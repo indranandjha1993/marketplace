@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+{% load product_tags %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:product_list_by_category' product.category.slug %}">{{ product.category.name }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ product.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-5 mb-4">
+            <div class="card">
+                <div class="card-body p-2">
+                    {% if product.primary_image %}
+                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="product-detail-image img-fluid" id="main-product-image">
+                    {% else %}
+                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="product-detail-image img-fluid" id="main-product-image">
+                    {% endif %}
+                </div>
+            </div>
+            {% if product.images.count > 1 %}
+            <div class="mt-3 d-flex flex-wrap">
+                {% for image in product.images.all %}
+                <div class="me-2 mb-2">
+                    <img src="{{ image.image.url }}" alt="{{ product.title }}" class="thumbnail-image {% if image.is_primary %}active{% endif %}" onclick="document.getElementById('main-product-image').src='{{ image.image.url }}'">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">{{ product.title }}</h1>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="product-rating me-3">
+                            {% if product.reviews.count > 0 %}
+                            {% with avg_rating=product.reviews.all|avg_rating %}
+                            {% for _ in "12345"|slice:":avg_rating" %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                            {% for _ in "12345"|slice:avg_rating|add:":5" %}
+                            <i class="far fa-star"></i>
+                            {% endfor %}
+                            <span class="text-muted ms-1">({{ product.reviews.count }} reviews)</span>
+                            {% endwith %}
+                            {% else %}
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <i class="far fa-star"></i>
+                            <span class="text-muted ms-1">(0 reviews)</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-muted">|</span>
+                        <span class="ms-3 text-muted">
+                            Sold by: <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}">{{ product.vendor.business_name }}</a>
+                        </span>
+                    </div>
+
+                    <div class="product-price mb-3">
+                        {% if product.is_on_sale %}
+                        <span class="original-price fs-5 text-decoration-line-through">₹{{ product.price }}</span>
+                        <span class="fs-3 fw-bold text-primary">₹{{ product.current_price }}</span>
+                        <span class="badge bg-danger ms-2">{{ product.discount_percentage }}% OFF</span>
+                        {% else %}
+                        <span class="fs-3 fw-bold text-primary">₹{{ product.current_price }}</span>
+                        {% endif %}
+                    </div>
+
+                    {% if product.variants.exists %}
+                    <div class="mb-4">
+                        <h5>Options</h5>
+                        <form id="variant-form">
+                            {% for attribute in product.variants.all|get_variant_attributes %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ attribute.name }}</label>
+                                <div class="d-flex flex-wrap">
+                                    {% for value in attribute.values.all %}
+                                    {% if value.variants.filter(product=product).exists %}
+                                    <div class="form-check me-3">
+                                        <input class="form-check-input variant-option" type="radio" name="{{ attribute.name }}" value="{{ value.id }}" id="variant-{{ value.id }}">
+                                        <label class="form-check-label" for="variant-{{ value.id }}">
+                                            {{ value.value }}
+                                        </label>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+                            {% csrf_token %}
+
+                            {% if product.variants.exists %}
+                            <input type="hidden" name="variant_id" id="selected-variant-id">
+                            {% endif %}
+
+                            <div class="d-flex align-items-center mb-3">
+                                <label class="me-3">Quantity:</label>
+                                <div class="input-group" style="width: 130px;">
+                                    <button class="btn btn-outline-secondary quantity-minus" type="button">-</button>
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center quantity-input">
+                                    <button class="btn btn-outline-secondary quantity-plus" type="button">+</button>
+                                </div>
+                                <span class="ms-3 text-muted">
+                                    {% if product.quantity > 10 %}
+                                        In Stock
+                                    {% elif product.quantity > 0 %}
+                                        Only {{ product.quantity }} left!
+                                    {% else %}
+                                        Out of Stock
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary me-2" {% if not product.is_in_stock %}disabled{% endif %}>
+                                    <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+
+                                <button type="button" class="btn btn-outline-danger wishlist-btn" data-product-id="{{ product.id }}">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Description -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Product Description</h5>
+                </div>
+                <div class="card-body">
+                    <div class="product-description">
+                        {{ product.description|linebreaks }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specifications -->
+            {% if product.brand %}
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Specifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Brand:</strong> {{ product.brand.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Category:</strong> {{ product.category.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>SKU:</strong> {{ product.sku }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Reviews and Questions Tabs -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="true">
+                        Reviews ({{ reviews.count }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="false">
+                        Questions ({{ questions.count }})
+                    </button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="productTabsContent">
+                <!-- Reviews Tab -->
+                <div class="tab-pane fade show active" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+                    {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <h5>Write a Review</h5>
+                        <form action="{% url 'products:add_review' product.slug %}" method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Rating</label>
+                                <div class="rating-input d-flex">
+                                    {% for i in '12345' %}
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating{{ i }}" value="{{ i }}" required>
+                                        <label class="form-check-label" for="rating{{ i }}">{{ i }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="reviewTitle" name="title" placeholder="Summarize your review">
+                            </div>
+                            <div class="mb-3">
+                                <label for="reviewComment" class="form-label">Comment</label>
+                                <textarea class="form-control" id="reviewComment" name="comment" rows="3" placeholder="What did you like or dislike about this product?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <h5>Customer Reviews</h5>
+                    {% if reviews %}
+                    <div class="reviews-list">
+                        {% for review in reviews %}
+                        <div class="review-item mb-3 pb-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <div class="product-rating">
+                                        {% for _ in '12345'|slice:":review.rating" %}
+                                        <i class="fas fa-star"></i>
+                                        {% endfor %}
+                                        {% for _ in '12345'|slice:review.rating:"5" %}
+                                        <i class="far fa-star"></i>
+                                        {% endfor %}
+                                    </div>
+                                    {% if review.title %}
+                                    <h6 class="mb-0 mt-1">{{ review.title }}</h6>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    {% if review.is_verified_purchase %}
+                                    <span class="badge bg-success">Verified Purchase</span>
+                                    {% endif %}
+                                    {{ review.created_at|date:"M d, Y" }}
+                                </div>
+                            </div>
+                            <div class="review-author small text-muted mb-2">
+                                By {{ review.user.first_name|default:review.user.email }}
+                            </div>
+                            <div class="review-content">
+                                {{ review.comment|linebreaks }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Questions Tab -->
+                <div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="questions-tab">
+                    {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <h5>Ask a Question</h5>
+                        <form action="{% url 'products:ask_question' product.slug %}" method="POST">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <textarea class="form-control" name="question" rows="2" placeholder="What would you like to know about this product?" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Question</button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <h5>Questions & Answers</h5>
+                    {% if questions %}
+                    <div class="questions-list">
+                        {% for question in questions %}
+                        <div class="question-item mb-4">
+                            <div class="question-header d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">Q: {{ question.question }}</span>
+                                <span class="text-muted small">{{ question.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="question-author small text-muted mb-3">
+                                Asked by {{ question.user.first_name|default:question.user.email }}
+                            </div>
+
+                            {% if question.answers.exists %}
+                            <div class="answers-list ms-4">
+                                {% for answer in question.answers.all %}
+                                <div class="answer-item mb-2">
+                                    <div class="answer-header d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold">A: {{ answer.answer }}</span>
+                                        <span class="text-muted small">{{ answer.created_at|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="answer-author small text-muted">
+                                        {% if answer.is_vendor %}
+                                        <span class="badge bg-primary">Seller</span>
+                                        {% endif %}
+                                        Answered by {{ answer.user.first_name|default:answer.user.email }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            {% if user.is_authenticated %}
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-link p-0 answer-toggle" data-question-id="{{ question.id }}">
+                                    Answer this question
+                                </button>
+                                <form action="{% url 'products:answer_question' question.id %}" method="POST" class="answer-form mt-2 d-none" id="answer-form-{{ question.id }}">
+                                    {% csrf_token %}
+                                    <div class="mb-2">
+                                        <textarea class="form-control form-control-sm" name="answer" rows="2" placeholder="Your answer" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Submit Answer</button>
+                                </form>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">No questions yet. Ask the first question about this product!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="related-products">
+        <h3 class="mb-3">Related Products</h3>
+        <div class="row g-4">
+            {% for product in related_products %}
+            <div class="col-md-3 col-6">
+                <div class="card product-card h-100">
+                    {% if product.is_on_sale %}
+                    <div class="discount-badge">-{{ product.discount_percentage }}%</div>
+                    {% endif %}
+
+                    <a href="{% url 'products:product_detail' product.slug %}">
+                        {% if product.primary_image %}
+                        <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
+                        {% else %}
+                        <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
+                        {% endif %}
+                    </a>
+
+                    <div class="card-body">
+                        <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
+                            {{ product.vendor.business_name }}
+                        </a>
+                        <h6 class="product-title">
+                            <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
+                                {{ product.title }}
+                            </a>
+                        </h6>
+
+                        <div class="product-price mt-2">
+                            {% if product.is_on_sale %}
+                            <span class="original-price">₹{{ product.price }}</span>
+                            {% endif %}
+                            ₹{{ product.current_price }}
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="fas fa-shopping-cart me-1"></i> Add
+                            </button>
+                        </form>
+
+                        <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    // Toggle answer forms
+    document.querySelectorAll('.answer-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const questionId = this.dataset.questionId;
+            const form = document.getElementById('answer-form-' + questionId);
+            form.classList.toggle('d-none');
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

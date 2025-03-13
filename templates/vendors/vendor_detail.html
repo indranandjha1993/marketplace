@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load product_tags %}
+
+{% block title %}{{ vendor.business_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Vendor Banner & Profile -->
+    <div class="card mb-4">
+        <div class="vendor-banner" style="background-image: url('{% if vendor.banner %}{{ vendor.banner.url }}{% else %}/static/img/vendor-banner-default.jpg{% endif %}'); height: 200px; background-size: cover; background-position: center; position: relative;">
+            <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}" class="vendor-logo" alt="{{ vendor.business_name }}" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid white; background-color: white; position: absolute; bottom: -50px; left: 50px; object-fit: contain;">
+        </div>
+        <div class="card-body pt-5 ps-5">
+            <div class="row">
+                <div class="col-md-8">
+                    <h1 class="h3 mb-2">{{ vendor.business_name }}</h1>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3">
+                            {% if vendor.avg_rating %}
+                            {% for _ in "12345"|slice:":vendor.avg_rating" %}
+                            <i class="fas fa-star text-warning"></i>
+                            {% endfor %}
+                            {% for _ in "12345"|slice:vendor.avg_rating:"5" %}
+                            <i class="far fa-star text-warning"></i>
+                            {% endfor %}
+                            <span class="text-muted ms-1">({{ vendor.reviews.count }} reviews)</span>
+                            {% else %}
+                            <i class="far fa-star text-warning"></i>
+                            <i class="far fa-star text-warning"></i>
+                            <i class="far fa-star text-warning"></i>
+                            <i class="far fa-star text-warning"></i>
+                            <i class="far fa-star text-warning"></i>
+                            <span class="text-muted ms-1">(0 reviews)</span>
+                            {% endif %}
+                        </div>
+                        <span class="text-muted">|</span>
+                        <span class="ms-3 text-muted">
+                            <i class="fas fa-box me-1"></i> {{ vendor.product_count }} products
+                        </span>
+                        <span class="text-muted ms-2">|</span>
+                        <span class="ms-3 text-muted">
+                            <i class="fas fa-calendar-alt me-1"></i> Joined {{ vendor.joined_date|date:"M Y" }}
+                        </span>
+                    </div>
+                    <p>{{ vendor.description }}</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if vendor.website %}
+                    <a href="{{ vendor.website }}" target="_blank" class="btn btn-outline-primary mb-2">
+                        <i class="fas fa-globe me-2"></i> Visit Website
+                    </a>
+                    {% endif %}
+                    <p class="mb-1">
+                        <i class="fas fa-map-marker-alt me-2"></i> {{ vendor.city }}, {{ vendor.state }}, {{ vendor.country }}
+                    </p>
+                    <p class="mb-1">
+                        <i class="fas fa-envelope me-2"></i> {{ vendor.email }}
+                    </p>
+                    <p>
+                        <i class="fas fa-phone me-2"></i> {{ vendor.phone_number }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Products -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-md-flex justify-content-between align-items-center mb-3">
+                <h2>Products ({{ product_count }})</h2>
+
+                <div class="d-flex align-items-center mt-2 mt-md-0">
+                    <label class="me-2 mb-0">Sort by:</label>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="window.location.href = this.value">
+                        <option value="?sort=newest" {% if current_sort == 'newest' or not current_sort %}selected{% endif %}>Newest</option>
+                        <option value="?sort=price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="?sort=price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="?sort=name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>Name: A to Z</option>
+                        <option value="?sort=name_desc" {% if current_sort == 'name_desc' %}selected{% endif %}>Name: Z to A</option>
+                        <option value="?sort=rating" {% if current_sort == 'rating' %}selected{% endif %}>Highest Rated</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if page_obj %}
+    <div class="row g-4">
+        {% for product in page_obj %}
+        <div class="col-md-3 col-6">
+            <div class="card product-card h-100">
+                {% if product.is_on_sale %}
+                <div class="discount-badge">-{{ product.discount_percentage }}%</div>
+                {% endif %}
+
+                <a href="{% url 'products:product_detail' product.slug %}">
+                    {% if product.primary_image %}
+                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
+                    {% else %}
+                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
+                    {% endif %}
+                </a>
+
+                <div class="card-body">
+                    <h6 class="product-title">
+                        <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
+                            {{ product.title }}
+                        </a>
+                    </h6>
+
+                    <div class="product-rating">
+                        {% if product.reviews.count > 0 %}
+                        {% with avg_rating=product.reviews.all|avg_rating %}
+                        {% for _ in "12345"|slice:":avg_rating" %}
+                        <i class="fas fa-star"></i>
+                        {% endfor %}
+                        {% for _ in "12345"|slice:avg_rating:"5" %}
+                        <i class="far fa-star"></i>
+                        {% endfor %}
+                        <span class="text-muted ms-1">({{ product.reviews.count }})</span>
+                        {% endwith %}
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-muted ms-1">(0)</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="product-price mt-2">
+                        {% if product.is_on_sale %}
+                        <span class="original-price">₹{{ product.price }}</span>
+                        {% endif %}
+                        ₹{{ product.current_price }}
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                    <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-shopping-cart me-1"></i> Add to Cart
+                        </button>
+                    </form>
+
+                    <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; First</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Last &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+        <h3>No products found</h3>
+        <p class="text-muted">This vendor doesn't have any products yet.</p>
+    </div>
+    {% endif %}
+
+    <!-- Vendor Reviews -->
+    <div class="card mt-5">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Seller Reviews</h5>
+        </div>
+        <div class="card-body">
+            {% if reviews %}
+            <div class="reviews-list">
+                {% for review in reviews %}
+                <div class="review-item mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="product-rating">
+                                {% for _ in '12345'|slice:":review.rating" %}
+                                <i class="fas fa-star"></i>
+                                {% endfor %}
+                                {% for _ in '12345'|slice:review.rating:"5" %}
+                                <i class="far fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="text-muted small">
+                            {{ review.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                    <div class="review-author small text-muted mb-2">
+                        By {{ review.user.first_name|default:review.user.email }}
+                    </div>
+                    <div class="review-content">
+                        {{ review.comment|linebreaks }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <p class="text-muted">No reviews yet for this seller.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

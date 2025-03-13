@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load product_tags %}
+
+{% block title %}Sellers{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Our Sellers</h1>
+
+    {% if page_obj %}
+    <div class="row g-4">
+        {% for vendor in page_obj %}
+        <div class="col-md-3 col-sm-6">
+            <div class="card vendor-card h-100">
+                <div class="vendor-banner" style="background-image: url('{% if vendor.banner %}{{ vendor.banner.url }}{% else %}/static/img/vendor-banner-default.jpg{% endif %}');">
+                    <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}" class="vendor-logo" alt="{{ vendor.business_name }}">
+                </div>
+                <div class="card-body text-center mt-5">
+                    <h5 class="card-title">{{ vendor.business_name }}</h5>
+                    <div class="mb-2">
+                        {% if vendor.avg_rating %}
+                        {% for _ in "12345"|slice:":vendor.avg_rating" %}
+                        <i class="fas fa-star text-warning"></i>
+                        {% endfor %}
+                        {% for _ in "12345"|slice:vendor.avg_rating:"5" %}
+                        <i class="far fa-star text-warning"></i>
+                        {% endfor %}
+                        <span class="text-muted ms-1">({{ vendor.reviews.count }})</span>
+                        {% else %}
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <i class="far fa-star text-warning"></i>
+                        <span class="text-muted ms-1">(0)</span>
+                        {% endif %}
+                    </div>
+                    <p class="card-text text-muted small">{{ vendor.description|truncatewords:15 }}</p>
+                    <a href="{% url 'vendors:vendor_detail' vendor.slug %}" class="btn btn-outline-primary">Visit Store</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1">&laquo; First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; First</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link">Last &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-store fa-4x text-muted mb-3"></i>
+        <h3>No sellers found</h3>
+        <p class="text-muted">There are no verified sellers at the moment.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

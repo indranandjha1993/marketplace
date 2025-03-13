@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">My Orders</h1>
+
+    {% if orders %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td><a href="{% url 'orders:order_detail' order.order_number %}">{{ order.order_number }}</a></td>
+                        <td>{{ order.created_at|date:"d M Y" }}</td>
+                        <td>{{ order.items.count }}</td>
+                        <td>₹{{ order.total }}</td>
+                        <td>
+                            {% if order.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif order.status == 'processing' %}
+                            <span class="badge bg-info">Processing</span>
+                            {% elif order.status == 'shipped' %}
+                            <span class="badge bg-primary">Shipped</span>
+                            {% elif order.status == 'delivered' %}
+                            <span class="badge bg-success">Delivered</span>
+                            {% elif order.status == 'cancelled' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                            {% elif order.status == 'refunded' %}
+                            <span class="badge bg-secondary">Refunded</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'orders:track_order' order.order_number %}" class="btn btn-outline-info">
+                                    <i class="fas fa-truck"></i>
+                                </a>
+                                <a href="{% url 'orders:generate_invoice' order.order_number %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-file-invoice"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+        <h3>No orders yet</h3>
+        <p class="text-muted">You haven't placed any orders yet.</p>
+        <a href="{% url 'products:product_list' %}" class="btn btn-primary mt-3">
+            Start Shopping
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

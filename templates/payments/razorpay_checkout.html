@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Complete Payment{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Complete Your Payment</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <h3 class="mb-4">Total Amount: ₹{{ order.total }}</h3>
+                    <p class="mb-4">Please click the button below to complete your payment for order #{{ order.order_number }}.</p>
+
+                    <form action="{{ callback_url }}" method="POST" id="razorpay-payment-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                        <input type="hidden" name="razorpay_order_id" value="{{ razorpay_order_id }}">
+                        <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+
+                        <button id="pay-btn" class="btn btn-primary btn-lg">Pay Now</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                            <p class="mb-0"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Shipping Address:</strong></p>
+                            <p class="mb-0">
+                                {{ order.shipping_address.full_name }}<br>
+                                {{ order.shipping_address.address_line1 }}
+                                {% if order.shipping_address.address_line2 %}, {{ order.shipping_address.address_line2 }}{% endif %}<br>
+                                {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                                {{ order.shipping_address.country }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const options = {
+            key: "{{ razorpay_merchant_key }}",
+            amount: "{{ razorpay_amount }}",
+            currency: "{{ currency }}",
+            name: "Multi-Vendor Marketplace",
+            description: "Order #{{ order.order_number }}",
+            order_id: "{{ razorpay_order_id }}",
+            handler: function (response) {
+                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
+                document.getElementById('razorpay_signature').value = response.razorpay_signature;
+                document.getElementById('razorpay-payment-form').submit();
+            },
+            prefill: {
+                name: "{{ order.user.get_full_name|default:order.user.email }}",
+                email: "{{ order.user.email }}",
+                contact: "{{ order.user.phone_number|default:'' }}"
+            },
+            theme: {
+                color: "#3498db"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+
+        document.getElementById('pay-btn').onclick = function(e) {
+            rzp.open();
+            e.preventDefault();
+        };
+    });
+</script>
+{% endblock %}

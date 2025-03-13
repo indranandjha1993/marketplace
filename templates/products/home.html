@@ -49,6 +49,7 @@
     </div>
 </section>
 
+{% if featured_categories %}
 <!-- Featured Categories -->
 <section class="featured-categories container py-5">
     <h2 class="text-center mb-4">Featured Categories</h2>
@@ -59,8 +60,7 @@
                 <div class="card text-center h-100">
                     <div class="p-3">
                         {% if category.image %}
-                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid"
-                             style="height: 100px; object-fit: contain;">
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid" style="height: 100px; object-fit: contain;">
                         {% else %}
                         <div class="category-icon">
                             <i class="fas fa-box fa-3x text-primary"></i>
@@ -76,7 +76,9 @@
         {% endfor %}
     </div>
 </section>
+{% endif %}
 
+{% if featured_products %}
 <!-- Featured Products -->
 <section class="featured-products container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -94,8 +96,7 @@
 
                 <a href="{% url 'products:product_detail' product.slug %}">
                     {% if product.primary_image %}
-                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
-                         class="card-img-top product-image">
+                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
                     {% else %}
                     <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
                     {% endif %}
@@ -112,15 +113,24 @@
                     </h6>
 
                     <div class="product-rating">
+                        {% if product.reviews.count > 0 %}
                         {% with avg_rating=product.reviews.all|avg_rating %}
-                        {% for _ in ''|ljust:avg_rating %}
+                        {% for _ in "12345"|slice:":avg_rating" %}
                         <i class="fas fa-star"></i>
                         {% endfor %}
-                        {% for _ in ''|ljust:5|slice:avg_rating %}
+                        {% for _ in "12345"|slice:avg_rating %}
                         <i class="far fa-star"></i>
                         {% endfor %}
                         <span class="text-muted ms-1">({{ product.reviews.count }})</span>
                         {% endwith %}
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span class="text-muted ms-1">(0)</span>
+                        {% endif %}
                     </div>
 
                     <div class="product-price mt-2">
@@ -152,121 +162,7 @@
         {% endfor %}
     </div>
 </section>
-
-<!-- New Arrivals -->
-<section class="new-arrivals container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>New Arrivals</h2>
-        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">View All</a>
-    </div>
-
-    <div class="row g-4">
-        {% for product in new_products %}
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="card product-card h-100">
-                {% if product.is_on_sale %}
-                <div class="discount-badge">-{{ product.discount_percentage }}%</div>
-                {% endif %}
-
-                <a href="{% url 'products:product_detail' product.slug %}">
-                    {% if product.primary_image %}
-                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
-                         class="card-img-top product-image">
-                    {% else %}
-                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
-                    {% endif %}
-                </a>
-
-                <div class="card-body">
-                    <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
-                        {{ product.vendor.business_name }}
-                    </a>
-                    <h6 class="product-title">
-                        <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
-                            {{ product.title }}
-                        </a>
-                    </h6>
-
-                    <div class="product-rating">
-                        {% with avg_rating=product.reviews.all|avg_rating %}
-                        {% for _ in ''|ljust:avg_rating %}
-                        <i class="fas fa-star"></i>
-                        {% endfor %}
-                        {% for _ in ''|ljust:5|slice:avg_rating %}
-                        <i class="far fa-star"></i>
-                        {% endfor %}
-                        <span class="text-muted ms-1">({{ product.reviews.count }})</span>
-                        {% endwith %}
-                    </div>
-
-                    <div class="product-price mt-2">
-                        {% if product.is_on_sale %}
-                        <span class="original-price">₹{{ product.price }}</span>
-                        {% endif %}
-                        ₹{{ product.current_price }}
-                    </div>
-                </div>
-
-                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                    <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                        </button>
-                    </form>
-
-                    <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-
-<!-- Top Vendors -->
-<section class="top-vendors container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Top Vendors</h2>
-        <a href="{% url 'vendors:vendor_list' %}" class="btn btn-outline-primary">View All Vendors</a>
-    </div>
-
-    <div class="row g-4">
-        {% for vendor in top_vendors %}
-        <div class="col-6 col-md-4 col-lg-3">
-            <div class="card vendor-card h-100">
-                <div class="vendor-banner"
-                     style="background-image: url('{% if vendor.banner %}{{ vendor.banner.url }}{% else %}/static/img/vendor-banner-default.jpg{% endif %}');">
-                    <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}"
-                         class="vendor-logo" alt="{{ vendor.business_name }}">
-                </div>
-                <div class="card-body text-center mt-5">
-                    <h5 class="card-title">{{ vendor.business_name }}</h5>
-                    <div class="mb-2">
-                        {% with avg_rating=vendor.reviews.all|avg_rating %}
-                        {% for _ in ''|ljust:avg_rating %}
-                        <i class="fas fa-star text-warning"></i>
-                        {% endfor %}
-                        {% for _ in ''|ljust:5|slice:avg_rating %}
-                        <i class="far fa-star text-warning"></i>
-                        {% endfor %}
-                        <span class="text-muted ms-1">({{ vendor.reviews.count }})</span>
-                        {% endwith %}
-                    </div>
-                    <p class="card-text text-muted small">{{ vendor.description|truncatewords:15 }}</p>
-                    <a href="{% url 'vendors:vendor_detail' vendor.slug %}" class="btn btn-outline-primary">Visit
-                        Store</a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</section>
+{% endif %}
 
 <!-- Services & Benefits -->
 <section class="services-benefits py-5 bg-light">
@@ -307,34 +203,6 @@
                         <h5>24/7 Support</h5>
                         <p class="text-muted">Dedicated customer service</p>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Newsletter & App Download -->
-<section class="newsletter-app py-5" style="background-color: #f0f8ff;">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h3>Subscribe to Our Newsletter</h3>
-                <p class="text-muted">Get the latest updates, offers and exclusive promotions</p>
-                <form class="newsletter-form d-flex">
-                    <input type="email" class="form-control" placeholder="Your email address" required>
-                    <button type="submit" class="btn btn-primary ms-2">Subscribe</button>
-                </form>
-            </div>
-            <div class="col-lg-6">
-                <h3>Download Our App</h3>
-                <p class="text-muted">Shop on the go with our mobile app</p>
-                <div class="app-buttons">
-                    <a href="#" class="me-2">
-                        <img src="/static/img/app-store-badge.png" alt="App Store" height="50">
-                    </a>
-                    <a href="#">
-                        <img src="/static/img/google-play-badge.png" alt="Google Play" height="50">
-                    </a>
                 </div>
             </div>
         </div>

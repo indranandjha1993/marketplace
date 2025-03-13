@@ -7,6 +7,7 @@ Django==5.1.7
 django-allauth==65.4.1
 django-crispy-forms==2.3
 django-storages==1.14.5
+Faker==37.0.0
 idna==3.10
 mysqlclient==2.2.7
 pillow==11.1.0
@@ -20,4 +21,5 @@ setuptools==76.0.0
 sqlparse==0.5.3
 stripe==11.6.0
 typing_extensions==4.12.2
+tzdata==2025.1
 urllib3==2.3.0

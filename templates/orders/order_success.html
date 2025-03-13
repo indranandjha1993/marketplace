@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Placed Successfully{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-5x text-success"></i>
+                    </div>
+                    <h1 class="mb-3">Thank You for Your Order!</h1>
+                    <p class="lead mb-4">Your order #{{ order.order_number }} has been placed successfully.</p>
+
+                    {% if order.payment_status == 'pending' and order.payment_method == 'cod' %}
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-info-circle me-2"></i> You've selected Cash on Delivery. You'll pay when your order arrives.
+                    </div>
+                    {% elif order.payment_status == 'paid' %}
+                    <div class="alert alert-success mb-4">
+                        <i class="fas fa-check-circle me-2"></i> Your payment has been successfully processed.
+                    </div>
+                    {% endif %}
+
+                    <p class="mb-4">We've sent a confirmation email to {{ order.user.email }} with all the order details.</p>
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary">
+                            <i class="fas fa-info-circle me-2"></i> View Order Details
+                        </a>
+                        <a href="{% url 'products:home' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-home me-2"></i> Continue Shopping
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
+                            <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                            <p class="mb-1"><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+                            <p class="mb-0"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Shipping Address:</strong></p>
+                            <p class="mb-0">
+                                {{ order.shipping_address.full_name }}<br>
+                                {{ order.shipping_address.address_line1 }}
+                                {% if order.shipping_address.address_line2 %}, {{ order.shipping_address.address_line2 }}{% endif %}<br>
+                                {{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}<br>
+                                {{ order.shipping_address.country }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What's Next -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">What's Next?</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline">
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5>Order Placed</h5>
+                                <p>Your order has been placed successfully and is being processed.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5>Processing</h5>
+                                <p>Sellers will prepare your items for shipping.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5>Shipping</h5>
+                                <p>Your items will be handed over to our shipping partners.</p>
+                            </div>
+                        </li>
+                        <li class="timeline-item">
+                            <div class="timeline-marker"></div>
+                            <div class="timeline-content">
+                                <h5>Delivery</h5>
+                                <p>Your package will be delivered to your doorstep.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+        list-style: none;
+    }
+
+    .timeline:before {
+        content: "";
+        position: absolute;
+        left: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 25px;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #3498db;
+        background-color: #fff;
+    }
+
+    .timeline-content {
+        padding-bottom: 10px;
+    }
+
+    .timeline-content h5 {
+        margin-bottom: 5px;
+    }
+
+    .timeline-content p {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}

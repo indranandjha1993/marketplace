@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Payment Method{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Add Payment Method</h1>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'accounts:user_profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user-circle me-2"></i> My Profile
+                    </a>
+                    <a href="{% url 'accounts:user_addresses' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-map-marker-alt me-2"></i> My Addresses
+                    </a>
+                    <a href="{% url 'orders:order_list' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-box me-2"></i> My Orders
+                    </a>
+                    <a href="{% url 'accounts:wishlist' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-heart me-2"></i> My Wishlist
+                    </a>
+                    <a href="{% url 'payments:payment_methods' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-credit-card me-2"></i> Payment Methods
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Method Form -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Choose Payment Method Type</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-pills mb-4" id="payment-tab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="card-tab" data-bs-toggle="pill" data-bs-target="#card" type="button" role="tab" aria-controls="card" aria-selected="true">
+                                <i class="far fa-credit-card me-2"></i> Credit/Debit Card
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="bank-tab" data-bs-toggle="pill" data-bs-target="#bank" type="button" role="tab" aria-controls="bank" aria-selected="false">
+                                <i class="fas fa-university me-2"></i> Bank Account
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="upi-tab" data-bs-toggle="pill" data-bs-target="#upi" type="button" role="tab" aria-controls="upi" aria-selected="false">
+                                <i class="fas fa-mobile-alt me-2"></i> UPI
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="wallet-tab" data-bs-toggle="pill" data-bs-target="#wallet" type="button" role="tab" aria-controls="wallet" aria-selected="false">
+                                <i class="fas fa-wallet me-2"></i> Wallet
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="payment-tabContent">
+                        <!-- Credit/Debit Card Form -->
+                        <div class="tab-pane fade show active" id="card" role="tabpanel" aria-labelledby="card-tab">
+                            <form action="{% url 'payments:add_payment_method' %}" method="POST" id="card-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_type" value="card">
+
+                                <div class="mb-3">
+                                    <label for="card_number" class="form-label">Card Number</label>
+                                    <input type="text" class="form-control" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" required>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="card_name" class="form-label">Cardholder Name</label>
+                                        <input type="text" class="form-control" id="card_name" name="card_name" placeholder="John Doe" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="card_expiry" class="form-label">Expiry Date</label>
+                                        <input type="text" class="form-control" id="card_expiry" name="card_expiry" placeholder="MM/YY" required>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <label for="card_cvc" class="form-label">CVC</label>
+                                        <input type="text" class="form-control" id="card_cvc" name="card_cvc" placeholder="123" required>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="card_is_default" name="is_default">
+                                        <label class="form-check-label" for="card_is_default">
+                                            Set as default payment method
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info">
+                                    <i class="fas fa-lock me-2"></i> Your card information is secure and encrypted.
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <a href="{% url 'payments:payment_methods' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save Card</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Bank Account Form -->
+                        <div class="tab-pane fade" id="bank" role="tabpanel" aria-labelledby="bank-tab">
+                            <form action="{% url 'payments:add_payment_method' %}" method="POST" id="bank-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_type" value="bank">
+
+                                <div class="mb-3">
+                                    <label for="bank_name" class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control" id="bank_name" name="bank_name" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bank_account_number" class="form-label">Account Number</label>
+                                    <input type="text" class="form-control" id="bank_account_number" name="bank_account_number" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bank_ifsc" class="form-label">IFSC Code</label>
+                                    <input type="text" class="form-control" id="bank_ifsc" name="bank_ifsc" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="bank_account_holder" class="form-label">Account Holder Name</label>
+                                    <input type="text" class="form-control" id="bank_account_holder" name="bank_account_holder" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="bank_is_default" name="is_default">
+                                        <label class="form-check-label" for="bank_is_default">
+                                            Set as default payment method
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <a href="{% url 'payments:payment_methods' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save Bank Account</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- UPI Form -->
+                        <div class="tab-pane fade" id="upi" role="tabpanel" aria-labelledby="upi-tab">
+                            <form action="{% url 'payments:add_payment_method' %}" method="POST" id="upi-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_type" value="upi">
+
+                                <div class="mb-3">
+                                    <label for="upi_id" class="form-label">UPI ID</label>
+                                    <input type="text" class="form-control" id="upi_id" name="upi_id" placeholder="name@upi" required>
+                                    <div class="form-text">Enter your UPI ID (e.g., phone@upi, name@bank)</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="upi_is_default" name="is_default">
+                                        <label class="form-check-label" for="upi_is_default">
+                                            Set as default payment method
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <a href="{% url 'payments:payment_methods' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save UPI ID</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Wallet Form -->
+                        <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab">
+                            <form action="{% url 'payments:add_payment_method' %}" method="POST" id="wallet-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="payment_type" value="wallet">
+
+                                <div class="mb-3">
+                                    <label for="wallet_provider" class="form-label">Wallet Provider</label>
+                                    <select class="form-select" id="wallet_provider" name="wallet_provider" required>
+                                        <option value="" selected disabled>Select a wallet provider</option>
+                                        <option value="paytm">PayTM</option>
+                                        <option value="amazonpay">Amazon Pay</option>
+                                        <option value="phonepe">PhonePe</option>
+                                        <option value="mobikwik">MobiKwik</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="wallet_name" class="form-label">Wallet Name</label>
+                                    <input type="text" class="form-control" id="wallet_name" name="wallet_name" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="wallet_id" class="form-label">Wallet ID/Mobile Number</label>
+                                    <input type="text" class="form-control" id="wallet_id" name="wallet_id" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="wallet_is_default" name="is_default">
+                                        <label class="form-check-label" for="wallet_is_default">
+                                            Set as default payment method
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <a href="{% url 'payments:payment_methods' %}" class="btn btn-outline-secondary me-2">Cancel</a>
+                                    <button type="submit" class="btn btn-primary">Save Wallet</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

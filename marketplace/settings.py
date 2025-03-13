@@ -35,6 +35,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'crispy_forms',
 
+
+    'marketplace',
     'accounts',
     'products',
     'vendors',
@@ -68,6 +70,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "cart.context_processors.cart_items_count",
+                'products.context_processors.categories_processor',
             ],
         },
     },

@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">Checkout</h1>
+
+    <form action="{% url 'orders:place_order' %}" method="POST" id="checkout-form">
+        {% csrf_token %}
+
+        <div class="row">
+            <!-- Shipping and Payment Information -->
+            <div class="col-lg-8">
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if addresses %}
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="shipping_address_type" id="shipping-address-saved" value="saved" checked>
+                                <label class="form-check-label" for="shipping-address-saved">
+                                    Use saved address
+                                </label>
+                            </div>
+
+                            <div class="mt-2">
+                                <select class="form-select" name="shipping_address" id="saved-shipping-select">
+                                    {% for address in addresses %}
+                                    {% if address.address_type == 'shipping' or address.address_type == 'both' %}
+                                    <option value="{{ address.id }}" {% if address == default_shipping_address %}selected{% endif %}>
+                                        {{ address.full_name }}, {{ address.address_line1 }}, {{ address.city }}
+                                        {% if address.is_default %} (Default){% endif %}
+                                    </option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="shipping_address_type" id="shipping-address-new" value="new">
+                                <label class="form-check-label" for="shipping-address-new">
+                                    Add new address
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div id="new-shipping-address" {% if addresses %}style="display: none;"{% endif %}>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="shipping_full_name" class="form-label">Full Name</label>
+                                    <input type="text" class="form-control" id="shipping_full_name" name="shipping_full_name" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="shipping_phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="shipping_phone" name="shipping_phone" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="shipping_address_line1" class="form-label">Address Line 1</label>
+                                <input type="text" class="form-control" id="shipping_address_line1" name="shipping_address_line1" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="shipping_address_line2" class="form-label">Address Line 2 (Optional)</label>
+                                <input type="text" class="form-control" id="shipping_address_line2" name="shipping_address_line2">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="shipping_city" class="form-label">City</label>
+                                    <input type="text" class="form-control" id="shipping_city" name="shipping_city" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="shipping_state" class="form-label">State</label>
+                                    <input type="text" class="form-control" id="shipping_state" name="shipping_state" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="shipping_postal_code" class="form-label">Postal Code</label>
+                                    <input type="text" class="form-control" id="shipping_postal_code" name="shipping_postal_code" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="shipping_country" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="shipping_country" name="shipping_country" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="shipping_set_default" name="shipping_set_default">
+                                    <label class="form-check-label" for="shipping_set_default">
+                                        Set as default shipping address
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Billing Address -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Billing Address</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="use_shipping_for_billing" name="use_shipping_for_billing" checked>
+                                <label class="form-check-label" for="use_shipping_for_billing">
+                                    Same as shipping address
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="billing-address-form" style="display: none;">
+                            {% if addresses %}
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="billing_address_type" id="billing-address-saved" value="saved" checked>
+                                    <label class="form-check-label" for="billing-address-saved">
+                                        Use saved address
+                                    </label>
+                                </div>
+
+                                <div class="mt-2">
+                                    <select class="form-select" name="billing_address" id="saved-billing-select">
+                                        {% for address in addresses %}
+                                        {% if address.address_type == 'billing' or address.address_type == 'both' %}
+                                        <option value="{{ address.id }}" {% if address == default_billing_address %}selected{% endif %}>
+                                            {{ address.full_name }}, {{ address.address_line1 }}, {{ address.city }}
+                                            {% if address.is_default %} (Default){% endif %}
+                                        </option>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="billing_address_type" id="billing-address-new" value="new">
+                                    <label class="form-check-label" for="billing-address-new">
+                                        Add new address
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="new-billing-address" style="display: none;">
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="billing_full_name" class="form-label">Full Name</label>
+                                        <input type="text" class="form-control" id="billing_full_name" name="billing_full_name">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="billing_phone" class="form-label">Phone Number</label>
+                                        <input type="tel" class="form-control" id="billing_phone" name="billing_phone">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="billing_address_line1" class="form-label">Address Line 1</label>
+                                    <input type="text" class="form-control" id="billing_address_line1" name="billing_address_line1">
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="billing_address_line2" class="form-label">Address Line 2 (Optional)</label>
+                                    <input type="text" class="form-control" id="billing_address_line2" name="billing_address_line2">
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="billing_city" class="form-label">City</label>
+                                        <input type="text" class="form-control" id="billing_city" name="billing_city">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="billing_state" class="form-label">State</label>
+                                        <input type="text" class="form-control" id="billing_state" name="billing_state">
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label for="billing_postal_code" class="form-label">Postal Code</label>
+                                        <input type="text" class="form-control" id="billing_postal_code" name="billing_postal_code">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="billing_country" class="form-label">Country</label>
+                                    <input type="text" class="form-control" id="billing_country" name="billing_country">
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="billing_set_default" name="billing_set_default">
+                                        <label class="form-check-label" for="billing_set_default">
+                                            Set as default billing address
+                                        </label>
+                                    </div>
+                                </div>
+                                {% if addresses %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Payment Method</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="payment-methods">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-card" value="stripe" checked>
+                                <label class="form-check-label" for="payment-card">
+                                    <i class="far fa-credit-card me-2"></i> Credit/Debit Card
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-razorpay" value="razorpay">
+                                <label class="form-check-label" for="payment-razorpay">
+                                    <i class="fas fa-money-bill-wave me-2"></i> UPI/Netbanking (Razorpay)
+                                </label>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cod">
+                                <label class="form-check-label" for="payment-cod">
+                                    <i class="fas fa-hand-holding-usd me-2"></i> Cash on Delivery
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="order-summary">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal</span>
+                                <span>₹{{ subtotal }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping</span>
+                                <span>₹{{ shipping_cost }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tax</span>
+                                <span>₹{{ tax_amount }}</span>
+                            </div>
+
+                            {% if coupon %}
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Coupon Discount ({{ coupon.code }})</span>
+                                <span>-₹{{ coupon_discount }}</span>
+                            </div>
+                            {% endif %}
+
+                            <hr>
+
+                            <div class="d-flex justify-content-between mb-4 fw-bold">
+                                <span>Total</span>
+                                <span>₹{{ total }}</span>
+                            </div>
+
+                            {% if not coupon %}
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" placeholder="Coupon code" name="coupon_code">
+                                    <button class="btn btn-outline-secondary" type="button" id="apply-coupon">Apply</button>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">Place Order</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Items -->
+                <div class="card mt-4">
+                    <div class="card-header bg-white">
+                        <h5 class="card-title mb-0">Cart Items</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for item in cart_items %}
+                            <li class="list-group-item">
+                                <div class="d-flex">
+                                    <div style="width: 60px; height: 60px;" class="flex-shrink-0 me-3">
+                                        {% if item.product.primary_image %}
+                                        <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}" class="img-fluid" style="max-height: 60px; max-width: 60px;">
+                                        {% else %}
+                                        <img src="/static/img/no-image.png" alt="{{ item.product.title }}" class="img-fluid" style="max-height: 60px; max-width: 60px;">
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="my-0">{{ item.product.title }}</h6>
+                                        {% if item.variant %}
+                                        <small class="text-muted">
+                                            {% for value in item.variant.attribute_values.all %}
+                                            {{ value.attribute.name }}: {{ value.value }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </small><br>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            Qty: {{ item.quantity }} × ₹{{ item.unit_price }}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fw-bold">₹{{ item.total }}</span>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Shipping address toggle
+        const shippingAddressRadios = document.querySelectorAll('input[name="shipping_address_type"]');
+        const newShippingAddress = document.getElementById('new-shipping-address');
+        const savedShippingSelect = document.getElementById('saved-shipping-select');
+
+        if (shippingAddressRadios.length > 0) {
+            shippingAddressRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'new') {
+                        newShippingAddress.style.display = 'block';
+                        if (savedShippingSelect) savedShippingSelect.disabled = true;
+                    } else {
+                        newShippingAddress.style.display = 'none';
+                        if (savedShippingSelect) savedShippingSelect.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // Billing address toggle
+        const useShippingCheckbox = document.getElementById('use_shipping_for_billing');
+        const billingAddressForm = document.getElementById('billing-address-form');
+
+        if (useShippingCheckbox && billingAddressForm) {
+            useShippingCheckbox.addEventListener('change', function() {
+                billingAddressForm.style.display = this.checked ? 'none' : 'block';
+            });
+        }
+
+        // Billing address type toggle
+        const billingAddressRadios = document.querySelectorAll('input[name="billing_address_type"]');
+        const newBillingAddress = document.getElementById('new-billing-address');
+        const savedBillingSelect = document.getElementById('saved-billing-select');
+
+        if (billingAddressRadios.length > 0) {
+            billingAddressRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'new') {
+                        newBillingAddress.style.display = 'block';
+                        if (savedBillingSelect) savedBillingSelect.disabled = true;
+                    } else {
+                        newBillingAddress.style.display = 'none';
+                        if (savedBillingSelect) savedBillingSelect.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // Apply coupon button
+        const applyCouponBtn = document.getElementById('apply-coupon');
+        if (applyCouponBtn) {
+            applyCouponBtn.addEventListener('click', function() {
+                const couponInput = this.previousElementSibling;
+                const couponCode = couponInput.value.trim();
+
+                if (couponCode) {
+                    // Create form for coupon submission
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '{% url "cart:apply_coupon" %}';
+
+                    // Add CSRF token
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrfmiddlewaretoken';
+                    csrfInput.value = '{{ csrf_token }}';
+                    form.appendChild(csrfInput);
+
+                    // Add coupon code
+                    const codeInput = document.createElement('input');
+                    codeInput.type = 'hidden';
+                    codeInput.name = 'coupon_code';
+                    codeInput.value = couponCode;
+                    form.appendChild(codeInput);
+
+                    // Submit form
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}Order #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Order #{{ order.order_number }}</h1>
+        <div>
+            <a href="{% url 'orders:generate_invoice' order.order_number %}" class="btn btn-outline-secondary">
+                <i class="fas fa-file-invoice me-2"></i> Invoice
+            </a>
+            <a href="{% url 'orders:track_order' order.order_number %}" class="btn btn-outline-primary ms-2">
+                <i class="fas fa-truck me-2"></i> Track Order
+            </a>
+        </div>
+    </div>
+
+    <!-- Order Status -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Order Information</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
+                    <p class="mb-1">
+                        <strong>Status:</strong>
+                        {% if order.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif order.status == 'processing' %}
+                        <span class="badge bg-info">Processing</span>
+                        {% elif order.status == 'shipped' %}
+                        <span class="badge bg-primary">Shipped</span>
+                        {% elif order.status == 'delivered' %}
+                        <span class="badge bg-success">Delivered</span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                        {% elif order.status == 'refunded' %}
+                        <span class="badge bg-secondary">Refunded</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>Payment:</strong>
+                        {% if order.payment_status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif order.payment_status == 'paid' %}
+                        <span class="badge bg-success">Paid</span>
+                        {% elif order.payment_status == 'failed' %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% elif order.payment_status == 'refunded' %}
+                        <span class="badge bg-secondary">Refunded</span>
+                        {% elif order.payment_status == 'partially_refunded' %}
+                        <span class="badge bg-info">Partially Refunded</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-0"><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% if order.status != 'cancelled' and order.status != 'refunded' %}
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if order.status == 'pending' or order.status == 'processing' %}
+                    <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" class="mb-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?')">
+                            <i class="fas fa-times me-2"></i> Cancel Order
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {% if order.status == 'delivered' %}
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#returnModal">
+                        <i class="fas fa-undo me-2"></i> Return Order
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Addresses -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card mb-4 mb-md-0">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Shipping Address</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">{{ order.shipping_address.full_name }}</p>
+                    <p class="mb-1">{{ order.shipping_address.phone }}</p>
+                    <p class="mb-1">{{ order.shipping_address.address_line1 }}</p>
+                    {% if order.shipping_address.address_line2 %}
+                    <p class="mb-1">{{ order.shipping_address.address_line2 }}</p>
+                    {% endif %}
+                    <p class="mb-1">{{ order.shipping_address.city }}, {{ order.shipping_address.state }} {{ order.shipping_address.postal_code }}</p>
+                    <p class="mb-0">{{ order.shipping_address.country }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Billing Address</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-1">{{ order.billing_address.full_name }}</p>
+                    <p class="mb-1">{{ order.billing_address.phone }}</p>
+                    <p class="mb-1">{{ order.billing_address.address_line1 }}</p>
+                    {% if order.billing_address.address_line2 %}
+                    <p class="mb-1">{{ order.billing_address.address_line2 }}</p>
+                    {% endif %}
+                    <p class="mb-1">{{ order.billing_address.city }}, {{ order.billing_address.state }} {{ order.billing_address.postal_code }}</p>
+                    <p class="mb-0">{{ order.billing_address.country }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="card mb-4">
+        <div class="card-header bg-white">
+            <h5 class="card-title mb-0">Order Items</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Vendor</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div style="width: 60px; height: 60px;" class="me-3">
+                                    {% if item.product.primary_image %}
+                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}" class="img-fluid" style="max-height: 60px; max-width: 60px;">
+                                    {% else %}
+                                    <img src="/static/img/no-image.png" alt="{{ item.product.title }}" class="img-fluid" style="max-height: 60px; max-width: 60px;">
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">
+                                        {{ item.product.title }}
+                                    </a>
+                                    {% if item.variant %}
+                                    <div class="small text-muted">
+                                        {% for value in item.variant.attribute_values.all %}
+                                        <span>{{ value.attribute.name }}: {{ value.value }}</span>{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">
+                                {{ item.product.vendor.business_name }}
+                            </a>
+                        </td>
+                        <td>₹{{ item.price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="text-end">₹{{ item.total }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Subtotal</strong></td>
+                        <td class="text-end">₹{{ order.subtotal }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Shipping</strong></td>
+                        <td class="text-end">₹{{ order.shipping_cost }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Tax</strong></td>
+                        <td class="text-end">₹{{ order.tax_amount }}</td>
+                    </tr>
+                    {% if order.discount_amount > 0 %}
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Discount</strong></td>
+                        <td class="text-end">-₹{{ order.discount_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td colspan="4" class="text-end"><strong>Total</strong></td>
+                        <td class="text-end"><strong>₹{{ order.total }}</strong></td>
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vendor Orders -->
+    <div class="accordion" id="vendorOrdersAccordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="vendorOrdersHeading">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vendorOrdersCollapse" aria-expanded="false" aria-controls="vendorOrdersCollapse">
+                    Vendor Order Details
+                </button>
+            </h2>
+            <div id="vendorOrdersCollapse" class="accordion-collapse collapse" aria-labelledby="vendorOrdersHeading" data-bs-parent="#vendorOrdersAccordion">
+                <div class="accordion-body p-0">
+                    {% for vendor_order in vendor_orders %}
+                    <div class="card mb-3 border-0">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0">{{ vendor_order.vendor.business_name }}</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Status:</strong>
+                                {% if vendor_order.status == 'pending' %}
+                                <span class="badge bg-warning">Pending</span>
+                                {% elif vendor_order.status == 'processing' %}
+                                <span class="badge bg-info">Processing</span>
+                                {% elif vendor_order.status == 'shipped' %}
+                                <span class="badge bg-primary">Shipped</span>
+                                {% elif vendor_order.status == 'delivered' %}
+                                <span class="badge bg-success">Delivered</span>
+                                {% elif vendor_order.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                                {% elif vendor_order.status == 'refunded' %}
+                                <span class="badge bg-secondary">Refunded</span>
+                                {% endif %}
+                            </p>
+                            {% if vendor_order.tracking_number %}
+                            <p><strong>Tracking:</strong> {{ vendor_order.tracking_number }} ({{ vendor_order.carrier }})</p>
+                            {% endif %}
+                            {% if vendor_order.dispatch_date %}
+                            <p><strong>Dispatched:</strong> {{ vendor_order.dispatch_date|date:"F d, Y" }}</p>
+                            {% endif %}
+                            {% if vendor_order.delivery_date %}
+                            <p><strong>Delivered:</strong> {{ vendor_order.delivery_date|date:"F d, Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Order Modal -->
+<div class="modal fade" id="returnModal" tabindex="-1" aria-labelledby="returnModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{% url 'orders:return_order' order.order_number %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnModalLabel">Return Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="returnReason" class="form-label">Return Reason</label>
+                        <select class="form-select" id="returnReason" name="return_reason" required>
+                            <option value="">Select a reason</option>
+                            <option value="Damaged product">Damaged product</option>
+                            <option value="Wrong product received">Wrong product received</option>
+                            <option value="Product doesn't match description">Product doesn't match description</option>
+                            <option value="Product quality issue">Product quality issue</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="returnComments" class="form-label">Additional Comments</label>
+                        <textarea class="form-control" id="returnComments" name="return_comments" rows="3"></textarea>
+                    </div>
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Once your return request is approved, you'll receive instructions on how to return the items.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Return Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
