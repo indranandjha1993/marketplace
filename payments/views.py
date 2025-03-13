@@ -7,9 +7,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-
 from orders.models import Order, Payment
 from .models import PaymentMethod, Transaction
+from django.db import transaction as db_transaction
 
 # Initialize payment gateways
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -229,7 +229,7 @@ def verify_payment(request, order_number):
             # Check if payment was successful
             if checkout_session.payment_status == 'paid':
                 # Update order status
-                with transaction.atomic():
+                with db_transaction.atomic():
                     order.payment_status = 'paid'
                     order.transaction_id = checkout_session.payment_intent
                     order.status = 'processing'
@@ -305,7 +305,7 @@ def verify_payment(request, order_number):
                 razorpay_client.utility.verify_payment_signature(params_dict)
 
                 # If we get here, signature is valid
-                with transaction.atomic():
+                with db_transaction.atomic():
                     order.payment_status = 'paid'
                     order.transaction_id = razorpay_payment_id
                     order.status = 'processing'
