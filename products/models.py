@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Case, When, F, DecimalField
 from django.utils.text import slugify
 from vendors.models import Vendor
 from accounts.models import User
@@ -108,28 +109,52 @@ class Product(models.Model):
 
     @property
     def is_on_sale(self):
+        """Check if the product is on sale."""
         return bool(self.sale_price and self.sale_price < self.price)
 
     @property
     def current_price(self):
+        """Return the current effective price (sale_price if on sale, otherwise price)."""
         return self.sale_price if self.is_on_sale else self.price
 
     @property
     def discount_percentage(self):
+        """Calculate the discount percentage if the product is on sale."""
         if self.is_on_sale:
-            return round((1 - self.sale_price / self.price) * 100)
+            return round((1 - (self.sale_price / self.price)) * 100)
         return 0
 
     @property
     def is_in_stock(self):
+        """Check if the product is in stock."""
         return self.quantity > 0
 
     @property
     def primary_image(self):
+        """Get the primary image for this product."""
         images = self.images.all()
         if images.exists():
+            primary = images.filter(is_primary=True).first()
+            if primary:
+                return primary
             return images.first()
         return None
+
+    @classmethod
+    def annotate_current_price(cls, queryset):
+        """
+        Annotate a queryset with a calculated 'effective_price' field that
+        represents the current price (sale_price if not null, otherwise price).
+
+        This is needed because the property 'current_price' cannot be used in database queries.
+        """
+        return queryset.annotate(
+            effective_price=Case(
+                When(sale_price__isnull=False, then=F('sale_price')),
+                default=F('price'),
+                output_field=DecimalField()
+            )
+        )
 
 
 class ProductImage(models.Model):

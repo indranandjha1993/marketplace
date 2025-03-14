@@ -12,6 +12,7 @@ from .models import (
     Category, Brand, Product, ProductReview,
     ProductQuestion, ProductAnswer
 )
+from .utils.product_filters import apply_product_filters
 
 
 def home(request):
@@ -21,16 +22,22 @@ def home(request):
     # Get featured categories (root categories only)
     featured_categories = Category.objects.filter(parent__isnull=True, is_active=True)[:6]
 
-    # Get featured products
+    # Get featured products - with effective_price annotation
     featured_products = Product.objects.filter(
         status='active',
         is_featured=True
-    ).select_related('vendor').order_by('-created_at')[:8]
+    ).select_related('vendor')
+
+    # Annotate with effective_price for sorting
+    featured_products = Product.annotate_current_price(featured_products).order_by('-created_at')[:8]
 
     # Get new products
     new_products = Product.objects.filter(
         status='active'
-    ).select_related('vendor').order_by('-created_at')[:8]
+    ).select_related('vendor')
+
+    # Annotate with effective_price for sorting
+    new_products = Product.annotate_current_price(new_products).order_by('-created_at')[:8]
 
     # Get top vendors based on review count and average rating
     top_vendors = Vendor.objects.filter(
@@ -58,52 +65,47 @@ def product_list(request):
     View for displaying all products with filtering and sorting options.
     """
     # Get all active products
-    products = Product.objects.filter(status='active')
+    products = Product.objects.filter(status='active').select_related('vendor', 'category', 'brand')
 
-    # Apply filters
-    category_slug = request.GET.get('category')
-    brand_slug = request.GET.get('brand')
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    rating = request.GET.get('rating')
-    sort = request.GET.get('sort', '-created_at')  # Default sorting by newest
+    # Apply filters from centralized utility
+    products = apply_product_filters(products, request)
 
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        # Include all child categories
-        categories = [category] + list(category.get_all_children)
-        products = products.filter(category__in=categories)
-
-    if brand_slug:
-        brand = get_object_or_404(Brand, slug=brand_slug)
-        products = products.filter(brand=brand)
-
-    if min_price:
-        products = products.filter(current_price__gte=min_price)
-
-    if max_price:
-        products = products.filter(current_price__lte=max_price)
-
-    if rating:
-        products = products.annotate(avg_rating=Avg('reviews__rating')).filter(avg_rating__gte=rating)
-
-    # Apply sorting
-    if sort == 'price_asc':
-        products = products.order_by('current_price')
-    elif sort == 'price_desc':
-        products = products.order_by('-current_price')
-    elif sort == 'name_asc':
-        products = products.order_by('title')
-    elif sort == 'name_desc':
-        products = products.order_by('-title')
-    elif sort == 'rating':
-        products = products.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
-    else:  # Default to newest
-        products = products.order_by('-created_at')
-
-    # Get all categories and brands for filtering
-    categories = Category.objects.filter(parent__isnull=True, is_active=True)
+    # Get all categories and brands for filtering sidebar
+    categories = Category.objects.filter(parent__isnull=True, is_active=True).prefetch_related('children')
     brands = Brand.objects.filter(is_active=True)
+
+    # Get current category and brand objects for breadcrumbs
+    current_category_obj = None
+    current_brand_obj = None
+    breadcrumb_categories = []
+
+    if request.GET.get('category'):
+        try:
+            current_category_obj = Category.objects.get(slug=request.GET.get('category'))
+
+            # Build breadcrumb path
+            category = current_category_obj
+            while category:
+                breadcrumb_categories.insert(0, category)
+                category = category.parent
+        except Category.DoesNotExist:
+            pass
+
+    if request.GET.get('brand'):
+        try:
+            current_brand_obj = Brand.objects.get(slug=request.GET.get('brand'))
+        except Brand.DoesNotExist:
+            pass
+
+    # Check if there are any active filters
+    has_active_filters = any([
+        request.GET.get('category'),
+        request.GET.get('brand'),
+        request.GET.get('min_price'),
+        request.GET.get('max_price'),
+        request.GET.get('rating'),
+        request.GET.get('sort') and request.GET.get('sort') != 'newest'
+    ])
 
     # Pagination
     paginator = Paginator(products, 20)  # 20 products per page
@@ -114,12 +116,16 @@ def product_list(request):
         'page_obj': page_obj,
         'categories': categories,
         'brands': brands,
-        'current_category': category_slug,
-        'current_brand': brand_slug,
-        'current_min_price': min_price,
-        'current_max_price': max_price,
-        'current_rating': rating,
-        'current_sort': sort,
+        'current_category': request.GET.get('category'),
+        'current_brand': request.GET.get('brand'),
+        'current_min_price': request.GET.get('min_price'),
+        'current_max_price': request.GET.get('max_price'),
+        'current_rating': request.GET.get('rating'),
+        'current_sort': request.GET.get('sort', 'newest'),
+        'current_category_obj': current_category_obj,
+        'current_brand_obj': current_brand_obj,
+        'breadcrumb_categories': breadcrumb_categories,
+        'has_active_filters': has_active_filters,
     }
 
     return render(request, 'products/product_list.html', context)
@@ -129,6 +135,7 @@ def product_list_by_category(request, category_slug):
     """
     View for displaying products filtered by category.
     """
+    # Redirect to product_list view with category filter
     return redirect(f"{reverse('products:product_list')}?category={category_slug}")
 
 
@@ -136,6 +143,7 @@ def product_list_by_brand(request, brand_slug):
     """
     View for displaying products filtered by brand.
     """
+    # Redirect to product_list view with brand filter
     return redirect(f"{reverse('products:product_list')}?brand={brand_slug}")
 
 
@@ -146,8 +154,7 @@ def product_detail(request, product_slug):
     product = get_object_or_404(Product, slug=product_slug, status='active')
 
     # Update product view count (for analytics)
-    product.view_count = F('view_count') + 1
-    product.save(update_fields=['view_count'])
+    Product.objects.filter(id=product.id).update(view_count=F('view_count') + 1)
 
     # Get product-specific recommendations
     related_products = get_recommendations_for_product(product)
@@ -180,65 +187,50 @@ def product_detail(request, product_slug):
     return render(request, 'products/product_detail.html', context)
 
 
-# In products/views.py - improve search_products function
 def search_products(request):
     """
     View for searching products with advanced filtering.
     """
-    query = request.GET.get('q', '')
-    category_id = request.GET.get('category')
-    brand_id = request.GET.get('brand')
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
-    rating = request.GET.get('rating')
-    sort = request.GET.get('sort', 'relevance')  # Default sorting by relevance
+    # Start with all active products
+    products = Product.objects.filter(status='active').select_related('vendor', 'category', 'brand')
 
-    if query:
-        products = Product.objects.filter(
-            Q(title__icontains=query) |
-            Q(description__icontains=query) |
-            Q(meta_keywords__icontains=query) |
-            Q(meta_description__icontains=query) |
-            Q(category__name__icontains=query) |
-            Q(brand__name__icontains=query),
-            status='active'
-        ).distinct()
-    else:
+    # Apply filters which will also handle the search query from 'q' parameter
+    products = apply_product_filters(products, request)
+
+    # If no search query and no filters, return empty queryset
+    if not request.GET.get('q') and not any(
+            param in request.GET for param in ['category', 'brand', 'min_price', 'max_price', 'rating']
+    ):
         products = Product.objects.none()
 
-    # Apply filters
-    if category_id:
-        category = get_object_or_404(Category, id=category_id)
-        # Include all child categories
-        categories = [category] + list(category.get_all_children)
-        products = products.filter(category__in=categories)
+    # Get current category and brand objects for display
+    current_category_obj = None
+    current_brand_obj = None
 
-    if brand_id:
-        products = products.filter(brand_id=brand_id)
+    if request.GET.get('category'):
+        try:
+            current_category_obj = Category.objects.get(slug=request.GET.get('category'))
+        except Category.DoesNotExist:
+            pass
 
-    if min_price:
-        products = products.filter(current_price__gte=min_price)
+    if request.GET.get('brand'):
+        try:
+            current_brand_obj = Brand.objects.get(slug=request.GET.get('brand'))
+        except Brand.DoesNotExist:
+            pass
 
-    if max_price:
-        products = products.filter(current_price__lte=max_price)
-
-    if rating:
-        products = products.annotate(avg_rating=Avg('reviews__rating')).filter(avg_rating__gte=rating)
-
-    # Apply sorting
-    if sort == 'price_asc':
-        products = products.order_by('current_price')
-    elif sort == 'price_desc':
-        products = products.order_by('-current_price')
-    elif sort == 'name_asc':
-        products = products.order_by('title')
-    elif sort == 'name_desc':
-        products = products.order_by('-title')
-    elif sort == 'rating':
-        products = products.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
+    # Check if there are any active filters
+    has_active_filters = any([
+        request.GET.get('category'),
+        request.GET.get('brand'),
+        request.GET.get('min_price'),
+        request.GET.get('max_price'),
+        request.GET.get('rating'),
+        request.GET.get('sort') and request.GET.get('sort') != 'relevance'
+    ]) or request.GET.get('q')
 
     # Get filter options
-    categories = Category.objects.filter(parent__isnull=True, is_active=True)
+    categories = Category.objects.filter(parent__isnull=True, is_active=True).prefetch_related('children')
     brands = Brand.objects.filter(is_active=True)
 
     # Pagination
@@ -247,16 +239,20 @@ def search_products(request):
     page_obj = paginator.get_page(page_number)
 
     context = {
-        'query': query,
+        'query': request.GET.get('q', ''),
         'page_obj': page_obj,
         'categories': categories,
         'brands': brands,
-        'current_category': category_id,
-        'current_brand': brand_id,
-        'current_min_price': min_price,
-        'current_max_price': max_price,
-        'current_rating': rating,
-        'current_sort': sort,
+        'current_category': request.GET.get('category'),
+        'current_brand': request.GET.get('brand'),
+        'current_min_price': request.GET.get('min_price'),
+        'current_max_price': request.GET.get('max_price'),
+        'current_rating': request.GET.get('rating'),
+        'current_sort': request.GET.get('sort', 'relevance' if request.GET.get('q') else 'newest'),
+        'current_category_obj': current_category_obj,
+        'current_brand_obj': current_brand_obj,
+        'has_active_filters': has_active_filters,
+        'current_query': request.GET.get('q'),
     }
 
     return render(request, 'products/search_results.html', context)
