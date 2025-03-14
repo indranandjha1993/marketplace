@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -156,6 +158,47 @@ def product_detail(request, product_slug):
     # Update product view count (for analytics)
     Product.objects.filter(id=product.id).update(view_count=F('view_count') + 1)
 
+    # Get the default variant (first available one)
+    default_variant = None
+    default_attribute_values = {}
+
+    if product.variants.exists():
+        # Get first variant with stock as default
+        default_variant = product.variants.filter(quantity__gt=0, is_active=True).first()
+
+        # If no in-stock variants, just get the first one
+        if not default_variant:
+            default_variant = product.variants.first()
+
+        # Get the attribute values for the default variant
+        if default_variant:
+            for attr_value in default_variant.attribute_values.all():
+                default_attribute_values[attr_value.attribute.id] = attr_value.id
+
+    # Prepare all variant data for JavaScript
+    variants_data = []
+    if product.variants.exists():
+        for variant in product.variants.all():
+            variant_data = {
+                'id': variant.id,
+                'price': float(variant.price),
+                'sale_price': float(variant.product.sale_price) if variant.product.sale_price else None,
+                'quantity': variant.quantity,
+                'sku': variant.sku,
+                'attributes': {},
+                'discount_percentage': product.discount_percentage,
+                'is_in_stock': variant.quantity > 0
+            }
+
+            # Add attribute values
+            for attr_value in variant.attribute_values.all():
+                variant_data['attributes'][attr_value.attribute.id] = attr_value.id
+
+            variants_data.append(variant_data)
+
+    # Convert to JSON for template
+    variants_json = json.dumps(variants_data)
+
     # Get product-specific recommendations
     related_products = get_recommendations_for_product(product)
 
@@ -178,6 +221,8 @@ def product_detail(request, product_slug):
         'personalized_recommendations': personalized_recommendations,
         'reviews': reviews,
         'questions': questions,
+        'variants_json': variants_json,
+        'default_variant': default_variant,
         'meta_title': f"{product.title} | {product.brand.name if product.brand else ''} | Marketplace",
         'meta_description': meta_description,
         'meta_keywords': meta_keywords,

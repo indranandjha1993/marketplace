@@ -31,8 +31,7 @@
                             </div>
                             <div class="col-md-4 col-9">
                                 <h6 class="mb-1">
-                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{
-                                        item.product.title }}</a>
+                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
                                 </h6>
                                 <div class="text-muted small">
                                     <span>Sold by: <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">{{ item.product.vendor.business_name }}</a></span>
@@ -121,8 +120,7 @@
                             </div>
                             <div class="col-md-6 col-9">
                                 <h6 class="mb-1">
-                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{
-                                        item.product.title }}</a>
+                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
                                 </h6>
                                 <div class="text-muted small">
                                     <span>Sold by: <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">{{ item.product.vendor.business_name }}</a></span>

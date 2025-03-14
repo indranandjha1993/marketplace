@@ -76,13 +76,19 @@
                         <form id="variant-form">
                             {% for attribute in product.variants.all|get_variant_attributes %}
                             <div class="mb-3">
-                                <label class="form-label">{{ attribute.name }}</label>
-                                <div class="d-flex flex-wrap">
+                                <label class="form-label fw-medium">{{ attribute.name }}</label>
+                                <div class="variant-options">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
-                                    <div class="form-check me-3">
-                                        <input class="form-check-input variant-option" type="radio" name="{{ attribute.name }}" value="{{ value.id }}" id="variant-{{ value.id }}">
-                                        <label class="form-check-label" for="variant-{{ value.id }}">
+                                    <div class="form-check">
+                                        <input class="form-check-input variant-option"
+                                               type="radio"
+                                               name="attribute-{{ attribute.id }}"
+                                               value="{{ value.id }}"
+                                               id="variant-{{ value.id }}"
+                                               data-attribute-id="{{ attribute.id }}"
+                                               {% if default_attribute_values and default_attribute_values|get_item:attribute.id == value.id %}checked{% endif %}>
+                                        <label class="form-check-label variant-label" for="variant-{{ value.id }}">
                                             {{ value.value }}
                                         </label>
                                     </div>
@@ -92,6 +98,16 @@
                             </div>
                             {% endfor %}
                         </form>
+                    </div>
+
+                    {% if default_variant %}
+                    <input type="hidden" name="variant_id" id="selected-variant-id" value="{{ default_variant.id }}">
+                    {% else %}
+                    <input type="hidden" name="variant_id" id="selected-variant-id" value="">
+                    {% endif %}
+
+                    <div id="variant-alert" class="alert alert-warning d-none">
+                        Please select all options to continue
                     </div>
                     {% endif %}
 
@@ -383,6 +399,9 @@
 {% endblock %}
 
 {% block extra_js %}
+<script id="variants-data" type="application/json">
+    {{ variants_json|safe }}
+</script>
 <script>
     // Image zoom functionality
     document.addEventListener('DOMContentLoaded', function() {
@@ -456,7 +475,7 @@
         }
     });
 
-    // Toggle answer forms - existing code
+    // Toggle answer forms
     document.querySelectorAll('.answer-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const questionId = this.dataset.questionId;
@@ -465,158 +484,172 @@
         });
     });
 
-    // Variant selection handling - add this
+    // Variant selection handling
     document.addEventListener('DOMContentLoaded', function() {
-        const variantForm = document.getElementById('variant-form');
         const variantOptions = document.querySelectorAll('.variant-option');
         const selectedVariantIdInput = document.getElementById('selected-variant-id');
         const addToCartBtn = document.querySelector('button[type="submit"]');
-        const priceDisplay = document.querySelector('.product-price');
+        const variantAlert = document.getElementById('variant-alert');
 
-        if (variantForm && variantOptions.length > 0) {
-            // Store all variants data
-            const variants = JSON.parse(document.getElementById('variants-data').textContent);
+        if (variantOptions.length > 0 && selectedVariantIdInput) {
+            // Parse the variants data
+            const variantsData = JSON.parse(document.getElementById('variants-data').textContent || '[]');
+            console.log("variantsData", variantsData)
+            // Store selected attribute values
+            const selectedAttributes = {};
 
-            // Function to check if a variant with selected attributes exists
-            function findMatchingVariant() {
-                const selectedAttributes = {};
+            // Initialize with any pre-selected attributes (from checked radio buttons)
+            variantOptions.forEach(option => {
+                if (option.checked) {
+                    const attributeId = option.dataset.attributeId;
+                    selectedAttributes[attributeId] = option.value;
+                }
+            });
 
-                // Get all selected attributes
-                variantForm.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
-                    const attributeName = radio.name;
-                    const attributeValueId = radio.value;
-                    selectedAttributes[attributeName] = attributeValueId;
+            // Filter available options based on current selection
+            function updateAvailableOptions() {
+                // Find all possible variants for current selection
+                const possibleVariants = variantsData.filter(variant => {
+                    for (const [attrId, valueId] of Object.entries(selectedAttributes)) {
+                        if (variant.attributes[attrId] != valueId) {
+                            return false;
+                        }
+                    }
+                    return true;
                 });
 
-                // Check if we have selected all required attributes
-                const requiredAttributeCount = Object.keys(variants[0].attributes).length;
-                if (Object.keys(selectedAttributes).length < requiredAttributeCount) {
+                // For each attribute that's not selected yet, show only valid options
+                variantOptions.forEach(option => {
+                    const attributeId = option.dataset.attributeId;
+                    const valueId = option.value;
+
+                    // Skip if this attribute is already selected
+                    if (selectedAttributes[attributeId] === valueId) {
+                        return;
+                    }
+
+                    // Check if there's any variant with this attribute value combination
+                    const isPossible = possibleVariants.some(variant =>
+                        variant.attributes[attributeId] == valueId
+                    );
+
+                    // Enable/disable the option based on availability
+                    const label = option.nextElementSibling;
+                    if (isPossible) {
+                        option.disabled = false;
+                        label.classList.remove('disabled');
+                    } else {
+                        option.disabled = true;
+                        label.classList.add('disabled');
+                    }
+                });
+            }
+
+            // Find matching variant based on selected attributes
+            function findMatchingVariant() {
+                // Get all selected attributes
+                const attributeCount = new Set(variantOptions.map(opt => opt.dataset.attributeId)).size;
+
+                // Only look for matches when all attributes are selected
+                if (Object.keys(selectedAttributes).length !== attributeCount) {
                     return null;
                 }
 
-                // Find matching variant
-                for (const variant of variants) {
-                    let isMatch = true;
-
-                    for (const [attrName, attrValueId] of Object.entries(selectedAttributes)) {
-                        if (variant.attributes[attrName] != attrValueId) {
-                            isMatch = false;
-                            break;
+                // Find the variant that matches all selected attributes
+                return variantsData.find(variant => {
+                    for (const [attrId, valueId] of Object.entries(selectedAttributes)) {
+                        if (variant.attributes[attrId] != valueId) {
+                            return false;
                         }
                     }
-
-                    if (isMatch) {
-                        return variant;
-                    }
-                }
-
-                return null;
+                    return true;
+                });
             }
 
-            // Update product info based on selected variant
-            function updateProductInfo() {
+            // Update UI based on selected variant
+            function updateVariantUI() {
                 const variant = findMatchingVariant();
 
                 if (variant) {
-                    // Update price
-                    if (variant.sale_price) {
-                        priceDisplay.innerHTML = `
-                            <span class="original-price fs-5 text-decoration-line-through">₹${variant.price}</span>
-                            <span class="fs-3 fw-bold text-primary">₹${variant.sale_price}</span>
-                            <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
-                        `;
-                    } else {
-                        priceDisplay.innerHTML = `
-                            <span class="fs-3 fw-bold text-primary">₹${variant.price}</span>
-                        `;
+                    // Hide any alert
+                    if (variantAlert) {
+                        variantAlert.classList.add('d-none');
+                    }
+
+                    // Update selected variant ID
+                    selectedVariantIdInput.value = variant.id;
+
+                    // Update price display
+                    const priceDisplay = document.querySelector('.product-price');
+                    if (priceDisplay) {
+                        if (variant.sale_price) {
+                            priceDisplay.innerHTML = `
+                                <span class="original-price fs-5 text-decoration-line-through">₹${variant.price}</span>
+                                <span class="fs-3 fw-bold text-primary">₹${variant.sale_price}</span>
+                                <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
+                            `;
+                        } else {
+                            priceDisplay.innerHTML = `
+                                <span class="fs-3 fw-bold text-primary">₹${variant.price}</span>
+                            `;
+                        }
                     }
 
                     // Update availability
                     const availabilityText = document.getElementById('availability-text');
-                    if (variant.is_in_stock) {
-                        if (variant.quantity > 10) {
-                            availabilityText.innerHTML = 'In Stock';
-                            availabilityText.className = 'ms-3 text-success';
+                    if (availabilityText) {
+                        if (variant.is_in_stock) {
+                            if (variant.quantity > 10) {
+                                availabilityText.innerHTML = '<i class="fas fa-check-circle me-1"></i> In Stock';
+                                availabilityText.className = 'ms-3 text-success';
+                            } else {
+                                availabilityText.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> Only ${variant.quantity} left!`;
+                                availabilityText.className = 'ms-3 text-warning';
+                            }
+                            addToCartBtn.disabled = false;
                         } else {
-                            availabilityText.innerHTML = `Only ${variant.quantity} left!`;
-                            availabilityText.className = 'ms-3 text-warning';
+                            availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
+                            availabilityText.className = 'ms-3 text-danger';
+                            addToCartBtn.disabled = true;
                         }
-                        addToCartBtn.disabled = false;
-                    } else {
-                        availabilityText.innerHTML = 'Out of Stock';
-                        availabilityText.className = 'ms-3 text-danger';
-                        addToCartBtn.disabled = true;
                     }
 
-                    // Set variant ID for form submission
-                    selectedVariantIdInput.value = variant.id;
+                    // Update SKU if displayed
+                    const skuElement = document.getElementById('product-sku');
+                    if (skuElement && variant.sku) {
+                        skuElement.textContent = variant.sku;
+                    }
                 } else {
-                    // Reset form if no matching variant
-                    addToCartBtn.disabled = true;
-                    selectedVariantIdInput.value = '';
+                    // Show warning if all attributes are selected but no matching variant
+                    const attributeCount = new Set(variantOptions.map(opt => opt.dataset.attributeId)).size;
+                    if (Object.keys(selectedAttributes).length === attributeCount) {
+                        if (variantAlert) {
+                            variantAlert.textContent = "This combination is not available";
+                            variantAlert.classList.remove('d-none');
+                        }
+                        selectedVariantIdInput.value = '';
+                        addToCartBtn.disabled = true;
+                    }
                 }
             }
 
-            // Add event listeners to variant options
+            // Initialize variant UI with default selected variant
+            updateVariantUI();
+
+            // Set up event listeners for variant selection
             variantOptions.forEach(option => {
-                option.addEventListener('change', updateProductInfo);
+                option.addEventListener('change', function() {
+                    const attributeId = this.dataset.attributeId;
+                    selectedAttributes[attributeId] = this.value;
+
+                    // Update available options for other attributes
+                    updateAvailableOptions();
+
+                    // Update UI based on new selection
+                    updateVariantUI();
+                });
             });
         }
     });
 </script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .product-detail-container {
-        position: relative;
-    }
-
-    .img-zoom-lens {
-        position: absolute;
-        border: 1px solid #d4d4d4;
-        /*set the size of the lens:*/
-        width: 80px;
-        height: 80px;
-        background-color: rgba(255, 255, 255, 0.3);
-        cursor: crosshair;
-    }
-
-    .product-detail-image {
-        transition: transform 0.3s ease;
-    }
-
-    /* Additional styling for variant options */
-    .variant-option-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 15px;
-    }
-
-    .variant-option-item {
-        border: 2px solid #dee2e6;
-        border-radius: 4px;
-        padding: 8px 15px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .variant-option-item:hover {
-        border-color: #3498db;
-    }
-
-    .variant-option-item.selected {
-        border-color: #3498db;
-        background-color: #f8f9fa;
-    }
-
-    /* Style the radio buttons to be hidden */
-    .variant-option {
-        position: absolute;
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-</style>
 {% endblock %}

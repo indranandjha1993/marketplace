@@ -71,6 +71,7 @@ def add_to_cart(request, product_id):
     View for adding a product to the cart with proper variant handling.
     """
     product = get_object_or_404(Product, id=product_id)
+    print(request.POST)
 
     # Check if product is active
     if product.status != 'active':
@@ -100,8 +101,8 @@ def add_to_cart(request, product_id):
             messages.error(request, 'Selected variant not found')
             return redirect('products:product_detail', product_slug=product.slug)
     elif product.variants.exists():
-        # If product has variants but none selected
-        messages.error(request, 'Please select a product variant')
+        # If product has variants but none selected, show error message
+        messages.error(request, 'Please select all product options')
         return redirect('products:product_detail', product_slug=product.slug)
 
     # Check if item already exists in cart

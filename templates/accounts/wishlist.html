@@ -37,21 +37,11 @@
                     <div class="product-rating">
                         {% if product.reviews.count > 0 %}
                         {% with avg_rating=product.reviews.all|avg_rating %}
-                        {% for _ in "12345"|slice:":avg_rating" %}
-                        <i class="fas fa-star"></i>
-                        {% endfor %}
-                        {% for _ in "12345"|slice:avg_rating:"5" %}
-                        <i class="far fa-star"></i>
-                        {% endfor %}
-                        <span class="text-muted ms-1">({{ product.reviews.count }})</span>
+                        {% display_stars avg_rating %}
+                        <span class="text-muted small">({{ product.reviews.count }})</span>
                         {% endwith %}
                         {% else %}
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <span class="text-muted ms-1">(0)</span>
+                        <span class="text-muted small">No reviews yet</span>
                         {% endif %}
                     </div>
 

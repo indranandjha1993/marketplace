@@ -65,3 +65,10 @@ def rating_display(rating, review_count=None, max_stars=5):
         count_text = ''
 
     return mark_safe(f'<div class="product-rating">{stars}{count_text}</div>')
+
+@register.filter
+def get_item(dictionary, key):
+    """Get a dictionary item by key safely."""
+    if dictionary and key in dictionary:
+        return dictionary[key]
+    return None
