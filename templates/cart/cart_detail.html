@@ -16,7 +16,7 @@
                 </div>
                 <div class="card-body p-0">
                     {% for item in cart_items %}
-                    <div class="cart-item p-3 {% if not forloop.last %}border-bottom{% endif %}" data-item-id="{{ item.id }}">
+                    <div class="cart-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
                         <div class="row align-items-center">
                             <div class="col-md-2 col-3">
                                 <a href="{% url 'products:product_detail' item.product.slug %}">
@@ -46,34 +46,35 @@
                                 <div class="mt-2 d-flex gap-2">
                                     <form action="{% url 'cart:save_for_later' item.id %}" method="POST" class="save-for-later-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-link p-0 save-for-later">Save for later</button>
+                                        <button type="submit" class="btn btn-sm btn-link p-0">Save for later</button>
                                     </form>
                                     <span>|</span>
                                     <form action="{% url 'cart:remove_from_cart' item.id %}" method="POST" class="remove-form">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 remove-cart-item">Remove</button>
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button>
                                     </form>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6 mt-3 mt-md-0">
-                                <form action="{% url 'cart:update_cart' item.id %}" method="POST" class="quantity-form">
+                                <form action="{% url 'cart:update_cart' item.id %}" method="POST">
                                     {% csrf_token %}
-                                    <div class="quantity-control-container">
-                                        <span class="quantity-minus">-</span>
-                                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
-                                               max="{{ item.product.quantity }}"
-                                               class="form-control text-center quantity-input cart-quantity-control"
-                                               data-item-id="{{ item.id }}">
-                                        <span class="quantity-plus">+</span>
+                                    <div class="d-flex align-items-center quantity-control-container">
+                                        <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                {% if item.quantity <= 1 %}disabled{% endif %}>-</button>
+                                        <span class="px-3">{{ item.quantity }}</span>
+                                        <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}"
+                                                class="btn btn-sm btn-outline-secondary"
+                                                {% if item.quantity >= item.product.quantity %}disabled{% endif %}>+</button>
                                     </div>
                                 </form>
                             </div>
                             <div class="col-md-3 col-6 text-end mt-3 mt-md-0">
                                 <div class="product-price">
-                                    <span class="fw-bold item-total">₹{{ item.total }}</span>
+                                    <span class="fw-bold">₹{{ item.total }}</span>
                                 </div>
                                 <div class="text-muted small">
-                                    <span class="item-subtotal">₹{{ item.unit_price }}</span> × {{ item.quantity }}
+                                    <span>₹{{ item.unit_price }}</span> × {{ item.quantity }}
                                 </div>
                             </div>
                         </div>
@@ -85,9 +86,10 @@
                         <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
                             <i class="fas fa-arrow-left me-2"></i> Continue Shopping
                         </a>
-                        <form action="{% url 'cart:clear_cart' %}" method="POST" class="clear-cart-form">
+                        <form action="{% url 'cart:clear_cart' %}" method="POST">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger clear-cart-button">
+                            <button type="submit" class="btn btn-outline-danger"
+                                    onclick="return confirm('Are you sure you want to remove all items from your cart?')">
                                 <i class="fas fa-trash me-2"></i> Clear Cart
                             </button>
                         </form>
@@ -103,7 +105,7 @@
                 </div>
                 <div class="card-body p-0">
                     {% for item in saved_items %}
-                    <div class="saved-item p-3 {% if not forloop.last %}border-bottom{% endif %}" data-item-id="{{ item.id }}">
+                    <div class="saved-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
                         <div class="row align-items-center">
                             <div class="col-md-2 col-3">
                                 <a href="{% url 'products:product_detail' item.product.slug %}">
@@ -131,17 +133,17 @@
                                 </div>
                                 {% endif %}
                                 <div class="mt-2">
-                                    <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="move-to-cart-form">
+                                    <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="d-inline">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-link p-0 move-to-cart">Move to Cart</button>
+                                        <button type="submit" class="btn btn-sm btn-link p-0">Move to Cart</button>
                                     </form>
                                     <span>|</span>
-                                    <form action="{% url 'accounts:remove_from_wishlist' item.product.id %}" method="POST" class="remove-saved-form">
+                                    <form action="{% url 'accounts:remove_from_wishlist' item.product.id %}" method="POST" class="d-inline">
                                         {% csrf_token %}
                                         {% if item.variant %}
                                         <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
                                         {% endif %}
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0 remove-saved-item">Remove</button>
+                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button>
                                     </form>
                                 </div>
                             </div>
@@ -177,57 +179,62 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal</span>
-                        <span id="cart-subtotal">₹{{ cart.subtotal }}</span>
+                        <span>₹{{ cart.subtotal }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping</span>
+                        <span>₹{{ shipping_cost|default:"0.00" }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Tax</span>
-                        <span id="cart-tax">₹{{ cart.tax_amount }}</span>
+                        <span>₹{{ cart.tax_amount }}</span>
                     </div>
 
                     {% if coupon %}
                     <div class="d-flex justify-content-between mb-2 text-success">
-                        <span>Coupon Discount</span>
-                        <span id="coupon-discount">-₹{{ coupon_discount }}</span>
+                        <span>Coupon Discount ({{ coupon.code }})</span>
+                        <span>-₹{{ coupon_discount }}</span>
                     </div>
                     {% endif %}
 
                     <hr>
 
-                    <div class="d-flex justify-content-between mb-3 fw-bold">
+                    <div class="d-flex justify-content-between mb-4 fw-bold">
                         <span>Total</span>
-                        <span id="cart-total" class="cart-total">₹{{ final_total }}</span>
+                        <span>₹{{ final_total }}</span>
                     </div>
 
-                    <a href="{% url 'orders:checkout' %}" class="btn btn-primary w-100 mb-3" id="checkout-btn">
-                        Proceed to Checkout
-                    </a>
-
-                    <!-- Coupon Form -->
-                    <div class="mt-3">
-                        {% if coupon %}
-                        <div class="alert alert-success d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ coupon.code }}</strong> applied
-                                {% if coupon.discount_type == 'percentage' %}
-                                ({{ coupon.discount_value }}% off)
-                                {% else %}
-                                (₹{{ coupon.discount_value }} off)
-                                {% endif %}
-                            </div>
-                            <form action="{% url 'cart:remove_coupon' %}" method="POST" id="remove-coupon-form">
-                                {% csrf_token %}
-                                <button type="submit" class="btn-close"></button>
-                            </form>
-                        </div>
-                        {% else %}
-                        <form action="{% url 'cart:apply_coupon' %}" method="POST" id="coupon-form">
+                    {% if not coupon %}
+                    <div class="mb-3">
+                        <form action="{% url 'cart:apply_coupon' %}" method="POST">
                             {% csrf_token %}
                             <div class="input-group">
-                                <input type="text" name="coupon_code" class="form-control" placeholder="Coupon code" id="coupon-code">
-                                <button type="submit" class="btn btn-outline-secondary" id="apply-coupon-btn">Apply</button>
+                                <input type="text" class="form-control" placeholder="Coupon code" name="coupon_code" required>
+                                <button class="btn btn-outline-secondary" type="submit">Apply</button>
                             </div>
                         </form>
-                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ coupon.code }}</strong> applied
+                            {% if coupon.discount_type == 'percentage' %}
+                            ({{ coupon.discount_value }}% off)
+                            {% else %}
+                            (₹{{ coupon.discount_value }} off)
+                            {% endif %}
+                        </div>
+                        <form action="{% url 'cart:remove_coupon' %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-close"></button>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-grid">
+                        <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-lg">
+                            Proceed to Checkout
+                        </a>
                     </div>
                 </div>
             </div>
@@ -247,7 +254,7 @@
         </div>
     </div>
     {% else %}
-    <div class="text-center py-5" id="empty-cart">
+    <div class="text-center py-5">
         <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
         <h3>Your cart is empty</h3>
         <p class="text-muted">Add items to your cart to see them here.</p>
@@ -257,105 +264,4 @@
     </div>
     {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="/static/js/cart.js"></script>
-<script>
-    // Additional cart page specific scripts
-    document.addEventListener('DOMContentLoaded', function() {
-        // Coupon form handling with AJAX
-        const couponForm = document.getElementById('coupon-form');
-        const removeCouponForm = document.getElementById('remove-coupon-form');
-
-        if (couponForm) {
-            couponForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const couponCode = document.getElementById('coupon-code').value.trim();
-                if (!couponCode) {
-                    showNotification('Please enter a coupon code', 'warning');
-                    return;
-                }
-
-                const formData = new FormData(this);
-                const url = this.action;
-                const applyBtn = document.getElementById('apply-coupon-btn');
-                const originalBtnText = applyBtn.textContent;
-
-                // Show loading state
-                applyBtn.disabled = true;
-                applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Applying...';
-
-                fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    // Reload page to show updated coupon state
-                    // This is simpler than trying to update all the UI elements
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    applyBtn.disabled = false;
-                    applyBtn.textContent = originalBtnText;
-                    showNotification('An error occurred. Please try again.', 'error');
-                });
-            });
-        }
-
-        if (removeCouponForm) {
-            removeCouponForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-
-                const formData = new FormData(this);
-                const url = this.action;
-
-                fetch(url, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'same-origin'
-                })
-                .then(response => {
-                    // Reload page to show updated coupon state
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('An error occurred. Please try again.', 'error');
-                });
-            });
-        }
-
-        // Helper function to show notifications
-        function showNotification(message, type = 'success') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `toast-notification toast-${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            // Show notification
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-
-            // Remove after animation completes
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        }
-    });
-</script>
 {% endblock %}

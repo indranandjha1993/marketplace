@@ -48,11 +48,11 @@
 
                     <div class="d-flex align-items-center mb-3">
                         {% if product.reviews.count > 0 %}
-                            {% with avg_rating=product.reviews.all|avg_rating %}
-                                {% rating_display avg_rating product.reviews.count %}
-                            {% endwith %}
+                        {% with avg_rating=product.reviews.all|avg_rating %}
+                        {% rating_display avg_rating product.reviews.count %}
+                        {% endwith %}
                         {% else %}
-                            {% rating_display 0 0 %}
+                        {% rating_display 0 0 %}
                         {% endif %}
                         <span class="text-muted">|</span>
                         <span class="ms-3 text-muted">
@@ -60,7 +60,7 @@
                         </span>
                     </div>
 
-                    <div class="product-price mb-3">
+                    <div class="product-price mb-3" id="product-price">
                         {% if product.is_on_sale %}
                         <span class="original-price fs-5 text-decoration-line-through">₹{{ product.price }}</span>
                         <span class="fs-3 fw-bold text-primary">₹{{ product.current_price }}</span>
@@ -74,9 +74,9 @@
                     {% if product.variants.exists %}
                     <div class="mb-4 product-variants">
                         <h5>Options</h5>
-                        <form id="variant-form">
+                        <div class="variant-selection">
                             {% for attribute in product.variants.all|get_variant_attributes %}
-                            <div class="mb-3 variant-attribute-group" data-attribute-name="{{ attribute.name }}">
+                            <div class="mb-3">
                                 <label class="form-label fw-medium">{{ attribute.name }}</label>
 
                                 <!-- Size attribute -->
@@ -84,13 +84,16 @@
                                 <div class="size-options d-flex flex-wrap gap-2 mt-2">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
-                                    <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
-                                           value="{{ value.id }}" id="size-{{ value.id }}"
-                                           data-attribute="{{ attribute.name }}" autocomplete="off"
-                                           {% if forloop.first %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary size-btn" for="size-{{ value.id }}">
-                                        {{ value.value }}
-                                    </label>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input variant-option"
+                                               name="{{ attribute.name }}" value="{{ value.id }}"
+                                               id="{{ attribute.name }}-{{ value.id }}"
+                                               data-attribute="{{ attribute.name }}"
+                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ attribute.name }}-{{ value.id }}">
+                                            {{ value.value }}
+                                        </label>
+                                    </div>
                                     {% endif %}
                                     {% endfor %}
                                 </div>
@@ -100,74 +103,73 @@
                                 <div class="color-options d-flex flex-wrap gap-2 mt-2">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
-                                    <div class="color-option">
-                                        <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
-                                               value="{{ value.id }}" id="color-{{ value.id }}"
-                                               data-attribute="{{ attribute.name }}" autocomplete="off"
-                                               {% if forloop.first %}checked{% endif %}>
-                                        <label class="btn color-btn" for="color-{{ value.id }}"
-                                               style="background-color: {{ value.color_code|default:value.value|lower }};"
-                                               title="{{ value.value }}">
-                                            <span class="visually-hidden">{{ value.value }}</span>
-                                        </label>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input variant-option"
+                                               name="{{ attribute.name }}" value="{{ value.id }}"
+                                               id="{{ attribute.name }}-{{ value.id }}"
+                                               data-attribute="{{ attribute.name }}"
+                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
+                                        <label class="form-check-label color-label" for="{{ attribute.name }}-{{ value.id }}"
+                                               style="background-color: {{ value.value|lower }}; width: 30px; height: 30px; border-radius: 50%; display: inline-block;"></label>
                                     </div>
                                     {% endif %}
                                     {% endfor %}
                                 </div>
 
-                                <!-- Material and all other attributes -->
+                                <!-- Other attributes -->
                                 {% else %}
-                                <div class="material-options d-flex flex-wrap gap-2 mt-2">
+                                <div class="options d-flex flex-wrap gap-2 mt-2">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
-                                    <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
-                                           value="{{ value.id }}" id="material-{{ value.id }}"
-                                           data-attribute="{{ attribute.name }}" autocomplete="off"
-                                           {% if forloop.first %}checked{% endif %}>
-                                    <label class="btn btn-outline-secondary material-btn" for="material-{{ value.id }}">
-                                        {{ value.value }}
-                                    </label>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input variant-option"
+                                               name="{{ attribute.name }}" value="{{ value.id }}"
+                                               id="{{ attribute.name }}-{{ value.id }}"
+                                               data-attribute="{{ attribute.name }}"
+                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
+                                        <label class="form-check-label" for="{{ attribute.name }}-{{ value.id }}">
+                                            {{ value.value }}
+                                        </label>
+                                    </div>
                                     {% endif %}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
                             {% endfor %}
-                        </form>
+                        </div>
                     </div>
                     {% endif %}
 
                     <!-- Add to cart form -->
                     <div class="mb-4">
-                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="add-to-cart-form">
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" id="add-to-cart-form">
                             {% csrf_token %}
 
                             {% if product.variants.exists %}
                             <input type="hidden" name="variant_id" id="selected-variant-id">
-                            <!-- Debug info - remove in production -->
-                            <div id="variant-debug-info" class="small text-muted mb-2" style="display: none;"></div>
                             {% endif %}
 
                             <!-- Quantity selector -->
                             <div class="d-flex align-items-center mb-3">
                                 <label class="me-3 fw-medium">Quantity:</label>
-                                <div class="input-group input-group-sm" style="width: 130px;">
-                                    <button class="btn btn-outline-primary quantity-minus" type="button">−</button>
+                                <div class="quantity-control">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-minus">−</button>
                                     <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}"
-                                           class="form-control text-center quantity-input">
-                                    <button class="btn btn-outline-primary quantity-plus" type="button">+</button>
+                                           class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-plus">+</button>
                                 </div>
 
                                 <span id="availability-text" class="ms-3
-                            {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
-                            {% if product.quantity > 10 %}
-                                <i class="fas fa-check-circle me-1"></i> In Stock
-                            {% elif product.quantity > 0 %}
-                                <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
-                            {% else %}
-                                <i class="fas fa-times-circle me-1"></i> Out of Stock
-                            {% endif %}
-                        </span>
+                                    {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
+                                    {% if product.quantity > 10 %}
+                                        <i class="fas fa-check-circle me-1"></i> In Stock
+                                    {% elif product.quantity > 0 %}
+                                        <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
+                                    {% else %}
+                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
+                                    {% endif %}
+                                </span>
                             </div>
 
                             <!-- Action buttons -->
@@ -176,14 +178,14 @@
                                     <i class="fas fa-shopping-cart me-2"></i> Add to Cart
                                 </button>
 
-                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline wishlist-form">
+                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{{ request.path }}">
-                                    <button type="submit" class="btn btn-outline-danger wishlist-btn">
-                                        {% if product in user.profile.wishlist_products.all %}
-                                        <i class="fas fa-heart"></i> <!-- Solid heart for in wishlist -->
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
+                                        <i class="fas fa-heart"></i>
                                         {% else %}
-                                        <i class="far fa-heart"></i> <!-- Regular heart for not in wishlist -->
+                                        <i class="far fa-heart"></i>
                                         {% endif %}
                                     </button>
                                 </form>
@@ -370,8 +372,8 @@
 
                             {% if user.is_authenticated %}
                             <div class="mt-2">
-                                <button class="btn btn-sm btn-link p-0 answer-toggle"
-                                        data-question-id="{{ question.id }}">
+                                <button class="btn btn-sm btn-link p-0"
+                                        onclick="document.getElementById('answer-form-{{ question.id }}').classList.toggle('d-none')">
                                     Answer this question
                                 </button>
                                 <form action="{% url 'products:answer_question' question.id %}" method="POST"
@@ -425,274 +427,159 @@
         </div>
     </div>
     {% endif %}
-
 </div>
-<script>
-    const productVariants = {{ variants_json|safe }};
-</script>
 {% endblock %}
 
 {% block extra_js %}
-<script src="/static/js/cart.js"></script>
 <script>
-    // Image zoom functionality (unchanged)
-    document.addEventListener('DOMContentLoaded', function() {
-        const mainImage = document.getElementById('main-product-image');
-        const thumbnails = document.querySelectorAll('.thumbnail-image');
+    // Store variant data from Django
+    const productVariants = {{ variants_json|safe }};
 
-        if (mainImage && thumbnails.length > 0) {
-            const imageZoom = function(imgID) {
-                let img = document.getElementById(imgID);
-                let lens = document.createElement("div");
-                lens.setAttribute("class", "img-zoom-lens");
-                img.parentElement.insertBefore(lens, img);
-
-                let ratio = 2.5;
-
-                lens.addEventListener("mousemove", moveLens);
-                img.addEventListener("mousemove", moveLens);
-                lens.addEventListener("touchmove", moveLens);
-                img.addEventListener("touchmove", moveLens);
-
-                function moveLens(e) {
-                    let pos, x, y;
-                    e.preventDefault();
-                    pos = getCursorPos(e);
-                    x = pos.x - (lens.offsetWidth / 2);
-                    y = pos.y - (lens.offsetHeight / 2);
-
-                    if (x > img.width - lens.offsetWidth) {x = img.width - lens.offsetWidth;}
-                    if (x < 0) {x = 0;}
-                    if (y > img.height - lens.offsetHeight) {y = img.height - lens.offsetHeight;}
-                    if (y < 0) {y = 0;}
-
-                    lens.style.left = x + "px";
-                    lens.style.top = y + "px";
-                    img.style.transform = `scale(${ratio})`;
-                    img.style.transformOrigin = `${x + lens.offsetWidth / 2}px ${y + lens.offsetHeight / 2}px`;
-                }
-
-                function getCursorPos(e) {
-                    let a, x = 0, y = 0;
-                    e = e || window.event;
-                    a = img.getBoundingClientRect();
-                    x = e.pageX - a.left;
-                    y = e.pageY - a.top;
-                    x = x - window.pageXOffset;
-                    y = y - window.pageYOffset;
-                    return {x : x, y : y};
-                }
-            }
-
-            imageZoom("main-product-image");
-
-            thumbnails.forEach(thumb => {
-                thumb.addEventListener('click', function() {
-                    mainImage.src = this.src;
-                    thumbnails.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        }
-    });
-
-    // Toggle answer forms (unchanged)
-    document.querySelectorAll('.answer-toggle').forEach(button => {
-        button.addEventListener('click', function() {
-            const questionId = this.dataset.questionId;
-            const form = document.getElementById('answer-form-' + questionId);
-            form.classList.toggle('d-none');
-        });
-    });
-
-    // Variant handling logic with improvements
-    document.addEventListener('DOMContentLoaded', function() {
-        // Validate productVariants
-        if (typeof productVariants === 'undefined' || !Array.isArray(productVariants)) {
-            console.error('productVariants is not defined or not an array:', productVariants);
-            // Disable variant-related UI if no valid data
-            document.querySelectorAll('.variant-option').forEach(opt => opt.disabled = true);
-            document.querySelector('.add-to-cart-form button[type="submit"]').disabled = true;
+    // Function to update the selected variant based on user selections
+    function updateSelectedVariant() {
+        // Skip if no variants exist
+        if (!productVariants || productVariants.length === 0) {
             return;
         }
 
-        if (productVariants.length === 0) {
-            console.warn('No variants available for this product');
-            document.getElementById('availability-text').innerHTML = '<i class="fas fa-info-circle me-1"></i> No options available';
-            document.querySelector('.add-to-cart-form button[type="submit"]').disabled = true;
-            return;
-        }
+        // Get all variant options
+        const variantOptions = document.querySelectorAll('.variant-option:checked');
 
-        // DOM elements
-        const variantOptions = document.querySelectorAll('.variant-option');
-        const selectedVariantInput = document.getElementById('selected-variant-id');
-        const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
-        const availabilityText = document.getElementById('availability-text');
-        const quantityInput = document.querySelector('.quantity-input');
-        const priceDisplay = document.querySelector('.product-price');
-
-        if (!variantOptions.length || !selectedVariantInput || !addToCartBtn || !availabilityText || !quantityInput || !priceDisplay) {
-            console.error('Required DOM elements are missing');
-            return;
-        }
-
-        // Get unique attribute names
-        const attributeNames = Array.from(variantOptions)
-            .map(option => option.dataset.attribute)
-            .filter((item, pos, self) => self.indexOf(item) === pos);
-
-        // State management
+        // Create a map of selected attribute values
         const selectedAttributes = {};
-        let availableCombinations = {};
+        variantOptions.forEach(option => {
+            const attributeName = option.getAttribute('data-attribute');
+            selectedAttributes[attributeName] = option.value;
+        });
 
-        // Set default selections
-        function setDefaultSelections() {
-            attributeNames.forEach(attrName => {
-                const checkedOption = document.querySelector(`.variant-option[data-attribute="${attrName}"]:checked`);
-                if (checkedOption) {
-                    selectedAttributes[attrName] = checkedOption.value;
-                }
+        // Find the matching variant
+        const matchingVariant = findMatchingVariant(selectedAttributes);
+
+        // Update the form with the selected variant ID
+        const variantIdInput = document.getElementById('selected-variant-id');
+        if (variantIdInput && matchingVariant) {
+            variantIdInput.value = matchingVariant.id;
+
+            // Update availability text
+            updateAvailabilityText(matchingVariant);
+
+            // Update price display
+            updatePriceDisplay(matchingVariant);
+
+            // Update quantity input max
+            updateQuantityInput(matchingVariant);
+        }
+    }
+
+    // Find the variant that matches the selected attributes
+    function findMatchingVariant(selectedAttributes) {
+        return productVariants.find(variant => {
+            return Object.entries(selectedAttributes).every(([attrName, attrValueId]) => {
+                return variant.attributes[attrName] == attrValueId;
             });
-        }
+        });
+    }
 
-        // Initialize available combinations
-        function initializeAvailableCombinations() {
-            attributeNames.forEach(attrName => {
-                availableCombinations[attrName] = {};
-                productVariants.forEach(variant => {
-                    Object.entries(variant.attributes).forEach(([name, value]) => {
-                        if (name === attrName) {
-                            availableCombinations[attrName][value] = availableCombinations[attrName][value] || [];
-                            availableCombinations[attrName][value].push(variant);
-                        }
-                    });
-                });
-            });
-        }
+    // Update the availability text based on the selected variant
+    function updateAvailabilityText(variant) {
+        const availabilityText = document.getElementById('availability-text');
+        if (!availabilityText) return;
 
-        // Find default variant (prioritize in-stock)
-        function findDefaultVariant() {
-            const inStockVariant = productVariants.find(v => v.is_in_stock && v.quantity > 0);
-            return inStockVariant || productVariants[0];
-        }
-
-        // Set UI to a specific variant
-        function setUIToVariant(variant) {
-            if (!variant) return;
-            Object.entries(variant.attributes).forEach(([attrName, attrValue]) => {
-                const option = document.querySelector(`.variant-option[data-attribute="${attrName}"][value="${attrValue}"]`);
-                if (option) {
-                    option.checked = true;
-                    selectedAttributes[attrName] = attrValue;
-                }
-            });
-        }
-
-        // Update available options
-        function updateAvailableOptions() {
-            const attrName = attributeNames[0]; // Since there’s only one attribute: "Material"
-            const options = Array.from(document.querySelectorAll(`.variant-option[data-attribute="${attrName}"]`));
-            options.forEach(option => {
-                const value = option.value; // e.g., "Cotton", "Leather", "Polyester"
-                const variant = productVariants.find(v => v.attributes[attrName] === value);
-                const isAvailable = variant && variant.is_in_stock; // Check if variant exists and is in stock
-                const label = document.querySelector(`label[for="${option.id}"]`);
-                if (label) {
-                    label.classList.toggle('variant-unavailable', !isAvailable);
-                    option.disabled = !isAvailable; // Disable the option if unavailable
-                }
-            });
-        }
-
-        // Find matching variant
-        function findMatchingVariant() {
-            if (Object.keys(selectedAttributes).length < attributeNames.length) {
-                return null;
-            }
-            return productVariants.find(variant =>
-                Object.entries(selectedAttributes).every(([attrName, attrValue]) =>
-                    variant.attributes[attrName] === attrValue
-                )
-            );
-        }
-
-        // Update UI based on selected variant
-        function updateVariantUI() {
-            const variant = findMatchingVariant();
-            if (variant) {
-                // Update price
-                const formattedPrice = variant.price.toFixed(2);
-                priceDisplay.style.transition = 'opacity 0.3s';
-                priceDisplay.style.opacity = '0';
-                setTimeout(() => {
-                    const originalPrice = priceDisplay.querySelector('.original-price');
-                    priceDisplay.innerHTML = originalPrice
-                        ? `<span class="original-price fs-5 text-decoration-line-through">₹${(variant.price * 1.2).toFixed(2)}</span>
-                           <span class="fs-3 fw-bold text-primary">₹${formattedPrice}</span>
-                           <span class="badge bg-danger ms-2">${variant.discount_percentage || 20}% OFF</span>`
-                        : `<span class="fs-3 fw-bold text-primary">₹${formattedPrice}</span>`;
-                    priceDisplay.style.opacity = '1';
-                }, 300);
-
-                // Update variant ID
-                selectedVariantInput.value = variant.id;
-
-                // Update quantity
-                quantityInput.max = variant.quantity;
-                if (parseInt(quantityInput.value) > variant.quantity) {
-                    quantityInput.value = variant.quantity;
-                }
-
-                // Update availability
-                availabilityText.style.transition = 'opacity 0.3s';
-                availabilityText.style.opacity = '0';
-                setTimeout(() => {
-                    if (variant.is_in_stock) {
-                        availabilityText.innerHTML = variant.quantity > 10
-                            ? '<i class="fas fa-check-circle me-1"></i> In Stock'
-                            : `<i class="fas fa-exclamation-circle me-1"></i> Only ${variant.quantity} left!`;
-                        availabilityText.className = `ms-3 ${variant.quantity > 10 ? 'text-success' : 'text-warning'}`;
-                    } else {
-                        availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
-                        availabilityText.className = 'ms-3 text-danger';
-                    }
-                    availabilityText.style.opacity = '1';
-                }, 300);
-
-                // Update button state
-                addToCartBtn.disabled = !variant.is_in_stock;
+        if (variant.is_in_stock) {
+            if (variant.quantity > 10) {
+                availabilityText.innerHTML = '<i class="fas fa-check-circle me-1"></i> In Stock';
+                availabilityText.className = 'ms-3 text-success';
             } else {
-                addToCartBtn.disabled = true;
-                selectedVariantInput.value = '';
+                availabilityText.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> Only ${variant.quantity} left!`;
+                availabilityText.className = 'ms-3 text-warning';
             }
+        } else {
+            availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
+            availabilityText.className = 'ms-3 text-danger';
         }
 
-        // Handle option selection
-        function handleOptionSelection() {
-            variantOptions.forEach(option => {
-                option.addEventListener('change', function() {
-                    if (this.checked) {
-                        selectedAttributes[this.dataset.attribute] = this.value;
-                        updateAvailableOptions();
-                        updateVariantUI();
-                    }
+        // Update add to cart button state
+        const addToCartBtn = document.querySelector('#add-to-cart-form button[type="submit"]');
+        if (addToCartBtn) {
+            addToCartBtn.disabled = !variant.is_in_stock;
+        }
+    }
+
+    // Update the price display based on the selected variant
+    function updatePriceDisplay(variant) {
+        const priceDisplay = document.getElementById('product-price');
+        if (!priceDisplay) return;
+
+        let priceHTML = '';
+
+        if (variant.sale_price) {
+            priceHTML = `
+                <span class="original-price fs-5 text-decoration-line-through">₹${variant.price.toFixed(2)}</span>
+                <span class="fs-3 fw-bold text-primary">₹${variant.sale_price.toFixed(2)}</span>
+                <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
+            `;
+        } else {
+            priceHTML = `<span class="fs-3 fw-bold text-primary">₹${variant.price.toFixed(2)}</span>`;
+        }
+
+        priceDisplay.innerHTML = priceHTML;
+    }
+
+    // Update the quantity input maximum based on the selected variant
+    function updateQuantityInput(variant) {
+        const quantityInput = document.querySelector('.quantity-input');
+        if (!quantityInput) return;
+
+        quantityInput.max = variant.quantity;
+
+        // Ensure quantity doesn't exceed available stock
+        if (parseInt(quantityInput.value) > variant.quantity) {
+            quantityInput.value = Math.max(1, variant.quantity);
+        }
+    }
+
+    // Handle quantity buttons
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.querySelector('.quantity-input');
+        const minusBtn = document.getElementById('quantity-minus');
+        const plusBtn = document.getElementById('quantity-plus');
+
+        if (quantityInput && minusBtn && plusBtn) {
+            minusBtn.addEventListener('click', function() {
+                const currentVal = parseInt(quantityInput.value);
+                if (currentVal > 1) {
+                    quantityInput.value = currentVal - 1;
+                }
+            });
+
+            plusBtn.addEventListener('click', function() {
+                const currentVal = parseInt(quantityInput.value);
+                const max = parseInt(quantityInput.max) || 99;
+                if (currentVal < max) {
+                    quantityInput.value = currentVal + 1;
+                }
+            });
+        }
+
+        // Image gallery functionality
+        const thumbnails = document.querySelectorAll('.thumbnail-image');
+        const mainImage = document.getElementById('main-product-image');
+
+        if (thumbnails.length > 0 && mainImage) {
+            thumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('click', function() {
+                    // Remove active class from all thumbnails
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked thumbnail
+                    this.classList.add('active');
+                    // Update main image source
+                    mainImage.src = this.src;
                 });
             });
         }
 
-        // Initialize
-        setDefaultSelections();
-        initializeAvailableCombinations();
-        handleOptionSelection();
-        updateAvailableOptions();
-
-        // Set default variant if incomplete selection
-        if (Object.keys(selectedAttributes).length < attributeNames.length) {
-            const defaultVariant = findDefaultVariant();
-            setUIToVariant(defaultVariant);
-        }
-
-        updateVariantUI();
+        // Initialize variant selection
+        updateSelectedVariant();
     });
 </script>
 {% endblock %}
