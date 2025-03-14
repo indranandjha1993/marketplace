@@ -70,55 +70,85 @@
                         {% endif %}
                     </div>
 
+                    <!-- Product variants section -->
                     {% if product.variants.exists %}
-                    <div class="mb-4">
+                    <div class="mb-4 product-variants">
                         <h5>Options</h5>
                         <form id="variant-form">
                             {% for attribute in product.variants.all|get_variant_attributes %}
-                            <div class="mb-3">
+                            <div class="mb-3 variant-attribute-group" data-attribute-name="{{ attribute.name }}">
                                 <label class="form-label fw-medium">{{ attribute.name }}</label>
-                                <div class="variant-options">
+
+                                <!-- Size attribute -->
+                                {% if attribute.name|lower == "size" %}
+                                <div class="size-options d-flex flex-wrap gap-2 mt-2">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
-                                    <div class="form-check">
-                                        <input class="form-check-input variant-option"
-                                               type="radio"
-                                               name="attribute-{{ attribute.id }}"
-                                               value="{{ value.id }}"
-                                               id="variant-{{ value.id }}"
-                                               data-attribute-id="{{ attribute.id }}"
-                                               {% if default_attribute_values and default_attribute_values|get_item:attribute.id == value.id %}checked{% endif %}>
-                                        <label class="form-check-label variant-label" for="variant-{{ value.id }}">
-                                            {{ value.value }}
+                                    <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
+                                           value="{{ value.id }}" id="size-{{ value.id }}"
+                                           data-attribute="{{ attribute.name }}" autocomplete="off"
+                                           {% if forloop.first %}checked{% endif %}>
+                                    <label class="btn btn-outline-secondary size-btn" for="size-{{ value.id }}">
+                                        {{ value.value }}
+                                    </label>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Color attribute -->
+                                {% elif attribute.name|lower == "color" %}
+                                <div class="color-options d-flex flex-wrap gap-2 mt-2">
+                                    {% for value in attribute.values.all %}
+                                    {% if value|has_variant_for_product:product %}
+                                    <div class="color-option">
+                                        <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
+                                               value="{{ value.id }}" id="color-{{ value.id }}"
+                                               data-attribute="{{ attribute.name }}" autocomplete="off"
+                                               {% if forloop.first %}checked{% endif %}>
+                                        <label class="btn color-btn" for="color-{{ value.id }}"
+                                               style="background-color: {{ value.color_code|default:value.value|lower }};"
+                                               title="{{ value.value }}">
+                                            <span class="visually-hidden">{{ value.value }}</span>
                                         </label>
                                     </div>
                                     {% endif %}
                                     {% endfor %}
                                 </div>
+
+                                <!-- Material and all other attributes -->
+                                {% else %}
+                                <div class="material-options d-flex flex-wrap gap-2 mt-2">
+                                    {% for value in attribute.values.all %}
+                                    {% if value|has_variant_for_product:product %}
+                                    <input type="radio" class="btn-check variant-option" name="{{ attribute.name }}"
+                                           value="{{ value.id }}" id="material-{{ value.id }}"
+                                           data-attribute="{{ attribute.name }}" autocomplete="off"
+                                           {% if forloop.first %}checked{% endif %}>
+                                    <label class="btn btn-outline-secondary material-btn" for="material-{{ value.id }}">
+                                        {{ value.value }}
+                                    </label>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
                             </div>
                             {% endfor %}
                         </form>
                     </div>
-
-                    {% if default_variant %}
-                    <input type="hidden" name="variant_id" id="selected-variant-id" value="{{ default_variant.id }}">
-                    {% else %}
-                    <input type="hidden" name="variant_id" id="selected-variant-id" value="">
                     {% endif %}
 
-                    <div id="variant-alert" class="alert alert-warning d-none">
-                        Please select all options to continue
-                    </div>
-                    {% endif %}
-
+                    <!-- Add to cart form -->
                     <div class="mb-4">
-                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="add-to-cart-form">
                             {% csrf_token %}
 
                             {% if product.variants.exists %}
                             <input type="hidden" name="variant_id" id="selected-variant-id">
+                            <!-- Debug info - remove in production -->
+                            <div id="variant-debug-info" class="small text-muted mb-2" style="display: none;"></div>
                             {% endif %}
 
+                            <!-- Quantity selector -->
                             <div class="d-flex align-items-center mb-3">
                                 <label class="me-3 fw-medium">Quantity:</label>
                                 <div class="input-group input-group-sm" style="width: 130px;">
@@ -129,23 +159,24 @@
                                 </div>
 
                                 <span id="availability-text" class="ms-3
-                                    {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
-                                    {% if product.quantity > 10 %}
-                                        <i class="fas fa-check-circle me-1"></i> In Stock
-                                    {% elif product.quantity > 0 %}
-                                        <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
-                                    {% else %}
-                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
-                                    {% endif %}
-                                </span>
+                            {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
+                            {% if product.quantity > 10 %}
+                                <i class="fas fa-check-circle me-1"></i> In Stock
+                            {% elif product.quantity > 0 %}
+                                <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
+                            {% else %}
+                                <i class="fas fa-times-circle me-1"></i> Out of Stock
+                            {% endif %}
+                        </span>
                             </div>
 
+                            <!-- Action buttons -->
                             <div class="d-flex">
                                 <button type="submit" class="btn btn-primary me-2" {% if not product.is_in_stock %}disabled{% endif %}>
                                     <i class="fas fa-shopping-cart me-2"></i> Add to Cart
                                 </button>
 
-                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline">
+                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline wishlist-form">
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{{ request.path }}">
                                     <button type="submit" class="btn btn-outline-danger wishlist-btn">
@@ -396,27 +427,26 @@
     {% endif %}
 
 </div>
+<script>
+    const productVariants = {{ variants_json|safe }};
+</script>
 {% endblock %}
 
 {% block extra_js %}
-<script id="variants-data" type="application/json">
-    {{ variants_json|safe }}
-</script>
+<script src="/static/js/cart.js"></script>
 <script>
-    // Image zoom functionality
+    // Image zoom functionality (unchanged)
     document.addEventListener('DOMContentLoaded', function() {
         const mainImage = document.getElementById('main-product-image');
         const thumbnails = document.querySelectorAll('.thumbnail-image');
 
         if (mainImage && thumbnails.length > 0) {
-            // Set up image zoom
             const imageZoom = function(imgID) {
                 let img = document.getElementById(imgID);
                 let lens = document.createElement("div");
                 lens.setAttribute("class", "img-zoom-lens");
                 img.parentElement.insertBefore(lens, img);
 
-                // Calculate ratio between result DIV and lens
                 let ratio = 2.5;
 
                 lens.addEventListener("mousemove", moveLens);
@@ -431,17 +461,13 @@
                     x = pos.x - (lens.offsetWidth / 2);
                     y = pos.y - (lens.offsetHeight / 2);
 
-                    // Prevent lens from going outside image
                     if (x > img.width - lens.offsetWidth) {x = img.width - lens.offsetWidth;}
                     if (x < 0) {x = 0;}
                     if (y > img.height - lens.offsetHeight) {y = img.height - lens.offsetHeight;}
                     if (y < 0) {y = 0;}
 
-                    // Set position of lens
                     lens.style.left = x + "px";
                     lens.style.top = y + "px";
-
-                    // Display what the lens "sees"
                     img.style.transform = `scale(${ratio})`;
                     img.style.transformOrigin = `${x + lens.offsetWidth / 2}px ${y + lens.offsetHeight / 2}px`;
                 }
@@ -458,16 +484,11 @@
                 }
             }
 
-            // Initialize zoom
             imageZoom("main-product-image");
 
-            // Handle thumbnail clicks
             thumbnails.forEach(thumb => {
                 thumb.addEventListener('click', function() {
-                    // Update main image
                     mainImage.src = this.src;
-
-                    // Update active thumbnail
                     thumbnails.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                 });
@@ -475,7 +496,7 @@
         }
     });
 
-    // Toggle answer forms
+    // Toggle answer forms (unchanged)
     document.querySelectorAll('.answer-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const questionId = this.dataset.questionId;
@@ -484,172 +505,194 @@
         });
     });
 
-    // Variant selection handling
+    // Variant handling logic with improvements
     document.addEventListener('DOMContentLoaded', function() {
+        // Validate productVariants
+        if (typeof productVariants === 'undefined' || !Array.isArray(productVariants)) {
+            console.error('productVariants is not defined or not an array:', productVariants);
+            // Disable variant-related UI if no valid data
+            document.querySelectorAll('.variant-option').forEach(opt => opt.disabled = true);
+            document.querySelector('.add-to-cart-form button[type="submit"]').disabled = true;
+            return;
+        }
+
+        if (productVariants.length === 0) {
+            console.warn('No variants available for this product');
+            document.getElementById('availability-text').innerHTML = '<i class="fas fa-info-circle me-1"></i> No options available';
+            document.querySelector('.add-to-cart-form button[type="submit"]').disabled = true;
+            return;
+        }
+
+        // DOM elements
         const variantOptions = document.querySelectorAll('.variant-option');
-        const selectedVariantIdInput = document.getElementById('selected-variant-id');
-        const addToCartBtn = document.querySelector('button[type="submit"]');
-        const variantAlert = document.getElementById('variant-alert');
+        const selectedVariantInput = document.getElementById('selected-variant-id');
+        const addToCartBtn = document.querySelector('.add-to-cart-form button[type="submit"]');
+        const availabilityText = document.getElementById('availability-text');
+        const quantityInput = document.querySelector('.quantity-input');
+        const priceDisplay = document.querySelector('.product-price');
 
-        if (variantOptions.length > 0 && selectedVariantIdInput) {
-            // Parse the variants data
-            const variantsData = JSON.parse(document.getElementById('variants-data').textContent || '[]');
-            console.log("variantsData", variantsData)
-            // Store selected attribute values
-            const selectedAttributes = {};
+        if (!variantOptions.length || !selectedVariantInput || !addToCartBtn || !availabilityText || !quantityInput || !priceDisplay) {
+            console.error('Required DOM elements are missing');
+            return;
+        }
 
-            // Initialize with any pre-selected attributes (from checked radio buttons)
-            variantOptions.forEach(option => {
-                if (option.checked) {
-                    const attributeId = option.dataset.attributeId;
-                    selectedAttributes[attributeId] = option.value;
+        // Get unique attribute names
+        const attributeNames = Array.from(variantOptions)
+            .map(option => option.dataset.attribute)
+            .filter((item, pos, self) => self.indexOf(item) === pos);
+
+        // State management
+        const selectedAttributes = {};
+        let availableCombinations = {};
+
+        // Set default selections
+        function setDefaultSelections() {
+            attributeNames.forEach(attrName => {
+                const checkedOption = document.querySelector(`.variant-option[data-attribute="${attrName}"]:checked`);
+                if (checkedOption) {
+                    selectedAttributes[attrName] = checkedOption.value;
                 }
             });
+        }
 
-            // Filter available options based on current selection
-            function updateAvailableOptions() {
-                // Find all possible variants for current selection
-                const possibleVariants = variantsData.filter(variant => {
-                    for (const [attrId, valueId] of Object.entries(selectedAttributes)) {
-                        if (variant.attributes[attrId] != valueId) {
-                            return false;
+        // Initialize available combinations
+        function initializeAvailableCombinations() {
+            attributeNames.forEach(attrName => {
+                availableCombinations[attrName] = {};
+                productVariants.forEach(variant => {
+                    Object.entries(variant.attributes).forEach(([name, value]) => {
+                        if (name === attrName) {
+                            availableCombinations[attrName][value] = availableCombinations[attrName][value] || [];
+                            availableCombinations[attrName][value].push(variant);
                         }
-                    }
-                    return true;
-                });
-
-                // For each attribute that's not selected yet, show only valid options
-                variantOptions.forEach(option => {
-                    const attributeId = option.dataset.attributeId;
-                    const valueId = option.value;
-
-                    // Skip if this attribute is already selected
-                    if (selectedAttributes[attributeId] === valueId) {
-                        return;
-                    }
-
-                    // Check if there's any variant with this attribute value combination
-                    const isPossible = possibleVariants.some(variant =>
-                        variant.attributes[attributeId] == valueId
-                    );
-
-                    // Enable/disable the option based on availability
-                    const label = option.nextElementSibling;
-                    if (isPossible) {
-                        option.disabled = false;
-                        label.classList.remove('disabled');
-                    } else {
-                        option.disabled = true;
-                        label.classList.add('disabled');
-                    }
-                });
-            }
-
-            // Find matching variant based on selected attributes
-            function findMatchingVariant() {
-                // Get all selected attributes
-                const attributeCount = new Set(variantOptions.map(opt => opt.dataset.attributeId)).size;
-
-                // Only look for matches when all attributes are selected
-                if (Object.keys(selectedAttributes).length !== attributeCount) {
-                    return null;
-                }
-
-                // Find the variant that matches all selected attributes
-                return variantsData.find(variant => {
-                    for (const [attrId, valueId] of Object.entries(selectedAttributes)) {
-                        if (variant.attributes[attrId] != valueId) {
-                            return false;
-                        }
-                    }
-                    return true;
-                });
-            }
-
-            // Update UI based on selected variant
-            function updateVariantUI() {
-                const variant = findMatchingVariant();
-
-                if (variant) {
-                    // Hide any alert
-                    if (variantAlert) {
-                        variantAlert.classList.add('d-none');
-                    }
-
-                    // Update selected variant ID
-                    selectedVariantIdInput.value = variant.id;
-
-                    // Update price display
-                    const priceDisplay = document.querySelector('.product-price');
-                    if (priceDisplay) {
-                        if (variant.sale_price) {
-                            priceDisplay.innerHTML = `
-                                <span class="original-price fs-5 text-decoration-line-through">₹${variant.price}</span>
-                                <span class="fs-3 fw-bold text-primary">₹${variant.sale_price}</span>
-                                <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
-                            `;
-                        } else {
-                            priceDisplay.innerHTML = `
-                                <span class="fs-3 fw-bold text-primary">₹${variant.price}</span>
-                            `;
-                        }
-                    }
-
-                    // Update availability
-                    const availabilityText = document.getElementById('availability-text');
-                    if (availabilityText) {
-                        if (variant.is_in_stock) {
-                            if (variant.quantity > 10) {
-                                availabilityText.innerHTML = '<i class="fas fa-check-circle me-1"></i> In Stock';
-                                availabilityText.className = 'ms-3 text-success';
-                            } else {
-                                availabilityText.innerHTML = `<i class="fas fa-exclamation-circle me-1"></i> Only ${variant.quantity} left!`;
-                                availabilityText.className = 'ms-3 text-warning';
-                            }
-                            addToCartBtn.disabled = false;
-                        } else {
-                            availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
-                            availabilityText.className = 'ms-3 text-danger';
-                            addToCartBtn.disabled = true;
-                        }
-                    }
-
-                    // Update SKU if displayed
-                    const skuElement = document.getElementById('product-sku');
-                    if (skuElement && variant.sku) {
-                        skuElement.textContent = variant.sku;
-                    }
-                } else {
-                    // Show warning if all attributes are selected but no matching variant
-                    const attributeCount = new Set(variantOptions.map(opt => opt.dataset.attributeId)).size;
-                    if (Object.keys(selectedAttributes).length === attributeCount) {
-                        if (variantAlert) {
-                            variantAlert.textContent = "This combination is not available";
-                            variantAlert.classList.remove('d-none');
-                        }
-                        selectedVariantIdInput.value = '';
-                        addToCartBtn.disabled = true;
-                    }
-                }
-            }
-
-            // Initialize variant UI with default selected variant
-            updateVariantUI();
-
-            // Set up event listeners for variant selection
-            variantOptions.forEach(option => {
-                option.addEventListener('change', function() {
-                    const attributeId = this.dataset.attributeId;
-                    selectedAttributes[attributeId] = this.value;
-
-                    // Update available options for other attributes
-                    updateAvailableOptions();
-
-                    // Update UI based on new selection
-                    updateVariantUI();
+                    });
                 });
             });
         }
+
+        // Find default variant (prioritize in-stock)
+        function findDefaultVariant() {
+            const inStockVariant = productVariants.find(v => v.is_in_stock && v.quantity > 0);
+            return inStockVariant || productVariants[0];
+        }
+
+        // Set UI to a specific variant
+        function setUIToVariant(variant) {
+            if (!variant) return;
+            Object.entries(variant.attributes).forEach(([attrName, attrValue]) => {
+                const option = document.querySelector(`.variant-option[data-attribute="${attrName}"][value="${attrValue}"]`);
+                if (option) {
+                    option.checked = true;
+                    selectedAttributes[attrName] = attrValue;
+                }
+            });
+        }
+
+        // Update available options
+        function updateAvailableOptions() {
+            const attrName = attributeNames[0]; // Since there’s only one attribute: "Material"
+            const options = Array.from(document.querySelectorAll(`.variant-option[data-attribute="${attrName}"]`));
+            options.forEach(option => {
+                const value = option.value; // e.g., "Cotton", "Leather", "Polyester"
+                const variant = productVariants.find(v => v.attributes[attrName] === value);
+                const isAvailable = variant && variant.is_in_stock; // Check if variant exists and is in stock
+                const label = document.querySelector(`label[for="${option.id}"]`);
+                if (label) {
+                    label.classList.toggle('variant-unavailable', !isAvailable);
+                    option.disabled = !isAvailable; // Disable the option if unavailable
+                }
+            });
+        }
+
+        // Find matching variant
+        function findMatchingVariant() {
+            if (Object.keys(selectedAttributes).length < attributeNames.length) {
+                return null;
+            }
+            return productVariants.find(variant =>
+                Object.entries(selectedAttributes).every(([attrName, attrValue]) =>
+                    variant.attributes[attrName] === attrValue
+                )
+            );
+        }
+
+        // Update UI based on selected variant
+        function updateVariantUI() {
+            const variant = findMatchingVariant();
+            if (variant) {
+                // Update price
+                const formattedPrice = variant.price.toFixed(2);
+                priceDisplay.style.transition = 'opacity 0.3s';
+                priceDisplay.style.opacity = '0';
+                setTimeout(() => {
+                    const originalPrice = priceDisplay.querySelector('.original-price');
+                    priceDisplay.innerHTML = originalPrice
+                        ? `<span class="original-price fs-5 text-decoration-line-through">₹${(variant.price * 1.2).toFixed(2)}</span>
+                           <span class="fs-3 fw-bold text-primary">₹${formattedPrice}</span>
+                           <span class="badge bg-danger ms-2">${variant.discount_percentage || 20}% OFF</span>`
+                        : `<span class="fs-3 fw-bold text-primary">₹${formattedPrice}</span>`;
+                    priceDisplay.style.opacity = '1';
+                }, 300);
+
+                // Update variant ID
+                selectedVariantInput.value = variant.id;
+
+                // Update quantity
+                quantityInput.max = variant.quantity;
+                if (parseInt(quantityInput.value) > variant.quantity) {
+                    quantityInput.value = variant.quantity;
+                }
+
+                // Update availability
+                availabilityText.style.transition = 'opacity 0.3s';
+                availabilityText.style.opacity = '0';
+                setTimeout(() => {
+                    if (variant.is_in_stock) {
+                        availabilityText.innerHTML = variant.quantity > 10
+                            ? '<i class="fas fa-check-circle me-1"></i> In Stock'
+                            : `<i class="fas fa-exclamation-circle me-1"></i> Only ${variant.quantity} left!`;
+                        availabilityText.className = `ms-3 ${variant.quantity > 10 ? 'text-success' : 'text-warning'}`;
+                    } else {
+                        availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
+                        availabilityText.className = 'ms-3 text-danger';
+                    }
+                    availabilityText.style.opacity = '1';
+                }, 300);
+
+                // Update button state
+                addToCartBtn.disabled = !variant.is_in_stock;
+            } else {
+                addToCartBtn.disabled = true;
+                selectedVariantInput.value = '';
+            }
+        }
+
+        // Handle option selection
+        function handleOptionSelection() {
+            variantOptions.forEach(option => {
+                option.addEventListener('change', function() {
+                    if (this.checked) {
+                        selectedAttributes[this.dataset.attribute] = this.value;
+                        updateAvailableOptions();
+                        updateVariantUI();
+                    }
+                });
+            });
+        }
+
+        // Initialize
+        setDefaultSelections();
+        initializeAvailableCombinations();
+        handleOptionSelection();
+        updateAvailableOptions();
+
+        // Set default variant if incomplete selection
+        if (Object.keys(selectedAttributes).length < attributeNames.length) {
+            const defaultVariant = findDefaultVariant();
+            setUIToVariant(defaultVariant);
+        }
+
+        updateVariantUI();
     });
 </script>
 {% endblock %}

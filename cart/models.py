@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from products.models import Product, ProductVariant
 
 User = get_user_model()
@@ -53,35 +54,107 @@ class Cart(models.Model):
         """Remove all items from the cart."""
         self.items.all().delete()
 
+    @transaction.atomic
     def migrate_from_session(self, user, session_id):
         """Migrate cart from session to user when logging in."""
         try:
-            session_cart = Cart.objects.get(session_id=session_id, user__isnull=True)
+            session_cart = Cart.objects.select_for_update().get(session_id=session_id, user__isnull=True)
+
             try:
-                user_cart = Cart.objects.get(user=user)
+                # Try to get existing user cart
+                user_cart = Cart.objects.select_for_update().get(user=user)
+
                 # Migrate items from session cart to user cart
-                for item in session_cart.items.all():
+                for item in session_cart.items.select_for_update().all():
                     try:
-                        user_item = user_cart.items.get(
+                        # Check if item exists in user cart
+                        user_item = user_cart.items.select_for_update().get(
                             product=item.product,
                             variant=item.variant
                         )
+
+                        # Calculate available quantity
+                        available_qty = item.variant.quantity if item.variant else item.product.quantity
+                        new_quantity = min(user_item.quantity + item.quantity, available_qty)
+
                         # Update quantity if item already exists
-                        user_item.quantity += item.quantity
+                        user_item.quantity = new_quantity
                         user_item.save()
                     except CartItem.DoesNotExist:
                         # Move item to user's cart
                         item.cart = user_cart
                         item.save()
+
                 # Delete session cart
                 session_cart.delete()
+                return user_cart
+
             except Cart.DoesNotExist:
                 # Just assign the session cart to the user
                 session_cart.user = user
                 session_cart.session_id = None
                 session_cart.save()
+                return session_cart
+
         except Cart.DoesNotExist:
-            pass
+            # No session cart exists, return/create user cart
+            user_cart, _ = Cart.objects.get_or_create(user=user)
+            return user_cart
+
+    def add_item(self, product, quantity=1, variant=None):
+        """
+        Add an item to the cart with proper validation and error handling.
+
+        Args:
+            product: The Product instance to add
+            quantity: The quantity to add
+            variant: Optional ProductVariant instance
+
+        Returns:
+            tuple: (success, message, cart_item)
+        """
+        if product.status != 'active':
+            return False, "This product is not available", None
+
+        if not product.is_in_stock:
+            return False, "This product is out of stock", None
+
+        if variant and not variant.is_in_stock:
+            return False, "This variant is out of stock", None
+
+        if product.variants.exists() and not variant:
+            return False, "Please select a product variant", None
+
+        try:
+            # Check if item exists in cart
+            cart_item = self.items.get(product=product, variant=variant)
+
+            # Check available quantity
+            available_qty = variant.quantity if variant else product.quantity
+
+            if cart_item.quantity + quantity > available_qty:
+                cart_item.quantity = available_qty
+                cart_item.save()
+                return True, f"Only {available_qty} items available. Cart updated to maximum quantity.", cart_item
+
+            # Update quantity
+            cart_item.quantity += quantity
+            cart_item.save()
+            return True, "Cart updated successfully", cart_item
+
+        except CartItem.DoesNotExist:
+            # Create new cart item
+            available_qty = variant.quantity if variant else product.quantity
+            add_quantity = min(quantity, available_qty)
+
+            cart_item = CartItem.objects.create(
+                cart=self,
+                product=product,
+                variant=variant,
+                quantity=add_quantity
+            )
+
+            return True, "Product added to cart", cart_item
 
 
 class CartItem(models.Model):

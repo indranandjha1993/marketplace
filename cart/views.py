@@ -1,7 +1,9 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
+from django.db import transaction
 
 from orders.models import Coupon
 from products.models import Product, ProductVariant
@@ -20,7 +22,7 @@ def get_or_create_cart(request):
             request.session.create()
             session_id = request.session.session_key
 
-        cart, created = Cart.objects.get_or_create(session_id=session_id)
+        cart, _ = Cart.objects.get_or_create(session_id=session_id, user__isnull=True)
 
     return cart
 
@@ -42,6 +44,7 @@ def cart_detail(request):
     coupon_discount = 0
 
     if coupon_id:
+        from orders.models import Coupon
         try:
             coupon = Coupon.objects.get(id=coupon_id)
             if coupon.is_valid:
@@ -51,11 +54,12 @@ def cart_detail(request):
                 del request.session['coupon_id']
                 messages.warning(request, 'The coupon has expired or is no longer valid')
         except Coupon.DoesNotExist:
-            del request.session['coupon_id']
+            if 'coupon_id' in request.session:
+                del request.session['coupon_id']
 
     context = {
         'cart': cart,
-        'cart_items': cart.items.select_related('product', 'variant').all(),
+        'cart_items': cart.items.select_related('product', 'variant', 'product__vendor').all(),
         'saved_items': saved_items,
         'coupon': coupon,
         'coupon_discount': coupon_discount,
@@ -69,79 +73,204 @@ def cart_detail(request):
 def add_to_cart(request, product_id):
     """
     View for adding a product to the cart with proper variant handling.
+    Supports both regular form submission and AJAX requests.
     """
-    product = get_object_or_404(Product, id=product_id)
-    print(request.POST)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
-    # Check if product is active
-    if product.status != 'active':
-        messages.error(request, 'This product is not available')
-        return redirect('products:product_detail', product_slug=product.slug)
-
-    # Check if product is in stock
-    if not product.is_in_stock:
-        messages.error(request, 'This product is out of stock')
-        return redirect('products:product_detail', product_slug=product.slug)
-
-    cart = get_or_create_cart(request)
-    quantity = int(request.POST.get('quantity', 1))
-
-    # Get variant if specified
-    variant_id = request.POST.get('variant_id')
-    variant = None
-
-    if variant_id:
-        try:
-            variant = ProductVariant.objects.get(id=variant_id, product=product)
-            # Check if variant is in stock
-            if not variant.is_in_stock:
-                messages.error(request, 'This variant is out of stock')
-                return redirect('products:product_detail', product_slug=product.slug)
-        except ProductVariant.DoesNotExist:
-            messages.error(request, 'Selected variant not found')
-            return redirect('products:product_detail', product_slug=product.slug)
-    elif product.variants.exists():
-        # If product has variants but none selected, show error message
-        messages.error(request, 'Please select all product options')
-        return redirect('products:product_detail', product_slug=product.slug)
-
-    # Check if item already exists in cart
     try:
-        cart_item = CartItem.objects.get(cart=cart, product=product, variant=variant)
-        # Check available quantity
-        available_qty = variant.quantity if variant else product.quantity
-        if cart_item.quantity + quantity > available_qty:
-            cart_item.quantity = available_qty
-            messages.warning(request, f'Only {available_qty} items available. Cart updated to maximum quantity.')
-        else:
-            cart_item.quantity += quantity
-            messages.success(request, 'Cart updated successfully')
-        cart_item.save()
-    except CartItem.DoesNotExist:
-        # Create new cart item
-        CartItem.objects.create(
-            cart=cart,
-            product=product,
-            variant=variant,
-            quantity=min(quantity, variant.quantity if variant else product.quantity)
-        )
-        messages.success(request, 'Product added to cart')
+        with transaction.atomic():
+            product = get_object_or_404(Product, id=product_id, status='active')
 
-    return redirect('cart:cart_detail')
+            # Check if product is active
+            if product.status != 'active':
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'This product is not available',
+                    }, status=400)
+                messages.error(request, 'This product is not available')
+                return redirect('products:product_detail', product_slug=product.slug)
+
+            # Check if product is in stock
+            if not product.is_in_stock:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'This product is out of stock',
+                    }, status=400)
+                messages.error(request, 'This product is out of stock')
+                return redirect('products:product_detail', product_slug=product.slug)
+
+            cart = get_or_create_cart(request)
+
+            try:
+                quantity = int(request.POST.get('quantity', 1))
+                if quantity <= 0:
+                    raise ValueError("Quantity must be greater than zero")
+            except ValueError:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'Invalid quantity',
+                    }, status=400)
+                messages.error(request, 'Please provide a valid quantity')
+                return redirect('products:product_detail', product_slug=product.slug)
+
+            # Get variant if specified
+            variant_id = request.POST.get('variant_id')
+            variant = None
+
+            # Check if product has variants
+            has_variants = product.variants.exists()
+
+            # Handle variant selection
+            if has_variants:
+                # If variant ID is not provided or empty
+                if not variant_id or variant_id.strip() == '':
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Please select a product variant',
+                            'requires_variant': True,
+                        }, status=400)
+                    messages.error(request, 'Please select a product variant')
+                    return redirect('products:product_detail', product_slug=product.slug)
+
+                try:
+                    # Get the selected variant
+                    variant = ProductVariant.objects.get(id=variant_id, product=product)
+
+                    # Check if variant is in stock
+                    if not variant.is_in_stock:
+                        if is_ajax:
+                            return JsonResponse({
+                                'success': False,
+                                'message': 'This variant is out of stock',
+                            }, status=400)
+                        messages.error(request, 'This variant is out of stock')
+                        return redirect('products:product_detail', product_slug=product.slug)
+
+                except ProductVariant.DoesNotExist:
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': False,
+                            'message': 'Selected variant not found',
+                        }, status=400)
+                    messages.error(request, 'Selected variant not found')
+                    return redirect('products:product_detail', product_slug=product.slug)
+
+            # Check if item already exists in cart
+            try:
+                cart_item = CartItem.objects.get(cart=cart, product=product, variant=variant)
+                # Check available quantity
+                available_qty = variant.quantity if variant else product.quantity
+
+                if cart_item.quantity + quantity > available_qty:
+                    cart_item.quantity = available_qty
+                    cart_item.save()
+
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': True,
+                            'message': f'Only {available_qty} items available. Cart updated to maximum quantity.',
+                            'cart_count': cart.total_items,
+                            'cart_total': float(cart.total),
+                        })
+
+                    messages.warning(request,
+                                     f'Only {available_qty} items available. Cart updated to maximum quantity.')
+                else:
+                    cart_item.quantity += quantity
+                    cart_item.save()
+
+                    if is_ajax:
+                        return JsonResponse({
+                            'success': True,
+                            'message': 'Cart updated successfully',
+                            'cart_count': cart.total_items,
+                            'cart_total': float(cart.total),
+                        })
+
+                    messages.success(request, 'Cart updated successfully')
+            except CartItem.DoesNotExist:
+                # Calculate max quantity based on available stock
+                available_qty = variant.quantity if variant else product.quantity
+                add_quantity = min(quantity, available_qty)
+
+                # Create new cart item
+                CartItem.objects.create(
+                    cart=cart,
+                    product=product,
+                    variant=variant,
+                    quantity=add_quantity
+                )
+
+                if is_ajax:
+                    product_name = product.title
+                    if variant:
+                        variant_details = ', '.join([f"{val.attribute.name}: {val.value}"
+                                                     for val in variant.attribute_values.all()])
+                        product_name = f"{product_name} ({variant_details})"
+
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'{product_name} added to cart',
+                        'cart_count': cart.total_items,
+                        'cart_total': float(cart.total),
+                    })
+
+                messages.success(request, 'Product added to cart')
+
+            # If we get here without returning, we need to redirect
+            return redirect('cart:cart_detail')
+
+    except Exception as e:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': f'Error adding to cart: {str(e)}',
+            }, status=500)
+        messages.error(request, f'Error adding to cart: {str(e)}')
+        return redirect('products:product_detail', product_slug=product.slug)
 
 
 @require_POST
 def remove_from_cart(request, item_id):
     """
     View for removing an item from the cart.
+    Supports both regular form submission and AJAX requests.
     """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     cart = get_or_create_cart(request)
 
     try:
         cart_item = CartItem.objects.get(id=item_id, cart=cart)
+        product_name = cart_item.product.title
+
+        if cart_item.variant:
+            variant_details = ', '.join([f"{val.attribute.name}: {val.value}"
+                                         for val in cart_item.variant.attribute_values.all()])
+            product_name = f"{product_name} ({variant_details})"
+
         cart_item.delete()
+
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': f'{product_name} removed from cart',
+                'cart_count': cart.total_items,
+                'cart_total': float(cart.total),
+                'item_id': item_id,
+            })
+
         messages.success(request, 'Item removed from cart')
     except CartItem.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': 'Item not found in cart',
+            }, status=404)
+
         messages.error(request, 'Item not found in cart')
 
     return redirect('cart:cart_detail')
@@ -151,24 +280,78 @@ def remove_from_cart(request, item_id):
 def update_cart(request, item_id):
     """
     View for updating the quantity of an item in the cart.
+    Supports both regular form submission and AJAX requests.
     """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     cart = get_or_create_cart(request)
 
     try:
         cart_item = CartItem.objects.get(id=item_id, cart=cart)
-        quantity = int(request.POST.get('quantity', 1))
+
+        try:
+            quantity = int(request.POST.get('quantity', 1))
+        except ValueError:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid quantity',
+                }, status=400)
+
+            messages.error(request, 'Invalid quantity')
+            return redirect('cart:cart_detail')
 
         if quantity <= 0:
             cart_item.delete()
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Item removed from cart',
+                    'cart_count': cart.total_items,
+                    'cart_total': float(cart.total),
+                    'item_removed': True,
+                    'item_id': item_id,
+                })
+
             messages.success(request, 'Item removed from cart')
         else:
+            # Check if requested quantity is available
+            available_qty = cart_item.variant.quantity if cart_item.variant else cart_item.product.quantity
+
+            if quantity > available_qty:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Only {available_qty} items available',
+                        'available_quantity': available_qty,
+                    }, status=400)
+
+                messages.warning(request, f'Only {available_qty} items available')
+                quantity = available_qty
+
             cart_item.quantity = quantity
             cart_item.save()
+
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Cart updated successfully',
+                    'cart_count': cart.total_items,
+                    'cart_total': float(cart.total),
+                    'item_total': float(cart_item.total),
+                    'item_subtotal': float(cart_item.subtotal),
+                    'item_quantity': cart_item.quantity,
+                })
+
             messages.success(request, 'Cart updated successfully')
     except CartItem.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': 'Item not found in cart',
+            }, status=404)
+
         messages.error(request, 'Item not found in cart')
-    except ValueError:
-        messages.error(request, 'Invalid quantity')
 
     return redirect('cart:cart_detail')
 
@@ -177,13 +360,23 @@ def update_cart(request, item_id):
 def clear_cart(request):
     """
     View for clearing all items from the cart.
+    Supports both regular form submission and AJAX requests.
     """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     cart = get_or_create_cart(request)
     cart.clear()
 
     # Remove coupon if applied
     if 'coupon_id' in request.session:
         del request.session['coupon_id']
+
+    if is_ajax:
+        return JsonResponse({
+            'success': True,
+            'message': 'Cart cleared successfully',
+            'cart_count': 0,
+            'cart_total': 0,
+        })
 
     messages.success(request, 'Cart cleared successfully')
     return redirect('cart:cart_detail')
@@ -194,11 +387,14 @@ def clear_cart(request):
 def save_for_later(request, item_id):
     """
     View for moving an item from the cart to the saved items list.
+    Supports both regular form submission and AJAX requests.
     """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     cart = get_or_create_cart(request)
 
     try:
         cart_item = CartItem.objects.get(id=item_id, cart=cart)
+        product_name = cart_item.product.title
 
         # Check if the item already exists in saved items
         saved_item, created = SavedForLater.objects.get_or_create(
@@ -210,8 +406,23 @@ def save_for_later(request, item_id):
         # Remove from cart
         cart_item.delete()
 
+        if is_ajax:
+            return JsonResponse({
+                'success': True,
+                'message': f'{product_name} saved for later',
+                'cart_count': cart.total_items,
+                'cart_total': float(cart.total),
+                'item_id': item_id,
+            })
+
         messages.success(request, 'Item saved for later')
     except CartItem.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': 'Item not found in cart',
+            }, status=404)
+
         messages.error(request, 'Item not found in cart')
 
     return redirect('cart:cart_detail')
@@ -222,10 +433,49 @@ def save_for_later(request, item_id):
 def move_to_cart(request, item_id):
     """
     View for moving an item from the saved items list to the cart.
+    Supports both regular form submission and AJAX requests.
     """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     try:
         saved_item = SavedForLater.objects.get(id=item_id, user=request.user)
         cart = get_or_create_cart(request)
+        product_name = saved_item.product.title
+
+        # Check if the product is still active and in stock
+        product = saved_item.product
+        if product.status != 'active':
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This product is no longer available',
+                }, status=400)
+
+            messages.error(request, 'This product is no longer available')
+            saved_item.delete()  # Remove unavailable product from saved items
+            return redirect('cart:cart_detail')
+
+        if not product.is_in_stock:
+            if is_ajax:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'This product is out of stock',
+                }, status=400)
+
+            messages.error(request, 'This product is out of stock')
+            return redirect('cart:cart_detail')
+
+        # If it's a variant, check variant status
+        if saved_item.variant:
+            if not saved_item.variant.is_in_stock:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': 'This product variant is out of stock',
+                    }, status=400)
+
+                messages.error(request, 'This product variant is out of stock')
+                return redirect('cart:cart_detail')
 
         # Check if the item already exists in the cart
         try:
@@ -234,10 +484,38 @@ def move_to_cart(request, item_id):
                 product=saved_item.product,
                 variant=saved_item.variant
             )
-            cart_item.quantity += 1
-            cart_item.save()
+
+            # Check available quantity before updating
+            available_qty = saved_item.variant.quantity if saved_item.variant else saved_item.product.quantity
+
+            if cart_item.quantity + 1 > available_qty:
+                if is_ajax:
+                    return JsonResponse({
+                        'success': False,
+                        'message': f'Cannot add more of this item. Maximum quantity ({available_qty}) already in cart.',
+                    }, status=400)
+
+                messages.warning(request,
+                                 f'Cannot add more of this item. Maximum quantity ({available_qty}) already in cart.')
+            else:
+                cart_item.quantity += 1
+                cart_item.save()
+
+                # Remove from saved items
+                saved_item.delete()
+
+                if is_ajax:
+                    return JsonResponse({
+                        'success': True,
+                        'message': f'{product_name} moved to cart',
+                        'cart_count': cart.total_items,
+                        'cart_total': float(cart.total),
+                        'item_id': item_id,
+                    })
+
+                messages.success(request, 'Item moved to cart')
         except CartItem.DoesNotExist:
-            # Create new cart item
+            # Create new cart item with quantity 1
             CartItem.objects.create(
                 cart=cart,
                 product=saved_item.product,
@@ -245,14 +523,86 @@ def move_to_cart(request, item_id):
                 quantity=1
             )
 
-        # Remove from saved items
-        saved_item.delete()
+            # Remove from saved items
+            saved_item.delete()
 
-        messages.success(request, 'Item moved to cart')
+            if is_ajax:
+                return JsonResponse({
+                    'success': True,
+                    'message': f'{product_name} moved to cart',
+                    'cart_count': cart.total_items,
+                    'cart_total': float(cart.total),
+                    'item_id': item_id,
+                })
+
+            messages.success(request, 'Item moved to cart')
     except SavedForLater.DoesNotExist:
+        if is_ajax:
+            return JsonResponse({
+                'success': False,
+                'message': 'Saved item not found',
+            }, status=404)
+
         messages.error(request, 'Saved item not found')
 
     return redirect('cart:cart_detail')
+
+
+def get_cart_info(request):
+    """
+    AJAX endpoint to get current cart information without refreshing the page.
+    """
+    try:
+        cart = get_or_create_cart(request)
+
+        # Calculate coupon discount if applied
+        coupon_discount = 0
+        coupon_id = request.session.get('coupon_id')
+
+        if coupon_id:
+            from orders.models import Coupon
+            try:
+                coupon = Coupon.objects.get(id=coupon_id)
+                if coupon.is_valid:
+                    coupon_discount = coupon.calculate_discount(cart.subtotal)
+            except Coupon.DoesNotExist:
+                pass
+
+        cart_data = {
+            'success': True,
+            'cart_count': cart.total_items,
+            'subtotal': float(cart.subtotal),
+            'tax_amount': float(cart.tax_amount),
+            'coupon_discount': float(coupon_discount),
+            'total': float(cart.total - coupon_discount),
+            'items': []
+        }
+
+        # Add detailed item info
+        for item in cart.items.select_related('product', 'variant').all():
+            product_name = item.product.title
+            if item.variant:
+                variant_details = ', '.join([f"{val.attribute.name}: {val.value}"
+                                             for val in item.variant.attribute_values.all()])
+                product_name = f"{product_name} ({variant_details})"
+
+            cart_data['items'].append({
+                'id': item.id,
+                'product_id': item.product.id,
+                'product_name': product_name,
+                'quantity': item.quantity,
+                'unit_price': float(item.unit_price),
+                'subtotal': float(item.subtotal),
+                'total': float(item.total),
+                'image_url': item.product.primary_image.image.url if item.product.primary_image else None,
+            })
+
+        return JsonResponse(cart_data)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e),
+        }, status=500)
 
 
 @require_POST
