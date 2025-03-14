@@ -15,7 +15,6 @@ class Category(models.Model):
     image = models.ImageField(upload_to='category_images/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     meta_keywords = models.CharField(max_length=255, blank=True, null=True)
-    meta_description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -92,6 +91,7 @@ class Product(models.Model):
     is_featured = models.BooleanField(default=False)
     meta_keywords = models.CharField(max_length=255, blank=True, null=True)
     meta_description = models.TextField(blank=True, null=True)
+    view_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

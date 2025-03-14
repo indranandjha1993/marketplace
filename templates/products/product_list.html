@@ -130,12 +130,12 @@
                             <div class="product-rating">
                                 {% if product.reviews.count > 0 %}
                                 {% with avg_rating=product.reviews.all|avg_rating %}
-                                {% for _ in "12345"|slice:":avg_rating" %}
-                                <i class="fas fa-star"></i>
-                                {% endfor %}
-                                {% for _ in "12345"|slice:avg_rating|add:":5" %}
+
+                                {% with remainder=5|add:"-review.rating" %}
+                                {% for _ in '12345'|slice:":remainder" %}
                                 <i class="far fa-star"></i>
                                 {% endfor %}
+                                {% endwith %}
                                 <span class="text-muted ms-1">({{ product.reviews.count }})</span>
                                 {% endwith %}
                                 {% else %}

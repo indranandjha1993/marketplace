@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}{% trans "Email Confirmed" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h1 class="h4 mb-0 text-center">{% trans "Email Confirmed" %}</h1>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                        <p>{% blocktrans with email=confirmation.email_address.email %}You have confirmed that <strong>{{ email }}</strong> is your email address.{% endblocktrans %}</p>
+                    </div>
+
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'products:home' %}" class="btn btn-primary">{% trans "Go to Homepage" %}</a>
+                    {% else %}
+                    <a href="{% url 'account_login' %}" class="btn btn-primary">{% trans "Sign In" %}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

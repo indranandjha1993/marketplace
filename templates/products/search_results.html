@@ -68,75 +68,7 @@
             <div class="row g-4">
                 {% for product in page_obj %}
                 <div class="col-md-4 col-6">
-                    <div class="card product-card h-100">
-                        {% if product.is_on_sale %}
-                        <div class="discount-badge">-{{ product.discount_percentage }}%</div>
-                        {% endif %}
-
-                        <a href="{% url 'products:product_detail' product.slug %}">
-                            {% if product.primary_image %}
-                            <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
-                            {% else %}
-                            <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
-                            {% endif %}
-                        </a>
-
-                        <div class="card-body">
-                            <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
-                                {{ product.vendor.business_name }}
-                            </a>
-                            <h6 class="product-title">
-                                <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
-                                    {{ product.title }}
-                                </a>
-                            </h6>
-
-                            <div class="product-rating">
-                                {% if product.reviews.count > 0 %}
-                                {% with avg_rating=product.reviews.all|avg_rating %}
-                                {% for _ in "12345"|slice:":avg_rating" %}
-                                <i class="fas fa-star"></i>
-                                {% endfor %}
-                                {% for _ in "12345"|slice:avg_rating|add:":5" %}
-                                <i class="far fa-star"></i>
-                                {% endfor %}
-                                <span class="text-muted ms-1">({{ product.reviews.count }})</span>
-                                {% endwith %}
-                                {% else %}
-                                <i class="far fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <i class="far fa-star"></i>
-                                <span class="text-muted ms-1">(0)</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="product-price mt-2">
-                                {% if product.is_on_sale %}
-                                <span class="original-price">₹{{ product.price }}</span>
-                                {% endif %}
-                                ₹{{ product.current_price }}
-                            </div>
-                        </div>
-
-                        <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                            <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
-                                {% csrf_token %}
-                                <input type="hidden" name="quantity" value="1">
-                                <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                                </button>
-                            </form>
-
-                            <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger btn-sm">
-                                    <i class="far fa-heart"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                    {% include 'products/includes/product_card.html' %}
                 </div>
                 {% endfor %}
             </div>

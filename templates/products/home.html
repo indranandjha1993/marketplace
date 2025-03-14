@@ -8,29 +8,29 @@
 <section class="hero-banner">
     <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
         </div>
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img src="/static/img/banner1.jpg" class="d-block w-100" alt="Special Offers">
+                <img src="/static/img/banner1.jpg" class="d-block w-100" alt="New Arrivals Every Day" style="height: 400px; object-fit: cover;">
                 <div class="carousel-caption d-none d-md-block">
-                    <h2>Welcome to Multi-Vendor Marketplace</h2>
-                    <p>Discover thousands of products from trusted sellers</p>
+                    <h2>New Arrivals Every Day</h2>
+                    <p>Be the first to discover the latest products</p>
                     <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
                 </div>
             </div>
             <div class="carousel-item">
-                <img src="/static/img/banner2.jpg" class="d-block w-100" alt="New Arrivals">
+                <img src="/static/img/banner2.jpg" class="d-block w-100" alt="Special Offers" style="height: 400px; object-fit: cover;">
                 <div class="carousel-caption d-none d-md-block">
-                    <h2>New Arrivals Every Day</h2>
-                    <p>Be the first to discover the latest products</p>
-                    <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop New Arrivals</a>
+                    <h2>Special Offers</h2>
+                    <p>Save big on our featured products</p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-light btn-lg">Shop Now</a>
                 </div>
             </div>
             <div class="carousel-item">
-                <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor">
+                <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor" style="height: 400px; object-fit: cover;">
                 <div class="carousel-caption d-none d-md-block">
                     <h2>Start Selling Today</h2>
                     <p>Join thousands of successful vendors on our platform</p>
@@ -52,23 +52,24 @@
 {% if featured_categories %}
 <!-- Featured Categories -->
 <section class="featured-categories container py-5">
-    <h2 class="text-center mb-4">Featured Categories</h2>
+    <h2 class="text-center mb-4">Shop by Category</h2>
     <div class="row g-4">
         {% for category in featured_categories %}
         <div class="col-6 col-md-4 col-lg-2">
             <a href="{% url 'products:product_list_by_category' category.slug %}" class="text-decoration-none">
-                <div class="card text-center h-100">
-                    <div class="p-3">
+                <div class="card category-card text-center h-100 border-0 shadow-sm">
+                    <div class="category-img-container p-3">
                         {% if category.image %}
                         <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid" style="height: 100px; object-fit: contain;">
                         {% else %}
-                        <div class="category-icon">
+                        <div class="category-icon-placeholder d-flex align-items-center justify-content-center" style="height: 100px;">
                             <i class="fas fa-box fa-3x text-primary"></i>
                         </div>
                         {% endif %}
                     </div>
                     <div class="card-body p-2">
-                        <h6 class="card-title">{{ category.name }}</h6>
+                        <h6 class="card-title mb-0">{{ category.name }}</h6>
+                        <small class="text-muted d-block mt-1">{{ category.products.count }} Products</small>
                     </div>
                 </div>
             </a>
@@ -83,123 +84,81 @@
 <section class="featured-products container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Featured Products</h2>
-        <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">View All</a>
+        <a href="{% url 'products:product_list' %}?featured=true" class="btn btn-outline-primary">View All</a>
     </div>
 
     <div class="row g-4">
         {% for product in featured_products %}
         <div class="col-6 col-md-4 col-lg-3">
-            <div class="card product-card h-100">
-                {% if product.is_on_sale %}
-                <div class="discount-badge">-{{ product.discount_percentage }}%</div>
-                {% endif %}
-
-                <a href="{% url 'products:product_detail' product.slug %}">
-                    {% if product.primary_image %}
-                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
-                    {% else %}
-                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
-                    {% endif %}
-                </a>
-
-                <div class="card-body">
-                    <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
-                        {{ product.vendor.business_name }}
-                    </a>
-                    <h6 class="product-title">
-                        <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
-                            {{ product.title }}
-                        </a>
-                    </h6>
-
-                    <div class="product-rating">
-                        {% if product.reviews.count > 0 %}
-                        {% with avg_rating=product.reviews.all|avg_rating %}
-                        {% for _ in "12345"|slice:":avg_rating" %}
-                        <i class="fas fa-star"></i>
-                        {% endfor %}
-                        {% for _ in "12345"|slice:avg_rating %}
-                        <i class="far fa-star"></i>
-                        {% endfor %}
-                        <span class="text-muted ms-1">({{ product.reviews.count }})</span>
-                        {% endwith %}
-                        {% else %}
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <span class="text-muted ms-1">(0)</span>
-                        {% endif %}
-                    </div>
-
-                    <div class="product-price mt-2">
-                        {% if product.is_on_sale %}
-                        <span class="original-price">₹{{ product.price }}</span>
-                        {% endif %}
-                        ₹{{ product.current_price }}
-                    </div>
-                </div>
-
-                <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                    <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
-                        {% csrf_token %}
-                        <input type="hidden" name="quantity" value="1">
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                        </button>
-                    </form>
-
-                    <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="far fa-heart"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
+            {% include 'products/includes/product_card.html' %}
         </div>
         {% endfor %}
     </div>
 </section>
 {% endif %}
 
-<!-- Services & Benefits -->
+{% if new_products %}
+<!-- New Arrivals -->
+<section class="new-products container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>New Arrivals</h2>
+        <a href="{% url 'products:product_list' %}?sort=newest" class="btn btn-outline-primary">View All</a>
+    </div>
+
+    <div class="row g-4">
+        {% for product in new_products %}
+        <div class="col-6 col-md-4 col-lg-3">
+            {% include 'products/includes/product_card.html' %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Services & Benefits with animation on hover -->
 <section class="services-benefits py-5 bg-light">
     <div class="container">
         <h2 class="text-center mb-5">Why Shop With Us</h2>
         <div class="row g-4">
             <div class="col-md-3 col-sm-6">
-                <div class="card border-0 bg-transparent text-center h-100">
-                    <div class="card-body">
-                        <i class="fas fa-truck fa-3x text-primary mb-3"></i>
+                <div class="card border-0 bg-white text-center h-100 shadow-sm benefit-card">
+                    <div class="card-body p-4">
+                        <div class="benefit-icon-wrapper mb-3">
+                            <i class="fas fa-truck fa-3x text-primary"></i>
+                        </div>
                         <h5>Free Shipping</h5>
                         <p class="text-muted">On orders over ₹500</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="card border-0 bg-transparent text-center h-100">
-                    <div class="card-body">
-                        <i class="fas fa-undo fa-3x text-primary mb-3"></i>
+                <div class="card border-0 bg-white text-center h-100 shadow-sm benefit-card">
+                    <div class="card-body p-4">
+                        <div class="benefit-icon-wrapper mb-3">
+                            <i class="fas fa-undo fa-3x text-primary"></i>
+                        </div>
                         <h5>Easy Returns</h5>
                         <p class="text-muted">30-day return policy</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="card border-0 bg-transparent text-center h-100">
-                    <div class="card-body">
-                        <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+                <div class="card border-0 bg-white text-center h-100 shadow-sm benefit-card">
+                    <div class="card-body p-4">
+                        <div class="benefit-icon-wrapper mb-3">
+                            <i class="fas fa-lock fa-3x text-primary"></i>
+                        </div>
                         <h5>Secure Payment</h5>
                         <p class="text-muted">Multiple payment options</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="card border-0 bg-transparent text-center h-100">
-                    <div class="card-body">
-                        <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                <div class="card border-0 bg-white text-center h-100 shadow-sm benefit-card">
+                    <div class="card-body p-4">
+                        <div class="benefit-icon-wrapper mb-3">
+                            <i class="fas fa-headset fa-3x text-primary"></i>
+                        </div>
                         <h5>24/7 Support</h5>
                         <p class="text-muted">Dedicated customer service</p>
                     </div>
@@ -208,4 +167,224 @@
         </div>
     </div>
 </section>
+
+{% if top_vendors %}
+<!-- Top Vendors -->
+<section class="top-vendors container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Top Sellers</h2>
+        <a href="{% url 'vendors:vendor_list' %}" class="btn btn-outline-primary">View All Sellers</a>
+    </div>
+
+    <div class="row g-4">
+        {% for vendor in top_vendors %}
+        <div class="col-md-3 col-sm-6">
+            <div class="card vendor-card h-100">
+                <div class="vendor-banner" style="background-image: url('{% if vendor.banner %}{{ vendor.banner.url }}{% else %}/static/img/vendor-banner-default.jpg{% endif %}');">
+                    <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}" class="vendor-logo" alt="{{ vendor.business_name }}">
+                </div>
+                <div class="card-body text-center mt-5">
+                    <h5 class="card-title">{{ vendor.business_name }}</h5>
+                    <div class="mb-2">
+                        {% display_stars vendor.avg_rating|default:0 %}
+                        <span class="text-muted ms-1">({{ vendor.reviews.count|default:0 }})</span>
+                    </div>
+                    <p class="card-text text-muted small">{{ vendor.description|truncatewords:15 }}</p>
+                    <a href="{% url 'vendors:vendor_detail' vendor.slug %}" class="btn btn-outline-primary">Visit Store</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% if brands %}
+<!-- Popular Brands -->
+<section class="brands container py-5">
+    <h2 class="text-center mb-4">Popular Brands</h2>
+    <div class="row g-4">
+        {% for brand in brands %}
+        <div class="col-4 col-md-3 col-lg-2">
+            <a href="{% url 'products:product_list_by_brand' brand.slug %}" class="text-decoration-none">
+                <div class="card brand-card text-center h-100 border-0">
+                    <div class="p-3 d-flex align-items-center justify-content-center" style="height: 100px;">
+                        {% if brand.logo %}
+                        <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="img-fluid" style="max-height: 70px; max-width: 100%;">
+                        {% else %}
+                        <span class="fw-bold text-primary">{{ brand.name }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Newsletter Subscription -->
+<section class="newsletter py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5">
+                        <h3>Subscribe to Our Newsletter</h3>
+                        <p class="text-muted mb-4">Stay updated with latest products, exclusive offers and promotions</p>
+                        <form class="newsletter-form" action="#" method="post">
+                            {% csrf_token %}
+                            <div class="input-group">
+                                <input type="email" class="form-control" placeholder="Your email address" required>
+                                <button class="btn btn-primary" type="submit">Subscribe</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Carousel enhancements */
+    .carousel-item {
+        position: relative;
+        height: 500px; /* Fixed height for consistent appearance */
+    }
+
+    .carousel-item img {
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .carousel-item::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .carousel-caption {
+        bottom: 50%;
+        transform: translateY(50%);
+        padding-bottom: 0;
+        z-index: 1;
+    }
+
+    .carousel-indicators {
+        z-index: 2;
+    }
+
+    .carousel-control-prev, .carousel-control-next {
+        z-index: 2;
+    }
+
+    /* Category cards styling */
+    .category-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .category-img-container {
+        overflow: hidden;
+    }
+
+    /* Brand cards styling */
+    .brand-card {
+        transition: transform 0.3s ease;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .brand-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Benefits cards styling */
+    .benefit-card {
+        transition: transform 0.3s ease;
+        border-radius: 8px;
+    }
+
+    .benefit-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .benefit-icon-wrapper {
+        height: 80px;
+        width: 80px;
+        border-radius: 50%;
+        background-color: rgba(52, 152, 219, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+
+    .benefit-card:hover .benefit-icon-wrapper {
+        background-color: rgba(52, 152, 219, 0.2);
+        transform: scale(1.1);
+    }
+
+    /* Vendor card styling */
+    .vendor-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .vendor-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .vendor-banner {
+        height: 120px;
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .vendor-logo {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 3px solid white;
+        background-color: white;
+        position: absolute;
+        bottom: -40px;
+        left: 50%;
+        transform: translateX(-50%);
+        object-fit: contain;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* Newsletter form */
+    .newsletter-form .form-control {
+        height: 50px;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .newsletter-form .btn {
+        border-radius: 0 4px 4px 0;
+        height: 50px;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+</style>
 {% endblock %}

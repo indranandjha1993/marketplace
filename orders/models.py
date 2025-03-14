@@ -206,9 +206,21 @@ class Refund(models.Model):
 
 class OrderTracking(models.Model):
     """History of order status changes."""
+    STATUS_CHOICES = (
+        ('pending', 'Order Received'),
+        ('confirmed', 'Order Confirmed'),
+        ('processing', 'Processing'),
+        ('packed', 'Packed'),
+        ('shipped', 'Shipped'),
+        ('out_for_delivery', 'Out for Delivery'),
+        ('delivered', 'Delivered'),
+        ('cancelled', 'Cancelled'),
+        ('returned', 'Returned'),
+        ('refunded', 'Refunded'),
+    )
 
     vendor_order = models.ForeignKey(VendorOrder, on_delete=models.CASCADE, related_name='tracking_history')
-    status = models.CharField(max_length=20)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
     timestamp = models.DateTimeField(auto_now_add=True)
     comment = models.TextField(blank=True, null=True)
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

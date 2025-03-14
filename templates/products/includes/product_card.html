@@ -1,0 +1,62 @@
+{% load product_tags %}
+<div class="card product-card h-100">
+    {% if product.is_on_sale %}
+    <div class="discount-badge">-{{ product.discount_percentage }}%</div>
+    {% endif %}
+
+    <a href="{% url 'products:product_detail' product.slug %}">
+        {% if product.primary_image %}
+        <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
+        {% else %}
+        <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
+        {% endif %}
+    </a>
+
+    <div class="card-body">
+        <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
+            {{ product.vendor.business_name }}
+        </a>
+        <h6 class="product-title">
+            <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
+                {{ product.title }}
+            </a>
+        </h6>
+
+        <!-- Add simplified rating display -->
+        {% if product.reviews.count > 0 %}
+        {% with avg_rating=product.reviews.all|avg_rating %}
+        {% display_stars avg_rating %}
+        <span class="text-muted small">({{ product.reviews.count }})</span>
+        {% endwith %}
+        {% endif %}
+
+        <div class="product-price mt-2">
+            {% if product.is_on_sale %}
+            <span class="original-price">₹{{ product.price }}</span>
+            {% endif %}
+            <span class="current-price">₹{{ product.current_price }}</span>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-shopping-cart me-1"></i> Add
+            </button>
+        </form>
+
+        <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <button type="submit" class="btn btn-outline-danger btn-sm wishlist-btn">
+                {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
+                <i class="fas fa-heart"></i>
+                {% else %}
+                <i class="far fa-heart"></i>
+                {% endif %}
+            </button>
+        </form>
+    </div>
+</div>

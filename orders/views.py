@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import UserAddress
 from cart.models import Cart
+from utils.email import send_order_confirmation_email
 from .models import Order, VendorOrder, OrderItem, Refund, OrderTracking, Coupon
 
 
@@ -229,7 +230,7 @@ def place_order(request):
         total_item = cart_item.total
 
         # Create order item
-        order_item = OrderItem.objects.create(
+        OrderItem.objects.create(
             order=order,
             product=product,
             variant=variant,
@@ -290,6 +291,8 @@ def place_order(request):
 
     # Clear the cart
     cart.clear()
+
+    send_order_confirmation_email(order)
 
     # Handle payment based on method
     if payment_method == 'cod':

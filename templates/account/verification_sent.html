@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Verify Your Email Address" %}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-white py-3">
+                    <h1 class="h4 mb-0 text-center">{% trans "Verify Your Email" %}</h1>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-envelope fa-4x text-primary mb-3"></i>
+                        <p>{% blocktrans %}We have sent an email to <strong>{{ email }}</strong> for verification. Follow the link provided to finalize the signup process.{% endblocktrans %}</p>
+                        <p class="text-muted small">{% blocktrans %}If you do not receive it within a few minutes, please check your spam folder or contact us for assistance.{% endblocktrans %}</p>
+                    </div>
+
+                    <a href="{% url 'account_email' %}" class="btn btn-outline-primary">{% trans "Manage Email Addresses" %}</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

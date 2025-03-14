@@ -68,7 +68,7 @@ def cart_detail(request):
 @require_POST
 def add_to_cart(request, product_id):
     """
-    View for adding a product to the cart.
+    View for adding a product to the cart with proper variant handling.
     """
     product = get_object_or_404(Product, id=product_id)
 
@@ -97,21 +97,32 @@ def add_to_cart(request, product_id):
                 messages.error(request, 'This variant is out of stock')
                 return redirect('products:product_detail', product_slug=product.slug)
         except ProductVariant.DoesNotExist:
-            pass
+            messages.error(request, 'Selected variant not found')
+            return redirect('products:product_detail', product_slug=product.slug)
+    elif product.variants.exists():
+        # If product has variants but none selected
+        messages.error(request, 'Please select a product variant')
+        return redirect('products:product_detail', product_slug=product.slug)
 
     # Check if item already exists in cart
     try:
         cart_item = CartItem.objects.get(cart=cart, product=product, variant=variant)
-        cart_item.quantity += quantity
+        # Check available quantity
+        available_qty = variant.quantity if variant else product.quantity
+        if cart_item.quantity + quantity > available_qty:
+            cart_item.quantity = available_qty
+            messages.warning(request, f'Only {available_qty} items available. Cart updated to maximum quantity.')
+        else:
+            cart_item.quantity += quantity
+            messages.success(request, 'Cart updated successfully')
         cart_item.save()
-        messages.success(request, 'Cart updated successfully')
     except CartItem.DoesNotExist:
         # Create new cart item
         CartItem.objects.create(
             cart=cart,
             product=product,
             variant=variant,
-            quantity=quantity
+            quantity=min(quantity, variant.quantity if variant else product.quantity)
         )
         messages.success(request, 'Product added to cart')
 

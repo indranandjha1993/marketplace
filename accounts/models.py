@@ -40,19 +40,30 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     """Custom User model for our marketplace."""
 
-    username = None
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text='Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.',
+        validators=[AbstractUser.username_validator],
+        error_messages={
+            'unique': 'A user with that username already exists.',
+        },
+    )
+
     email = models.EmailField(_('email address'), unique=True)
     phone_number = models.CharField(max_length=30, blank=True, null=True)
     is_vendor = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    # USERNAME_FIELD = 'email'
+    # REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        return self.username or self.email
 
 
 class UserProfile(models.Model):

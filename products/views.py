@@ -1,10 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count, Q, F
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from recommendations import get_recommendations_for_product, get_personalized_recommendations
 from vendors.models import Vendor
 from .models import (
     Category, Brand, Product, ProductReview,
@@ -127,31 +129,31 @@ def product_list_by_category(request, category_slug):
     """
     View for displaying products filtered by category.
     """
-    category = get_object_or_404(Category, slug=category_slug)
-    # Add the category filter to the request.GET dict and redirect to the main product list view
-    url = f"{request.path}?category={category_slug}"
-    return redirect(url)
+    return redirect(f"{reverse('products:product_list')}?category={category_slug}")
 
 
 def product_list_by_brand(request, brand_slug):
     """
     View for displaying products filtered by brand.
     """
-    brand = get_object_or_404(Brand, slug=brand_slug)
-    # Add the brand filter to the request.GET dict and redirect to the main product list view
-    url = f"{request.path}?brand={brand_slug}"
-    return redirect(url)
+    return redirect(f"{reverse('products:product_list')}?brand={brand_slug}")
 
 
 def product_detail(request, product_slug):
     """
-    View for displaying product details.
+    View for displaying product details with SEO.
     """
     product = get_object_or_404(Product, slug=product_slug, status='active')
-    related_products = Product.objects.filter(
-        category=product.category,
-        status='active'
-    ).exclude(id=product.id)[:4]
+
+    # Update product view count (for analytics)
+    product.view_count = F('view_count') + 1
+    product.save(update_fields=['view_count'])
+
+    # Get product-specific recommendations
+    related_products = get_recommendations_for_product(product)
+
+    # Get personalized recommendations for "You Might Also Like" section
+    personalized_recommendations = get_personalized_recommendations(request.user)
 
     # Get product reviews
     reviews = product.reviews.all().order_by('-created_at')
@@ -159,21 +161,37 @@ def product_detail(request, product_slug):
     # Get product questions
     questions = product.questions.all().prefetch_related('answers').order_by('-created_at')
 
+    # Context for better SEO and social sharing
+    meta_description = product.meta_description or product.description[:160]
+    meta_keywords = product.meta_keywords or f"{product.title}, {product.category.name}, {product.brand.name if product.brand else ''}"
+
     context = {
         'product': product,
         'related_products': related_products,
+        'personalized_recommendations': personalized_recommendations,
         'reviews': reviews,
         'questions': questions,
+        'meta_title': f"{product.title} | {product.brand.name if product.brand else ''} | Marketplace",
+        'meta_description': meta_description,
+        'meta_keywords': meta_keywords,
+        'og_image': product.primary_image.image.url if product.primary_image else None,
     }
 
     return render(request, 'products/product_detail.html', context)
 
 
+# In products/views.py - improve search_products function
 def search_products(request):
     """
-    View for searching products.
+    View for searching products with advanced filtering.
     """
     query = request.GET.get('q', '')
+    category_id = request.GET.get('category')
+    brand_id = request.GET.get('brand')
+    min_price = request.GET.get('min_price')
+    max_price = request.GET.get('max_price')
+    rating = request.GET.get('rating')
+    sort = request.GET.get('sort', 'relevance')  # Default sorting by relevance
 
     if query:
         products = Product.objects.filter(
@@ -188,6 +206,41 @@ def search_products(request):
     else:
         products = Product.objects.none()
 
+    # Apply filters
+    if category_id:
+        category = get_object_or_404(Category, id=category_id)
+        # Include all child categories
+        categories = [category] + list(category.get_all_children)
+        products = products.filter(category__in=categories)
+
+    if brand_id:
+        products = products.filter(brand_id=brand_id)
+
+    if min_price:
+        products = products.filter(current_price__gte=min_price)
+
+    if max_price:
+        products = products.filter(current_price__lte=max_price)
+
+    if rating:
+        products = products.annotate(avg_rating=Avg('reviews__rating')).filter(avg_rating__gte=rating)
+
+    # Apply sorting
+    if sort == 'price_asc':
+        products = products.order_by('current_price')
+    elif sort == 'price_desc':
+        products = products.order_by('-current_price')
+    elif sort == 'name_asc':
+        products = products.order_by('title')
+    elif sort == 'name_desc':
+        products = products.order_by('-title')
+    elif sort == 'rating':
+        products = products.annotate(avg_rating=Avg('reviews__rating')).order_by('-avg_rating')
+
+    # Get filter options
+    categories = Category.objects.filter(parent__isnull=True, is_active=True)
+    brands = Brand.objects.filter(is_active=True)
+
     # Pagination
     paginator = Paginator(products, 20)  # 20 products per page
     page_number = request.GET.get('page')
@@ -196,6 +249,14 @@ def search_products(request):
     context = {
         'query': query,
         'page_obj': page_obj,
+        'categories': categories,
+        'brands': brands,
+        'current_category': category_id,
+        'current_brand': brand_id,
+        'current_min_price': min_price,
+        'current_max_price': max_price,
+        'current_rating': rating,
+        'current_sort': sort,
     }
 
     return render(request, 'products/search_results.html', context)

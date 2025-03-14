@@ -322,3 +322,45 @@ header {
     bottom: -40px;
   }
 }
+
+/* In static/css/style.css - add toast notification styles */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    color: white;
+    z-index: 1000;
+    animation: fadeInOut 3s ease-in-out;
+    max-width: 300px;
+}
+
+.toast-success {
+    background-color: var(--success-color);
+}
+
+.toast-info {
+    background-color: var(--info-color);
+}
+
+.toast-warning {
+    background-color: var(--warning-color);
+}
+
+.toast-error {
+    background-color: var(--danger-color);
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Add style for active wishlist button */
+.wishlist-btn.active {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+}

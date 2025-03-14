@@ -5,7 +5,6 @@ app_name = 'vendors'
 
 urlpatterns = [
     path('', views.vendor_list, name='vendor_list'),
-    path('<slug:vendor_slug>/', views.vendor_detail, name='vendor_detail'),
     path('become-vendor/', views.become_vendor, name='become_vendor'),
     path('dashboard/', views.vendor_dashboard, name='vendor_dashboard'),
     path('dashboard/products/', views.vendor_products, name='vendor_products'),
@@ -16,4 +15,5 @@ urlpatterns = [
     path('dashboard/profile/', views.vendor_profile, name='vendor_profile'),
     path('dashboard/settings/', views.vendor_settings, name='vendor_settings'),
     path('dashboard/analytics/', views.vendor_analytics, name='vendor_analytics'),
+    path('<slug:vendor_slug>/', views.vendor_detail, name='vendor_detail'),
 ]

@@ -1,10 +1,14 @@
+from datetime import datetime, timedelta
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Sum
+from django.db.models.functions import TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils.text import slugify
 
-from products.models import Product
+from products.models import Product, Category, Brand, ProductImage
 from .models import Vendor
 
 
@@ -177,8 +181,28 @@ def vendor_dashboard(request):
 
     vendor = request.user.vendor
 
-    # Get recent orders
-    recent_orders = vendor.orders.all().order_by('-created_at')[:5]
+    # Get date range from request or default to last 30 days
+    date_range = request.GET.get('range', '30days')
+
+    if date_range == '7days':
+        start_date = datetime.now() - timedelta(days=7)
+    elif date_range == '30days':
+        start_date = datetime.now() - timedelta(days=30)
+    elif date_range == '90days':
+        start_date = datetime.now() - timedelta(days=90)
+    else:
+        start_date = datetime.now() - timedelta(days=30)  # Default to 30 days
+
+    # Get sales data
+    recent_orders = vendor.orders.filter(created_at__gte=start_date).order_by('-created_at')
+
+    # Daily sales chart data
+    daily_sales = recent_orders.annotate(
+        day=TruncDay('created_at')
+    ).values('day').annotate(
+        revenue=Sum('total_vendor_amount'),
+        orders=Count('id')
+    ).order_by('day')
 
     # Get sales statistics
     total_sales = sum(
@@ -200,6 +224,8 @@ def vendor_dashboard(request):
         'total_products': total_products,
         'active_products': active_products,
         'out_of_stock': out_of_stock,
+        'daily_sales': list(daily_sales),
+        'date_range': date_range
     }
 
     return render(request, 'vendors/dashboard/index.html', context)
@@ -259,14 +285,76 @@ def add_product(request):
 
     # Handle form submission
     if request.method == 'POST':
-        # Process product form
-        # This would be a more complex form handling with image uploads, variants, etc.
-        # For now, just a placeholder
-        messages.success(request, 'Product added successfully')
-        return redirect('vendors:vendor_products')
+        # Process product data
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        category_id = request.POST.get('category')
+        brand_id = request.POST.get('brand') if request.POST.get('brand') else None
+        price = request.POST.get('price')
+        sale_price = request.POST.get('sale_price') if request.POST.get('sale_price') else None
+        tax_rate = request.POST.get('tax_rate', 0)
+        quantity = request.POST.get('quantity', 0)
+        sku = request.POST.get('sku')
+        is_featured = request.POST.get('is_featured') == 'on'
+
+        # Validate required fields
+        if not all([title, description, category_id, price, sku]):
+            messages.error(request, 'Please fill in all required fields')
+            return redirect('vendors:add_product')
+
+        # Create product
+        try:
+            category = Category.objects.get(id=category_id)
+            brand = Brand.objects.get(id=brand_id) if brand_id else None
+
+            product = Product.objects.create(
+                vendor=vendor,
+                title=title,
+                slug=slugify(title),
+                description=description,
+                category=category,
+                brand=brand,
+                price=price,
+                sale_price=sale_price,
+                tax_rate=tax_rate,
+                quantity=quantity,
+                sku=sku,
+                is_featured=is_featured,
+                status='pending'  # Set as pending for admin approval
+            )
+
+            # Handle image uploads
+            images = request.FILES.getlist('images')
+            for i, image in enumerate(images):
+                ProductImage.objects.create(
+                    product=product,
+                    image=image,
+                    alt_text=f"{product.title} image {i + 1}",
+                    is_primary=(i == 0)  # First image is primary
+                )
+
+            # Handle variants if any
+            has_variants = request.POST.get('has_variants') == 'on'
+            if has_variants:
+                # Process variant data
+                # This would need additional form fields in the template
+                pass
+
+            messages.success(request, 'Product added successfully and is pending approval')
+            return redirect('vendors:vendor_products')
+
+        except Exception as e:
+            messages.error(request, f'Error adding product: {str(e)}')
+            return redirect('vendors:add_product')
+
+    # Get data for the form
+    categories = Category.objects.filter(is_active=True)
+    brands = Brand.objects.filter(is_active=True)
 
     context = {
         'vendor': vendor,
+        'categories': categories,
+        'brands': brands,
     }
 
     return render(request, 'vendors/dashboard/add_product.html', context)
@@ -450,3 +538,14 @@ def vendor_analytics(request):
     }
 
     return render(request, 'vendors/dashboard/analytics.html', context)
+
+
+def vendor_status(request):
+    """Add vendor status to context for all templates."""
+    if request.user.is_authenticated:
+        is_vendor = request.user.is_vendor and hasattr(request.user, 'vendor')
+        return {
+            'is_vendor': is_vendor,
+            'pending_vendor': request.user.is_vendor and not hasattr(request.user, 'vendor')
+        }
+    return {'is_vendor': False, 'pending_vendor': False}

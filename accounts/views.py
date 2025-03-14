@@ -1,3 +1,5 @@
+from django.contrib.auth import update_session_auth_hash
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,18 +11,53 @@ from products.models import Product
 @login_required
 def user_profile(request):
     """
-    View for user profile management.
+    View for user profile management with enhanced order statistics.
     """
     try:
         profile = request.user.profile
     except UserProfile.DoesNotExist:
         profile = UserProfile.objects.create(user=request.user)
 
+    # Get basic order statistics
+    from django.db.models import Count, Sum
+    from orders.models import Order
+
+    # Get order stats
+    order_stats = {
+        'total': Order.objects.filter(user=request.user).count(),
+        'completed': Order.objects.filter(user=request.user, status='delivered').count(),
+        'processing': Order.objects.filter(user=request.user, status__in=['pending', 'processing', 'shipped']).count(),
+        'cancelled': Order.objects.filter(user=request.user, status='cancelled').count(),
+        'total_spent': Order.objects.filter(user=request.user, status='delivered').aggregate(Sum('total'))[
+                           'total__sum'] or 0,
+    }
+
+    # Get recent orders
+    recent_orders = Order.objects.filter(user=request.user).order_by('-created_at')[:3]
+
     if request.method == 'POST':
+        # Enhanced security - verify current password before saving changes
+        current_password = request.POST.get('current_password')
+        if not current_password or not request.user.check_password(current_password):
+            messages.error(request, 'Please enter your current password correctly to make changes')
+            return redirect('accounts:user_profile')
+
         # Update user info
         request.user.first_name = request.POST.get('first_name')
         request.user.last_name = request.POST.get('last_name')
         request.user.phone_number = request.POST.get('phone_number')
+
+        # If user wants to change password
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        if new_password:
+            if new_password == confirm_password:
+                request.user.set_password(new_password)
+                update_session_auth_hash(request, request.user)  # Keep user logged in
+            else:
+                messages.error(request, 'New passwords do not match')
+                return redirect('accounts:user_profile')
+
         request.user.save()
 
         # Update profile
@@ -39,7 +76,9 @@ def user_profile(request):
         return redirect('accounts:user_profile')
 
     context = {
-        'profile': profile
+        'profile': profile,
+        'order_stats': order_stats,
+        'recent_orders': recent_orders,
     }
 
     return render(request, 'accounts/user_profile.html', context)
@@ -211,3 +250,45 @@ def remove_from_wishlist(request, product_id):
     if next_url:
         return redirect(next_url)
     return redirect('accounts:wishlist')
+
+
+@login_required
+@require_POST
+def toggle_wishlist(request, product_id):
+    """
+    View for toggling a product in the wishlist (add if not present, remove if present).
+    """
+    product = get_object_or_404(Product, id=product_id)
+
+    try:
+        profile = request.user.profile
+    except UserProfile.DoesNotExist:
+        profile = UserProfile.objects.create(user=request.user)
+
+    # Check if product is already in wishlist
+    if product in profile.wishlist_products.all():
+        # Remove from wishlist
+        profile.wishlist_products.remove(product)
+        status = 'removed'
+        message = 'Product removed from wishlist.'
+    else:
+        # Add to wishlist
+        profile.wishlist_products.add(product)
+        status = 'added'
+        message = 'Product added to wishlist.'
+
+    # If this is an AJAX request, return JSON response
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'status': status,
+            'message': message
+        })
+
+    # Otherwise, add message and redirect
+    messages.success(request, message)
+
+    # Redirect back to the referring page
+    next_url = request.POST.get('next', '')
+    if next_url:
+        return redirect(next_url)
+    return redirect('products:product_detail', product_slug=product.slug)

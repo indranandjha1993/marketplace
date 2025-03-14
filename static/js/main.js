@@ -127,4 +127,57 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 5000);
     });
+
+    // Wishlist toggle with AJAX
+    const wishlistForms = document.querySelectorAll('.wishlist-form');
+    wishlistForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Only proceed with AJAX if user is authenticated
+            if (document.body.classList.contains('user-authenticated')) {
+                const formData = new FormData(this);
+                const url = this.action;
+                const wishlistBtn = this.querySelector('.wishlist-btn');
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Update button icon based on status
+                    if (data.status === 'added') {
+                        wishlistBtn.innerHTML = '<i class="fas fa-heart"></i>';
+                        wishlistBtn.classList.add('active');
+                    } else {
+                        wishlistBtn.innerHTML = '<i class="far fa-heart"></i>';
+                        wishlistBtn.classList.remove('active');
+                    }
+
+                    // Show toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'toast-notification ' +
+                        (data.status === 'added' ? 'toast-success' : 'toast-info');
+                    toast.textContent = data.message;
+                    document.body.appendChild(toast);
+
+                    // Remove toast after animation
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 3000);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                // If user is not authenticated, submit the form normally
+                this.submit();
+            }
+        });
+    });
 });

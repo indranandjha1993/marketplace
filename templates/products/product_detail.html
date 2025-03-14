@@ -19,9 +19,11 @@
             <div class="card">
                 <div class="card-body p-2">
                     {% if product.primary_image %}
-                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="product-detail-image img-fluid" id="main-product-image">
+                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
+                         class="product-detail-image img-fluid" id="main-product-image">
                     {% else %}
-                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="product-detail-image img-fluid" id="main-product-image">
+                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="product-detail-image img-fluid"
+                         id="main-product-image">
                     {% endif %}
                 </div>
             </div>
@@ -29,7 +31,9 @@
             <div class="mt-3 d-flex flex-wrap">
                 {% for image in product.images.all %}
                 <div class="me-2 mb-2">
-                    <img src="{{ image.image.url }}" alt="{{ product.title }}" class="thumbnail-image {% if image.is_primary %}active{% endif %}" onclick="document.getElementById('main-product-image').src='{{ image.image.url }}'">
+                    <img src="{{ image.image.url }}" alt="{{ product.title }}"
+                         class="thumbnail-image {% if image.is_primary %}active{% endif %}"
+                         onclick="document.getElementById('main-product-image').src='{{ image.image.url }}'">
                 </div>
                 {% endfor %}
             </div>
@@ -43,26 +47,13 @@
                     <h1 class="h3 mb-2">{{ product.title }}</h1>
 
                     <div class="d-flex align-items-center mb-3">
-                        <div class="product-rating me-3">
-                            {% if product.reviews.count > 0 %}
+                        {% if product.reviews.count > 0 %}
                             {% with avg_rating=product.reviews.all|avg_rating %}
-                            {% for _ in "12345"|slice:":avg_rating" %}
-                            <i class="fas fa-star"></i>
-                            {% endfor %}
-                            {% for _ in "12345"|slice:avg_rating|add:":5" %}
-                            <i class="far fa-star"></i>
-                            {% endfor %}
-                            <span class="text-muted ms-1">({{ product.reviews.count }} reviews)</span>
+                                {% rating_display avg_rating product.reviews.count %}
                             {% endwith %}
-                            {% else %}
-                            <i class="far fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <i class="far fa-star"></i>
-                            <span class="text-muted ms-1">(0 reviews)</span>
-                            {% endif %}
-                        </div>
+                        {% else %}
+                            {% rating_display 0 0 %}
+                        {% endif %}
                         <span class="text-muted">|</span>
                         <span class="ms-3 text-muted">
                             Sold by: <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}">{{ product.vendor.business_name }}</a>
@@ -88,7 +79,7 @@
                                 <label class="form-label">{{ attribute.name }}</label>
                                 <div class="d-flex flex-wrap">
                                     {% for value in attribute.values.all %}
-                                    {% if value.variants.filter(product=product).exists %}
+                                    {% if value|has_variant_for_product:product %}
                                     <div class="form-check me-3">
                                         <input class="form-check-input variant-option" type="radio" name="{{ attribute.name }}" value="{{ value.id }}" id="variant-{{ value.id }}">
                                         <label class="form-check-label" for="variant-{{ value.id }}">
@@ -113,19 +104,22 @@
                             {% endif %}
 
                             <div class="d-flex align-items-center mb-3">
-                                <label class="me-3">Quantity:</label>
-                                <div class="input-group" style="width: 130px;">
-                                    <button class="btn btn-outline-secondary quantity-minus" type="button">-</button>
-                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control text-center quantity-input">
-                                    <button class="btn btn-outline-secondary quantity-plus" type="button">+</button>
+                                <label class="me-3 fw-medium">Quantity:</label>
+                                <div class="input-group input-group-sm" style="width: 130px;">
+                                    <button class="btn btn-outline-primary quantity-minus" type="button">−</button>
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}"
+                                           class="form-control text-center quantity-input">
+                                    <button class="btn btn-outline-primary quantity-plus" type="button">+</button>
                                 </div>
-                                <span class="ms-3 text-muted">
+
+                                <span id="availability-text" class="ms-3
+                                    {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
                                     {% if product.quantity > 10 %}
-                                        In Stock
+                                        <i class="fas fa-check-circle me-1"></i> In Stock
                                     {% elif product.quantity > 0 %}
-                                        Only {{ product.quantity }} left!
+                                        <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
                                     {% else %}
-                                        Out of Stock
+                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
                                     {% endif %}
                                 </span>
                             </div>
@@ -135,9 +129,17 @@
                                     <i class="fas fa-shopping-cart me-2"></i> Add to Cart
                                 </button>
 
-                                <button type="button" class="btn btn-outline-danger wishlist-btn" data-product-id="{{ product.id }}">
-                                    <i class="far fa-heart"></i>
-                                </button>
+                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <button type="submit" class="btn btn-outline-danger wishlist-btn">
+                                        {% if product in user.profile.wishlist_products.all %}
+                                        <i class="fas fa-heart"></i> <!-- Solid heart for in wishlist -->
+                                        {% else %}
+                                        <i class="far fa-heart"></i> <!-- Regular heart for not in wishlist -->
+                                        {% endif %}
+                                    </button>
+                                </form>
                             </div>
                         </form>
                     </div>
@@ -185,12 +187,14 @@
         <div class="card-header bg-white">
             <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="true">
+                    <button class="nav-link active" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
+                            type="button" role="tab" aria-controls="reviews" aria-selected="true">
                         Reviews ({{ reviews.count }})
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions" type="button" role="tab" aria-controls="questions" aria-selected="false">
+                    <button class="nav-link" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions"
+                            type="button" role="tab" aria-controls="questions" aria-selected="false">
                         Questions ({{ questions.count }})
                     </button>
                 </li>
@@ -210,7 +214,8 @@
                                 <div class="rating-input d-flex">
                                     {% for i in '12345' %}
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="rating" id="rating{{ i }}" value="{{ i }}" required>
+                                        <input class="form-check-input" type="radio" name="rating" id="rating{{ i }}"
+                                               value="{{ i }}" required>
                                         <label class="form-check-label" for="rating{{ i }}">{{ i }}</label>
                                     </div>
                                     {% endfor %}
@@ -218,11 +223,14 @@
                             </div>
                             <div class="mb-3">
                                 <label for="reviewTitle" class="form-label">Title</label>
-                                <input type="text" class="form-control" id="reviewTitle" name="title" placeholder="Summarize your review">
+                                <input type="text" class="form-control" id="reviewTitle" name="title"
+                                       placeholder="Summarize your review">
                             </div>
                             <div class="mb-3">
                                 <label for="reviewComment" class="form-label">Comment</label>
-                                <textarea class="form-control" id="reviewComment" name="comment" rows="3" placeholder="What did you like or dislike about this product?" required></textarea>
+                                <textarea class="form-control" id="reviewComment" name="comment" rows="3"
+                                          placeholder="What did you like or dislike about this product?"
+                                          required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Submit Review</button>
                         </form>
@@ -236,14 +244,7 @@
                         <div class="review-item mb-3 pb-3 border-bottom">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div>
-                                    <div class="product-rating">
-                                        {% for _ in '12345'|slice:":review.rating" %}
-                                        <i class="fas fa-star"></i>
-                                        {% endfor %}
-                                        {% for _ in '12345'|slice:review.rating:"5" %}
-                                        <i class="far fa-star"></i>
-                                        {% endfor %}
-                                    </div>
+                                    {% display_stars review.rating %}
                                     {% if review.title %}
                                     <h6 class="mb-0 mt-1">{{ review.title }}</h6>
                                     {% endif %}
@@ -279,7 +280,9 @@
                         <form action="{% url 'products:ask_question' product.slug %}" method="POST">
                             {% csrf_token %}
                             <div class="mb-3">
-                                <textarea class="form-control" name="question" rows="2" placeholder="What would you like to know about this product?" required></textarea>
+                                <textarea class="form-control" name="question" rows="2"
+                                          placeholder="What would you like to know about this product?"
+                                          required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Submit Question</button>
                         </form>
@@ -320,13 +323,16 @@
 
                             {% if user.is_authenticated %}
                             <div class="mt-2">
-                                <button class="btn btn-sm btn-link p-0 answer-toggle" data-question-id="{{ question.id }}">
+                                <button class="btn btn-sm btn-link p-0 answer-toggle"
+                                        data-question-id="{{ question.id }}">
                                     Answer this question
                                 </button>
-                                <form action="{% url 'products:answer_question' question.id %}" method="POST" class="answer-form mt-2 d-none" id="answer-form-{{ question.id }}">
+                                <form action="{% url 'products:answer_question' question.id %}" method="POST"
+                                      class="answer-form mt-2 d-none" id="answer-form-{{ question.id }}">
                                     {% csrf_token %}
                                     <div class="mb-2">
-                                        <textarea class="form-control form-control-sm" name="answer" rows="2" placeholder="Your answer" required></textarea>
+                                        <textarea class="form-control form-control-sm" name="answer" rows="2"
+                                                  placeholder="Your answer" required></textarea>
                                     </div>
                                     <button type="submit" class="btn btn-sm btn-primary">Submit Answer</button>
                                 </form>
@@ -352,64 +358,105 @@
         <div class="row g-4">
             {% for product in related_products %}
             <div class="col-md-3 col-6">
-                <div class="card product-card h-100">
-                    {% if product.is_on_sale %}
-                    <div class="discount-badge">-{{ product.discount_percentage }}%</div>
-                    {% endif %}
-
-                    <a href="{% url 'products:product_detail' product.slug %}">
-                        {% if product.primary_image %}
-                        <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
-                        {% else %}
-                        <img src="/static/img/no-image.png" alt="{{ product.title }}" class="card-img-top product-image">
-                        {% endif %}
-                    </a>
-
-                    <div class="card-body">
-                        <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
-                            {{ product.vendor.business_name }}
-                        </a>
-                        <h6 class="product-title">
-                            <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
-                                {{ product.title }}
-                            </a>
-                        </h6>
-
-                        <div class="product-price mt-2">
-                            {% if product.is_on_sale %}
-                            <span class="original-price">₹{{ product.price }}</span>
-                            {% endif %}
-                            ₹{{ product.current_price }}
-                        </div>
-                    </div>
-
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-shopping-cart me-1"></i> Add
-                            </button>
-                        </form>
-
-                        <form action="{% url 'accounts:add_to_wishlist' product.id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="far fa-heart"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                {% include 'products/includes/product_card.html' %}
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
+
+    <!-- Personalized Recommendations -->
+    {% if personalized_recommendations %}
+    <div class="personalized-recommendations mt-5">
+        <h3 class="mb-3">You Might Also Like</h3>
+        <div class="row g-4">
+            {% for product in personalized_recommendations %}
+            <div class="col-md-3 col-6">
+                {% include 'products/includes/product_card.html' %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
 </div>
+{% endblock %}
 
 {% block extra_js %}
 <script>
-    // Toggle answer forms
+    // Image zoom functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const mainImage = document.getElementById('main-product-image');
+        const thumbnails = document.querySelectorAll('.thumbnail-image');
+
+        if (mainImage && thumbnails.length > 0) {
+            // Set up image zoom
+            const imageZoom = function(imgID) {
+                let img = document.getElementById(imgID);
+                let lens = document.createElement("div");
+                lens.setAttribute("class", "img-zoom-lens");
+                img.parentElement.insertBefore(lens, img);
+
+                // Calculate ratio between result DIV and lens
+                let ratio = 2.5;
+
+                lens.addEventListener("mousemove", moveLens);
+                img.addEventListener("mousemove", moveLens);
+                lens.addEventListener("touchmove", moveLens);
+                img.addEventListener("touchmove", moveLens);
+
+                function moveLens(e) {
+                    let pos, x, y;
+                    e.preventDefault();
+                    pos = getCursorPos(e);
+                    x = pos.x - (lens.offsetWidth / 2);
+                    y = pos.y - (lens.offsetHeight / 2);
+
+                    // Prevent lens from going outside image
+                    if (x > img.width - lens.offsetWidth) {x = img.width - lens.offsetWidth;}
+                    if (x < 0) {x = 0;}
+                    if (y > img.height - lens.offsetHeight) {y = img.height - lens.offsetHeight;}
+                    if (y < 0) {y = 0;}
+
+                    // Set position of lens
+                    lens.style.left = x + "px";
+                    lens.style.top = y + "px";
+
+                    // Display what the lens "sees"
+                    img.style.transform = `scale(${ratio})`;
+                    img.style.transformOrigin = `${x + lens.offsetWidth / 2}px ${y + lens.offsetHeight / 2}px`;
+                }
+
+                function getCursorPos(e) {
+                    let a, x = 0, y = 0;
+                    e = e || window.event;
+                    a = img.getBoundingClientRect();
+                    x = e.pageX - a.left;
+                    y = e.pageY - a.top;
+                    x = x - window.pageXOffset;
+                    y = y - window.pageYOffset;
+                    return {x : x, y : y};
+                }
+            }
+
+            // Initialize zoom
+            imageZoom("main-product-image");
+
+            // Handle thumbnail clicks
+            thumbnails.forEach(thumb => {
+                thumb.addEventListener('click', function() {
+                    // Update main image
+                    mainImage.src = this.src;
+
+                    // Update active thumbnail
+                    thumbnails.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+    });
+
+    // Toggle answer forms - existing code
     document.querySelectorAll('.answer-toggle').forEach(button => {
         button.addEventListener('click', function() {
             const questionId = this.dataset.questionId;
@@ -417,6 +464,159 @@
             form.classList.toggle('d-none');
         });
     });
+
+    // Variant selection handling - add this
+    document.addEventListener('DOMContentLoaded', function() {
+        const variantForm = document.getElementById('variant-form');
+        const variantOptions = document.querySelectorAll('.variant-option');
+        const selectedVariantIdInput = document.getElementById('selected-variant-id');
+        const addToCartBtn = document.querySelector('button[type="submit"]');
+        const priceDisplay = document.querySelector('.product-price');
+
+        if (variantForm && variantOptions.length > 0) {
+            // Store all variants data
+            const variants = JSON.parse(document.getElementById('variants-data').textContent);
+
+            // Function to check if a variant with selected attributes exists
+            function findMatchingVariant() {
+                const selectedAttributes = {};
+
+                // Get all selected attributes
+                variantForm.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+                    const attributeName = radio.name;
+                    const attributeValueId = radio.value;
+                    selectedAttributes[attributeName] = attributeValueId;
+                });
+
+                // Check if we have selected all required attributes
+                const requiredAttributeCount = Object.keys(variants[0].attributes).length;
+                if (Object.keys(selectedAttributes).length < requiredAttributeCount) {
+                    return null;
+                }
+
+                // Find matching variant
+                for (const variant of variants) {
+                    let isMatch = true;
+
+                    for (const [attrName, attrValueId] of Object.entries(selectedAttributes)) {
+                        if (variant.attributes[attrName] != attrValueId) {
+                            isMatch = false;
+                            break;
+                        }
+                    }
+
+                    if (isMatch) {
+                        return variant;
+                    }
+                }
+
+                return null;
+            }
+
+            // Update product info based on selected variant
+            function updateProductInfo() {
+                const variant = findMatchingVariant();
+
+                if (variant) {
+                    // Update price
+                    if (variant.sale_price) {
+                        priceDisplay.innerHTML = `
+                            <span class="original-price fs-5 text-decoration-line-through">₹${variant.price}</span>
+                            <span class="fs-3 fw-bold text-primary">₹${variant.sale_price}</span>
+                            <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
+                        `;
+                    } else {
+                        priceDisplay.innerHTML = `
+                            <span class="fs-3 fw-bold text-primary">₹${variant.price}</span>
+                        `;
+                    }
+
+                    // Update availability
+                    const availabilityText = document.getElementById('availability-text');
+                    if (variant.is_in_stock) {
+                        if (variant.quantity > 10) {
+                            availabilityText.innerHTML = 'In Stock';
+                            availabilityText.className = 'ms-3 text-success';
+                        } else {
+                            availabilityText.innerHTML = `Only ${variant.quantity} left!`;
+                            availabilityText.className = 'ms-3 text-warning';
+                        }
+                        addToCartBtn.disabled = false;
+                    } else {
+                        availabilityText.innerHTML = 'Out of Stock';
+                        availabilityText.className = 'ms-3 text-danger';
+                        addToCartBtn.disabled = true;
+                    }
+
+                    // Set variant ID for form submission
+                    selectedVariantIdInput.value = variant.id;
+                } else {
+                    // Reset form if no matching variant
+                    addToCartBtn.disabled = true;
+                    selectedVariantIdInput.value = '';
+                }
+            }
+
+            // Add event listeners to variant options
+            variantOptions.forEach(option => {
+                option.addEventListener('change', updateProductInfo);
+            });
+        }
+    });
 </script>
 {% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-detail-container {
+        position: relative;
+    }
+
+    .img-zoom-lens {
+        position: absolute;
+        border: 1px solid #d4d4d4;
+        /*set the size of the lens:*/
+        width: 80px;
+        height: 80px;
+        background-color: rgba(255, 255, 255, 0.3);
+        cursor: crosshair;
+    }
+
+    .product-detail-image {
+        transition: transform 0.3s ease;
+    }
+
+    /* Additional styling for variant options */
+    .variant-option-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .variant-option-item {
+        border: 2px solid #dee2e6;
+        border-radius: 4px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .variant-option-item:hover {
+        border-color: #3498db;
+    }
+
+    .variant-option-item.selected {
+        border-color: #3498db;
+        background-color: #f8f9fa;
+    }
+
+    /* Style the radio buttons to be hidden */
+    .variant-option {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+</style>
 {% endblock %}
