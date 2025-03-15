@@ -150,57 +150,41 @@ def product_list_by_brand(request, brand_slug):
 
 
 def product_detail(request, product_slug):
-    """
-    View for displaying product details with improved variant handling.
-    """
     product = get_object_or_404(
         Product.objects.select_related('vendor', 'brand', 'category')
         .prefetch_related('variants__attribute_values__attribute', 'images', 'reviews', 'questions__answers'),
         slug=product_slug, status='active'
     )
 
-    # Update product view count (for analytics)
     Product.objects.filter(id=product.id).update(view_count=F('view_count') + 1)
 
-    # Prepare all variant data for JavaScript
     variants_data = []
     if product.variants.exists():
         for variant in product.variants.all():
-            # Create attribute mapping for this variant
-            attribute_dict = {}
-            for attr_value in variant.attribute_values.all():
-                # Use attribute name as key, attribute value id as value
-                attribute_dict[attr_value.attribute.name] = attr_value.id
+            sale_price = None
+            if product.is_on_sale and product.discount_percentage:
+                sale_price = float(variant.price) * (1 - float(product.discount_percentage) / 100)
 
             variant_data = {
                 'id': variant.id,
                 'price': float(variant.price),
-                'sale_price': float(variant.product.sale_price) if variant.product.sale_price else None,
+                'sale_price': sale_price,
                 'quantity': variant.quantity,
                 'sku': variant.sku,
-                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in variant.attribute_values.all()},
-                'discount_percentage': product.discount_percentage,
+                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in
+                               variant.attribute_values.all()},
+                'discount_percentage': product.discount_percentage if product.is_on_sale else 0,
                 'is_in_stock': variant.quantity > 0
             }
-
             variants_data.append(variant_data)
 
-    # Convert to JSON for template
     variants_json = json.dumps(variants_data)
 
-    # Get product-specific recommendations
     related_products = get_recommendations_for_product(product)
-
-    # Get personalized recommendations for "You Might Also Like" section
     personalized_recommendations = get_personalized_recommendations(request.user)
-
-    # Get product reviews
     reviews = product.reviews.all().order_by('-created_at')
-
-    # Get product questions
     questions = product.questions.all().prefetch_related('answers').order_by('-created_at')
 
-    # Context for better SEO and social sharing
     meta_description = product.meta_description or product.description[:160]
     meta_keywords = product.meta_keywords or f"{product.title}, {product.category.name}, {product.brand.name if product.brand else ''}"
 

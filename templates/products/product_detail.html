@@ -155,8 +155,12 @@
                                 <label class="me-3 fw-medium">Quantity:</label>
                                 <div class="quantity-control">
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-minus">−</button>
-                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}"
-                                           class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
+
+                                    {% if product.variants.exists %}
+                                    <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
+                                    {% else %}
+                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
+                                    {% endif %}
                                     <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-plus">+</button>
                                 </div>
 
@@ -437,37 +441,43 @@
 
     // Function to update the selected variant based on user selections
     function updateSelectedVariant() {
-        // Skip if no variants exist
         if (!productVariants || productVariants.length === 0) {
             return;
         }
 
-        // Get all variant options
         const variantOptions = document.querySelectorAll('.variant-option:checked');
-
-        // Create a map of selected attribute values
         const selectedAttributes = {};
         variantOptions.forEach(option => {
             const attributeName = option.getAttribute('data-attribute');
             selectedAttributes[attributeName] = option.value;
         });
 
-        // Find the matching variant
         const matchingVariant = findMatchingVariant(selectedAttributes);
-
-        // Update the form with the selected variant ID
         const variantIdInput = document.getElementById('selected-variant-id');
-        if (variantIdInput && matchingVariant) {
+        const addToCartBtn = document.querySelector('#add-to-cart-form button[type="submit"]');
+
+        if (matchingVariant) {
             variantIdInput.value = matchingVariant.id;
-
-            // Update availability text
             updateAvailabilityText(matchingVariant);
-
-            // Update price display
             updatePriceDisplay(matchingVariant);
-
-            // Update quantity input max
             updateQuantityInput(matchingVariant);
+            if (addToCartBtn) {
+                addToCartBtn.disabled = false;
+            }
+        } else {
+            variantIdInput.value = '';
+            const availabilityText = document.getElementById('availability-text');
+            if (availabilityText) {
+                availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Combination not available';
+                availabilityText.className = 'ms-3 text-danger';
+            }
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+            }
+            const priceDisplay = document.getElementById('product-price');
+            if (priceDisplay) {
+                priceDisplay.innerHTML = `₹${parseFloat('{{ product.current_price }}').toFixed(2)}`;
+            }
         }
     }
 
@@ -475,7 +485,7 @@
     function findMatchingVariant(selectedAttributes) {
         return productVariants.find(variant => {
             return Object.entries(selectedAttributes).every(([attrName, attrValueId]) => {
-                return variant.attributes[attrName] == attrValueId;
+                return variant.attributes[attrName] === parseInt(attrValueId, 10);
             });
         });
     }
@@ -498,7 +508,6 @@
             availabilityText.className = 'ms-3 text-danger';
         }
 
-        // Update add to cart button state
         const addToCartBtn = document.querySelector('#add-to-cart-form button[type="submit"]');
         if (addToCartBtn) {
             addToCartBtn.disabled = !variant.is_in_stock;
@@ -511,7 +520,6 @@
         if (!priceDisplay) return;
 
         let priceHTML = '';
-
         if (variant.sale_price) {
             priceHTML = `
                 <span class="original-price fs-5 text-decoration-line-through">₹${variant.price.toFixed(2)}</span>
@@ -521,7 +529,6 @@
         } else {
             priceHTML = `<span class="fs-3 fw-bold text-primary">₹${variant.price.toFixed(2)}</span>`;
         }
-
         priceDisplay.innerHTML = priceHTML;
     }
 
@@ -531,8 +538,6 @@
         if (!quantityInput) return;
 
         quantityInput.max = variant.quantity;
-
-        // Ensure quantity doesn't exceed available stock
         if (parseInt(quantityInput.value) > variant.quantity) {
             quantityInput.value = Math.max(1, variant.quantity);
         }
@@ -564,15 +569,11 @@
         // Image gallery functionality
         const thumbnails = document.querySelectorAll('.thumbnail-image');
         const mainImage = document.getElementById('main-product-image');
-
         if (thumbnails.length > 0 && mainImage) {
             thumbnails.forEach(thumbnail => {
                 thumbnail.addEventListener('click', function() {
-                    // Remove active class from all thumbnails
                     thumbnails.forEach(t => t.classList.remove('active'));
-                    // Add active class to clicked thumbnail
                     this.classList.add('active');
-                    // Update main image source
                     mainImage.src = this.src;
                 });
             });
