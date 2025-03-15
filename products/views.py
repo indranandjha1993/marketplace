@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Q, F
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -12,7 +13,7 @@ from recommendations import get_recommendations_for_product, get_personalized_re
 from vendors.models import Vendor
 from .models import (
     Category, Brand, Product, ProductReview,
-    ProductQuestion, ProductAnswer
+    ProductQuestion, ProductAnswer, ProductVariant
 )
 from .utils.product_filters import apply_product_filters
 
@@ -159,20 +160,26 @@ def product_detail(request, product_slug):
     Product.objects.filter(id=product.id).update(view_count=F('view_count') + 1)
 
     variants_data = []
+    default_attributes = {}
     if product.variants.exists():
+        default_variant = ProductVariant.objects.filter(product__id=product.id).filter(quantity__gt=0).first()
+        print(f"default_variant: {default_variant.attribute_values.all()}")
+        for attr_value in default_variant.attribute_values.all():
+            d = {attr_value.attribute.name: attr_value.id for attr_value in default_variant.attribute_values.all()}
+            print(f"attr_value: {d}")
+        if default_variant:
+            default_attributes = {attr_value.attribute.name: attr_value.id for attr_value in default_variant.attribute_values.all()}
         for variant in product.variants.all():
             sale_price = None
             if product.is_on_sale and product.discount_percentage:
                 sale_price = float(variant.price) * (1 - float(product.discount_percentage) / 100)
-
             variant_data = {
                 'id': variant.id,
                 'price': float(variant.price),
                 'sale_price': sale_price,
                 'quantity': variant.quantity,
                 'sku': variant.sku,
-                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in
-                               variant.attribute_values.all()},
+                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in variant.attribute_values.all()},
                 'discount_percentage': product.discount_percentage if product.is_on_sale else 0,
                 'is_in_stock': variant.quantity > 0
             }
@@ -188,6 +195,8 @@ def product_detail(request, product_slug):
     meta_description = product.meta_description or product.description[:160]
     meta_keywords = product.meta_keywords or f"{product.title}, {product.category.name}, {product.brand.name if product.brand else ''}"
 
+    all_variants_out_of_stock = product.variants.exists() and not product.variants.filter(quantity__gt=0).exists()
+
     context = {
         'product': product,
         'related_products': related_products,
@@ -195,6 +204,8 @@ def product_detail(request, product_slug):
         'reviews': reviews,
         'questions': questions,
         'variants_json': variants_json,
+        'default_attributes': default_attributes,
+        'all_variants_out_of_stock': all_variants_out_of_stock,
         'meta_title': f"{product.title} | {product.brand.name if product.brand else ''} | Marketplace",
         'meta_description': meta_description,
         'meta_keywords': meta_keywords,
@@ -362,3 +373,8 @@ def answer_question(request, question_id):
 
     messages.success(request, 'Your answer has been submitted')
     return redirect('products:product_detail', product_slug=question.product.slug)
+
+
+def check_variant_quantity(request, variant_id):
+    variant = get_object_or_404(ProductVariant, id=variant_id)
+    return JsonResponse({'quantity': variant.quantity})

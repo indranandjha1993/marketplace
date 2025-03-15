@@ -78,63 +78,32 @@
                             {% for attribute in product.variants.all|get_variant_attributes %}
                             <div class="mb-3">
                                 <label class="form-label fw-medium">{{ attribute.name }}</label>
-
-                                <!-- Size attribute -->
-                                {% if attribute.name|lower == "size" %}
-                                <div class="size-options d-flex flex-wrap gap-2 mt-2">
+                                <div class="variant-options d-flex flex-wrap gap-2 mt-2">
                                     {% for value in attribute.values.all %}
                                     {% if value|has_variant_for_product:product %}
                                     <div class="form-check">
-                                        <input type="radio" class="form-check-input variant-option"
+                                        <input type="radio" class="variant-option"
                                                name="{{ attribute.name }}" value="{{ value.id }}"
                                                id="{{ attribute.name }}-{{ value.id }}"
                                                data-attribute="{{ attribute.name }}"
-                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
-                                        <label class="form-check-label" for="{{ attribute.name }}-{{ value.id }}">
+                                               onchange="updateSelectedVariant()"
+                                               data-test-default_attributes.attribute.name ="{{ default_attributes|get_item:attribute.name }}"
+                                               data-test-value.id ="{{ value.id  }}"
+                                               data-test-all_variants_out_of_stock ="{{ all_variants_out_of_stock  }}"
+                                               {% if default_attributes|get_item:attribute.name == value.id %}checked{% endif %}
+                                               {% if all_variants_out_of_stock %}disabled{% endif %}>
+                                        {% if attribute.name|lower == "color" %}
+                                        <label class="color-label" for="{{ attribute.name }}-{{ value.id }}"
+                                               style="background-color: {{ value.value|lower }};"></label>
+                                        {% else %}
+                                        <label class="variant-label" for="{{ attribute.name }}-{{ value.id }}">
                                             {{ value.value }}
                                         </label>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                     {% endfor %}
                                 </div>
-
-                                <!-- Color attribute -->
-                                {% elif attribute.name|lower == "color" %}
-                                <div class="color-options d-flex flex-wrap gap-2 mt-2">
-                                    {% for value in attribute.values.all %}
-                                    {% if value|has_variant_for_product:product %}
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input variant-option"
-                                               name="{{ attribute.name }}" value="{{ value.id }}"
-                                               id="{{ attribute.name }}-{{ value.id }}"
-                                               data-attribute="{{ attribute.name }}"
-                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
-                                        <label class="form-check-label color-label" for="{{ attribute.name }}-{{ value.id }}"
-                                               style="background-color: {{ value.value|lower }}; width: 30px; height: 30px; border-radius: 50%; display: inline-block;"></label>
-                                    </div>
-                                    {% endif %}
-                                    {% endfor %}
-                                </div>
-
-                                <!-- Other attributes -->
-                                {% else %}
-                                <div class="options d-flex flex-wrap gap-2 mt-2">
-                                    {% for value in attribute.values.all %}
-                                    {% if value|has_variant_for_product:product %}
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input variant-option"
-                                               name="{{ attribute.name }}" value="{{ value.id }}"
-                                               id="{{ attribute.name }}-{{ value.id }}"
-                                               data-attribute="{{ attribute.name }}"
-                                               onchange="updateSelectedVariant()" {% if forloop.first %}checked{% endif %}>
-                                        <label class="form-check-label" for="{{ attribute.name }}-{{ value.id }}">
-                                            {{ value.value }}
-                                        </label>
-                                    </div>
-                                    {% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
                             </div>
                             {% endfor %}
                         </div>
@@ -448,32 +417,32 @@
         const variantOptions = document.querySelectorAll('.variant-option:checked');
         const selectedAttributes = {};
         variantOptions.forEach(option => {
-            const attributeName = option.getAttribute('data-attribute');
-            selectedAttributes[attributeName] = option.value;
+            selectedAttributes[option.getAttribute('data-attribute')] = option.value;
         });
 
         const matchingVariant = findMatchingVariant(selectedAttributes);
         const variantIdInput = document.getElementById('selected-variant-id');
         const addToCartBtn = document.querySelector('#add-to-cart-form button[type="submit"]');
+        const hasAvailableVariants = productVariants.some(variant => variant.is_in_stock);
 
         if (matchingVariant) {
             variantIdInput.value = matchingVariant.id;
             updateAvailabilityText(matchingVariant);
             updatePriceDisplay(matchingVariant);
             updateQuantityInput(matchingVariant);
-            if (addToCartBtn) {
-                addToCartBtn.disabled = false;
-            }
+            if (addToCartBtn) addToCartBtn.disabled = !matchingVariant.is_in_stock;
         } else {
             variantIdInput.value = '';
             const availabilityText = document.getElementById('availability-text');
             if (availabilityText) {
-                availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Combination not available';
+                if (hasAvailableVariants) {
+                    availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> This combination is not available';
+                } else {
+                    availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> All variants are out of stock';
+                }
                 availabilityText.className = 'ms-3 text-danger';
             }
-            if (addToCartBtn) {
-                addToCartBtn.disabled = true;
-            }
+            if (addToCartBtn) addToCartBtn.disabled = true;
             const priceDisplay = document.getElementById('product-price');
             if (priceDisplay) {
                 priceDisplay.innerHTML = `₹${parseFloat('{{ product.current_price }}').toFixed(2)}`;
@@ -507,6 +476,7 @@
             availabilityText.innerHTML = '<i class="fas fa-times-circle me-1"></i> Out of Stock';
             availabilityText.className = 'ms-3 text-danger';
         }
+
 
         const addToCartBtn = document.querySelector('#add-to-cart-form button[type="submit"]');
         if (addToCartBtn) {
@@ -581,6 +551,32 @@
 
         // Initialize variant selection
         updateSelectedVariant();
+    });
+
+
+    document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const variantId = document.getElementById('selected-variant-id').value;
+        const quantity = parseInt(document.querySelector('.quantity-input').value);
+
+        if (variantId) {
+            fetch(`/check-variant-quantity/${variantId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.quantity >= quantity) {
+                        this.submit();
+                    } else {
+                        alert(`Only ${data.quantity} items left in stock.`);
+                        updateAvailabilityText({ quantity: data.quantity, is_in_stock: data.quantity > 0 });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.submit(); // Fallback to server-side validation
+                });
+        } else {
+            this.submit(); // No variant selected, proceed normally
+        }
     });
 </script>
 {% endblock %}
