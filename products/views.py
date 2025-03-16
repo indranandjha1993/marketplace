@@ -3,13 +3,13 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Avg, Count, Q, F
+from django.db.models import Avg, Count, F
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from recommendations import get_recommendations_for_product, get_personalized_recommendations
+from utils.product_recommendations import get_recommendations_for_product, get_personalized_recommendations
 from vendors.models import Vendor
 from .models import (
     Category, Brand, Product, ProductReview,
@@ -164,7 +164,8 @@ def product_detail(request, product_slug):
     if product.variants.exists():
         default_variant = product.variants.filter(quantity__gt=0).first()
         if default_variant:
-            default_attributes = {attr_value.attribute.name: attr_value.id for attr_value in default_variant.attribute_values.all()}
+            default_attributes = {attr_value.attribute.name: attr_value.id for attr_value in
+                                  default_variant.attribute_values.all()}
         for variant in product.variants.all():
             variant_data = {
                 'id': variant.id,
@@ -172,7 +173,8 @@ def product_detail(request, product_slug):
                 'sale_price': float(variant.current_price),
                 'quantity': variant.quantity,
                 'sku': variant.sku,
-                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in variant.attribute_values.all()},
+                'attributes': {attr_value.attribute.name: attr_value.id for attr_value in
+                               variant.attribute_values.all()},
                 'discount_percentage': variant.discount_percentage if variant.is_on_sale else 0,
                 'is_in_stock': variant.is_in_stock
             }
