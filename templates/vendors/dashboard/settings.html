@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Settings{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 mb-4">
+            {% include 'vendors/includes/sidebar.html' %}
+        </div>
+        <div class="col-md-9 col-lg-10">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Account Section -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Account Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" class="form-grid">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="account">
+                        {{ account_form.non_field_errors }}
+                        {{ bank_form.non_field_errors }}
+
+                        <h6>Vendor Information</h6>
+                        {% for field in account_form %}
+                        <div class="form-group">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="errorlist">{{ field.errors }}</div>{% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <h6 class="mt-4">Bank Account Details</h6>
+                        {% for field in bank_form %}
+                        <div class="form-group">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}<div class="errorlist">{{ field.errors }}</div>{% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-modern">Save Account</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Documents Section -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Documents</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="form-grid" id="documentForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="documents">
+                        {{ document_form.non_field_errors }}
+
+                        <div class="form-group">
+                            <label class="form-label">Document Type</label>
+                            {{ document_form.document_type }}
+                            {% if document_form.document_type.errors %}
+                            <div class="errorlist">{{ document_form.document_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Upload Document</label>
+                            <input type="file" name="document" class="form-control" required>
+                            {% if document_form.document.errors %}
+                            <div class="errorlist">{{ document_form.document.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary btn-modern">Upload Document</button>
+                        </div>
+                    </form>
+
+                    {% if documents %}
+                    <div class="mt-4">
+                        <h6>Uploaded Documents</h6>
+                        <div class="document-list">
+                            <ul class="list-group">
+                                {% for document in documents %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ document.get_document_type_display }} - {{ document.document.name }}
+                                    <form method="post" action="{% url 'vendors:delete_document' document.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm btn-modern">Delete</button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="mt-3 text-muted">No documents uploaded yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

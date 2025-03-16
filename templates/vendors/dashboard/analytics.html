@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Vendor Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section-card {
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: none;
+        margin-bottom: 20px;
+        background: #fff;
+    }
+    .section-header {
+        background: linear-gradient(90deg, #f8f9fa, #e9ecef);
+        border-radius: 12px 12px 0 0;
+        padding: 15px 20px;
+        border-bottom: 1px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-body {
+        padding: 25px;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    .stat-card h6 {
+        font-size: 1rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+    .stat-card .value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+    .stat-card .growth-positive {
+        color: #28a745;
+        font-size: 0.9rem;
+    }
+    .stat-card .growth-negative {
+        color: #dc3545;
+        font-size: 0.9rem;
+    }
+    .chart-container {
+        position: relative;
+        margin: 20px 0;
+    }
+    .btn-modern {
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+    .btn-modern:hover {
+        transform: translateY(-1px);
+    }
+    .btn-primary {
+        background: #007aff;
+        border-color: #007aff;
+    }
+    .btn-primary:hover {
+        background: #0056b3;
+        border-color: #0056b3;
+    }
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        padding: 8px;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #007aff;
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        outline: none;
+    }
+    .table-modern {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .table-modern th, .table-modern td {
+        padding: 12px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .table-modern th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+    .messages {
+        margin-bottom: 20px;
+    }
+    .alert {
+        border-radius: 8px;
+        padding: 10px 15px;
+    }
+    .date-picker-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .date-picker {
+        width: 120px;
+    }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 mb-4">
+            {% include 'vendors/includes/sidebar.html' %}
+        </div>
+        <div class="col-md-9 col-lg-10">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Overview Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h5 class="mb-0">Analytics Overview</h5>
+                    <form method="get" class="date-picker-container" id="dateRangeForm">
+                        <select name="range" id="rangeSelect" class="form-select me-2">
+                            <option value="7days" {% if date_range == '7days' %}selected{% endif %}>Last 7 Days</option>
+                            <option value="30days" {% if date_range == '30days' %}selected{% endif %}>Last 30 Days</option>
+                            <option value="90days" {% if date_range == '90days' %}selected{% endif %}>Last 90 Days</option>
+                            <option value="custom" {% if date_range == 'custom' %}selected{% endif %}>Custom Range</option>
+                        </select>
+                        <input type="text" name="start_date" id="startDate" class="form-control date-picker" placeholder="Start Date" value="{{ start_date }}" {% if date_range != 'custom' %}style="display:none;"{% endif %}>
+                        <input type="text" name="end_date" id="endDate" class="form-control date-picker" placeholder="End Date" value="{{ end_date }}" {% if date_range != 'custom' %}style="display:none;"{% endif %}>
+                        <button type="submit" class="btn btn-primary btn-modern">Apply</button>
+                    </form>
+                </div>
+                <div class="section-body">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="stat-card">
+                                <h6>Total Sales</h6>
+                                <div class="value">${{ total_sales|floatformat:2 }}</div>
+                                <div class="{% if sales_growth >= 0 %}growth-positive{% else %}growth-negative{% endif %}">
+                                    {{ sales_growth|floatformat:1 }}% vs previous period
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="stat-card">
+                                <h6>Total Orders</h6>
+                                <div class="value">{{ total_orders }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="stat-card">
+                                <h6>Average Order Value</h6>
+                                <div class="value">${{ average_order_value|floatformat:2 }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-4">
+                            <div class="stat-card">
+                                <h6>Repeat Customers</h6>
+                                <div class="value">{{ repeat_customers }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="salesChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Insights -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h5 class="mb-0">Detailed Insights</h5>
+                </div>
+                <div class="section-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6>Top Selling Products</h6>
+                            {% if top_products %}
+                            <table class="table table-modern">
+                                <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity Sold</th>
+                                    <th>Revenue</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for product in top_products %}
+                                <tr>
+                                    <td>{{ product.product__title }}</td>
+                                    <td>{{ product.total_quantity }}</td>
+                                    <td>${{ product.total_revenue|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            {% else %}
+                            <p class="text-muted">No sales data available.</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <h6>Revenue by Category</h6>
+                            <canvas id="categoryChart" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date pickers with restrictions
+        const startPicker = flatpickr("#startDate", {
+            dateFormat: "Y-m-d",
+            maxDate: new Date(), // Prevent future dates
+            onChange: function(selectedDates, dateStr, instance) {
+                // Update end date's minDate to start date
+                const endPicker = document.querySelector("#endDate")._flatpickr;
+                if (selectedDates.length) {
+                    endPicker.set('minDate', selectedDates[0]);
+                    // If end date is now invalid, clear it
+                    const endDateValue = document.querySelector("#endDate").value;
+                    if (endDateValue && new Date(endDateValue) < selectedDates[0]) {
+                        endPicker.clear();
+                    }
+                }
+            }
+        });
+
+        const endPicker = flatpickr("#endDate", {
+            dateFormat: "Y-m-d",
+            maxDate: new Date(), // Prevent future dates
+            onChange: function(selectedDates, dateStr, instance) {
+                // Update start date's maxDate to end date
+                const startPicker = document.querySelector("#startDate")._flatpickr;
+                if (selectedDates.length) {
+                    startPicker.set('maxDate', selectedDates[0]);
+                    // If start date is now invalid, clear it
+                    const startDateValue = document.querySelector("#startDate").value;
+                    if (startDateValue && new Date(startDateValue) > selectedDates[0]) {
+                        startPicker.clear();
+                    }
+                }
+            }
+        });
+
+        // Show/hide date pickers based on range selection
+        const rangeSelect = document.querySelector('#rangeSelect');
+        const datePickers = document.querySelectorAll('.date-picker');
+        const dateRangeForm = document.querySelector('#dateRangeForm');
+
+        rangeSelect.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                datePickers.forEach(picker => picker.style.display = 'block');
+            } else {
+                datePickers.forEach(picker => picker.style.display = 'none');
+                dateRangeForm.submit(); // Submit immediately for predefined ranges
+            }
+        });
+
+        // Ensure form submission only when both dates are selected for custom range
+        dateRangeForm.addEventListener('submit', function(event) {
+            const range = rangeSelect.value;
+            const startDate = document.querySelector('#startDate').value;
+            const endDate = document.querySelector('#endDate').value;
+
+            if (range === 'custom') {
+                if (!startDate || !endDate) {
+                    event.preventDefault();
+                    alert('Please select both start and end dates for a custom range.');
+                } else if (new Date(startDate) > new Date(endDate)) {
+                    event.preventDefault();
+                    alert('Start date must be less than or equal to end date.');
+                }
+            }
+        });
+
+        // Sales Chart
+        const salesData = {{ sales_data|safe }};
+        const salesLabels = salesData.map(data => data.day);
+        const salesValues = salesData.map(data => data.total_sales);
+        const ordersValues = salesData.map(data => data.total_orders);
+
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: salesLabels.length ? salesLabels : ['No Data'],
+                datasets: [
+                    {
+                        label: 'Total Sales ($)',
+                        data: salesValues.length ? salesValues : [0],
+                        borderColor: '#007aff',
+                        backgroundColor: 'rgba(0, 122, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Total Orders',
+                        data: ordersValues.length ? ordersValues : [0],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Value'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryData = {{ revenue_by_category|safe }};
+        const categoryLabels = categoryData.map(data => data.category);
+        const categoryValues = categoryData.map(data => data.total_revenue);
+
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'pie',
+            data: {
+                labels: categoryLabels.length ? categoryLabels : ['No Data'],
+                datasets: [{
+                    data: categoryValues.length ? categoryValues : [0],
+                    backgroundColor: [
+                        '#007aff', '#28a745', '#dc3545', '#ffca28', '#6f42c1',
+                        '#17a2b8', '#fd7e14', '#6610f2', '#e83e8c', '#20c997'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: $${value.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

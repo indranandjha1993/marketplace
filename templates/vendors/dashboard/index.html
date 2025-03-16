@@ -3,38 +3,11 @@
 {% block title %}Vendor Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container py-4">
     <div class="row">
-        <!-- Sidebar -->
         <div class="col-md-3 col-lg-2 mb-4">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Vendor Menu</h5>
-                </div>
-                <div class="list-group list-group-flush">
-                    <a href="{% url 'vendors:vendor_dashboard' %}" class="list-group-item list-group-item-action active">
-                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                    </a>
-                    <a href="{% url 'vendors:vendor_products' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-box me-2"></i> Products
-                    </a>
-                    <a href="{% url 'vendors:vendor_orders' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-shopping-cart me-2"></i> Orders
-                    </a>
-                    <a href="{% url 'vendors:vendor_profile' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-user-circle me-2"></i> Profile
-                    </a>
-                    <a href="{% url 'vendors:vendor_settings' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-cog me-2"></i> Settings
-                    </a>
-                    <a href="{% url 'vendors:vendor_analytics' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-chart-bar me-2"></i> Analytics
-                    </a>
-                </div>
-            </div>
+            {% include 'vendors/includes/sidebar.html' %}
         </div>
-
-        <!-- Dashboard Content -->
         <div class="col-md-9 col-lg-10">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="h3 mb-0">Welcome, {{ vendor.business_name }}</h1>

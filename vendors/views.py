@@ -1,15 +1,23 @@
+import logging
 from datetime import datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Sum
 from django.db.models.functions import TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
 from django.utils.text import slugify
+from django.views.generic import DeleteView
 
+from orders.models import Order, OrderItem
 from products.models import Product, Category, Brand, ProductImage
-from .models import Vendor
+from .forms import VendorAccountForm, VendorBankAccountForm, VendorDocumentForm
+from .models import Vendor, VendorBankAccount, VendorDocument
+
+logger = logging.getLogger(__name__)
 
 
 def vendor_list(request):
@@ -502,39 +510,240 @@ def vendor_profile(request):
     return render(request, 'vendors/dashboard/profile.html', context)
 
 
+def validate_document(document):
+    # Check file size (e.g., max 5MB)
+    max_size = 5 * 1024 * 1024  # 5MB
+    if document.size > max_size:
+        raise ValidationError(f"File size should not exceed {max_size / (1024 * 1024)} MB")
+
+    # Check file type (e.g., only allow PDF and image files)
+    valid_mime_types = ['application/pdf', 'image/jpeg', 'image/png']
+    if document.content_type not in valid_mime_types:
+        raise ValidationError("Unsupported file type. Only PDF, JPEG, and PNG files are allowed.")
+
+
 @login_required
 def vendor_settings(request):
-    """
-    View for vendor account settings.
-    """
-    # Check if the user is a vendor
     if not request.user.is_vendor or not hasattr(request.user, 'vendor'):
         messages.error(request, 'You need to register as a vendor to access the dashboard')
         return redirect('vendors:become_vendor')
 
     vendor = request.user.vendor
+    bank_account, created = VendorBankAccount.objects.get_or_create(vendor=vendor)
+    documents = VendorDocument.objects.filter(vendor=vendor)
+
+    used_document_types = documents.values_list('document_type', flat=True)
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'account':
+            account_form = VendorAccountForm(request.POST, instance=vendor)
+            bank_form = VendorBankAccountForm(request.POST, instance=bank_account)
+            if account_form.is_valid() and bank_form.is_valid():
+                account_form.save()
+                bank_form.save()
+                messages.success(request, 'Account details updated successfully')
+            else:
+                for error in account_form.errors.values():
+                    messages.error(request, error)
+                for error in bank_form.errors.values():
+                    messages.error(request, error)
+
+        elif action == 'documents':
+            logger.debug(f"Raw POST data: {request.POST}")
+            logger.debug(f"Raw FILES data: {request.FILES}")
+            document_form = VendorDocumentForm(request.POST, request.FILES, exclude_types=used_document_types)
+            if document_form.is_valid():
+                document_file = request.FILES.get('document')  # Single file
+                document_type = document_form.cleaned_data['document_type']
+                VendorDocument.objects.filter(vendor=vendor, document_type=document_type).delete()
+                VendorDocument.objects.create(
+                    vendor=vendor,
+                    document_type=document_type,
+                    document=document_file
+                )
+                messages.success(request, 'Document uploaded successfully')
+            else:
+                for field, errors in document_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Document form error ({field}): {error}")
+                logger.error(f"Form errors: {document_form.errors}")
+
+        return redirect('vendors:vendor_settings')
+
+    else:
+        account_form = VendorAccountForm(instance=vendor)
+        bank_form = VendorBankAccountForm(instance=bank_account)
+        document_form = VendorDocumentForm(exclude_types=used_document_types)
 
     context = {
         'vendor': vendor,
+        'account_form': account_form,
+        'bank_form': bank_form,
+        'document_form': document_form,
+        'documents': documents,
     }
-
     return render(request, 'vendors/dashboard/settings.html', context)
 
 
 @login_required
+def delete_vendor_document(request, document_id):
+    document = get_object_or_404(VendorDocument, id=document_id, vendor=request.user.vendor)
+    if request.method == 'POST':
+        document.delete()
+        messages.success(request, 'Document deleted successfully')
+    return redirect('vendors:vendor_settings')
+
+
+@login_required
 def vendor_analytics(request):
-    """
-    View for vendor analytics and reporting.
-    """
-    # Check if the user is a vendor
     if not request.user.is_vendor or not hasattr(request.user, 'vendor'):
         messages.error(request, 'You need to register as a vendor to access the dashboard')
         return redirect('vendors:become_vendor')
 
     vendor = request.user.vendor
 
+    # Handle date range selection
+    date_range = request.GET.get('range', '30days')
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+
+    # Default to 30 days if no custom range is provided
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+
+    if date_range == 'custom' and start_date_str and end_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+            # Set end_date to the end of the day (23:59:59.999999)
+            end_date = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            if start_date > end_date:
+                messages.error(request, 'Start date must be less than or equal to end date. Using default 30 days.')
+                logger.error(f"Invalid date range: start_date={start_date_str} is after end_date={end_date_str}")
+                start_date = datetime.now() - timedelta(days=30)
+                end_date = datetime.now()
+            elif end_date > datetime.now():
+                end_date = datetime.now()  # Cap end_date to current time if it's in the future
+            logger.debug(f"Custom date range: {start_date} to {end_date}")
+        except ValueError:
+            messages.error(request, 'Invalid date format. Using default 30 days.')
+            logger.error(f"Invalid date format: start_date={start_date_str}, end_date={end_date_str}")
+    else:
+        if date_range == '7days':
+            start_date = end_date - timedelta(days=7)
+        elif date_range == '90days':
+            start_date = end_date - timedelta(days=90)
+        else:  # Default to 30 days
+            start_date = end_date - timedelta(days=30)
+        # Adjust start_date to the beginning of the day and end_date to the current time
+        start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        logger.debug(f"Predefined date range: {date_range}, {start_date} to {end_date}")
+
+    # Previous period for comparison
+    previous_period_start = start_date - (end_date - start_date)
+    previous_period_end = start_date
+
+    # Sales data for the selected date range
+    sales_data = Order.objects.filter(
+        vendor_orders__vendor=vendor,
+        created_at__gte=start_date,
+        created_at__lte=end_date
+    ).annotate(
+        day=TruncDay('created_at')
+    ).values('day').annotate(
+        total_sales=Sum('total'),
+        total_orders=Count('id')
+    ).order_by('day')
+
+    # Previous period sales for growth calculation
+    previous_sales_data = Order.objects.filter(
+        vendor_orders__vendor=vendor,
+        created_at__gte=previous_period_start,
+        created_at__lte=previous_period_end
+    ).aggregate(
+        total_sales=Sum('total')
+    )
+
+    # Format sales data for JavaScript
+    sales_data = [
+        {
+            'day': data['day'].strftime('%Y-%m-%d'),
+            'total_sales': float(data['total_sales']),
+            'total_orders': data['total_orders']
+        }
+        for data in sales_data
+    ]
+
+    # Total sales and orders
+    total_sales = sum(data['total_sales'] for data in sales_data)
+    total_orders = sum(data['total_orders'] for data in sales_data)
+
+    # Sales growth percentage
+    previous_total_sales = previous_sales_data['total_sales'] or 0
+    if previous_total_sales > 0:
+        sales_growth = ((total_sales - previous_total_sales) / previous_total_sales) * 100
+    else:
+        sales_growth = 100 if total_sales > 0 else 0
+
+    # Average order value
+    average_order_value = total_sales / total_orders if total_orders > 0 else 0
+
+    # Top selling products
+    top_products = OrderItem.objects.filter(
+        order__vendor_orders__vendor=vendor,
+        order__created_at__gte=start_date,
+        order__created_at__lte=end_date
+    ).values(
+        'product__title'
+    ).annotate(
+        total_quantity=Sum('quantity'),
+        total_revenue=Sum('price')
+    ).order_by('-total_quantity')[:5]
+
+    # Revenue by category (assuming Product has a category field)
+    revenue_by_category = OrderItem.objects.filter(
+        order__vendor_orders__vendor=vendor,
+        order__created_at__gte=start_date,
+        order__created_at__lte=end_date
+    ).values(
+        'product__category__name'
+    ).annotate(
+        total_revenue=Sum('price')
+    ).order_by('-total_revenue')
+
+    # Format for JavaScript
+    revenue_by_category = [
+        {
+            'category': data['product__category__name'] or 'Uncategorized',
+            'total_revenue': float(data['total_revenue'])
+        }
+        for data in revenue_by_category
+    ]
+
+    # Repeat customers
+    repeat_customers = Order.objects.filter(
+        vendor_orders__vendor=vendor,
+        created_at__gte=start_date,
+        created_at__lte=end_date
+    ).values('user').annotate(
+        order_count=Count('id')
+    ).filter(order_count__gt=1).count()
+
     context = {
         'vendor': vendor,
+        'sales_data': sales_data,
+        'total_sales': total_sales,
+        'total_orders': total_orders,
+        'average_order_value': average_order_value,
+        'sales_growth': sales_growth,
+        'top_products': top_products,
+        'revenue_by_category': revenue_by_category,
+        'repeat_customers': repeat_customers,
+        'date_range': date_range,
+        'start_date': start_date.strftime('%Y-%m-%d'),
+        'end_date': end_date.strftime('%Y-%m-%d'),
     }
 
     return render(request, 'vendors/dashboard/analytics.html', context)
@@ -549,3 +758,12 @@ def vendor_status(request):
             'pending_vendor': request.user.is_vendor and not hasattr(request.user, 'vendor')
         }
     return {'is_vendor': False, 'pending_vendor': False}
+
+
+class ProductDeleteView(DeleteView):
+    model = Product
+    template_name = 'vendors/dashboard/product_confirm_delete.html'
+    success_url = reverse_lazy('vendors:vendor_products')
+
+    def get_queryset(self):
+        return self.model.objects.filter(vendor=self.request.user.vendor)
