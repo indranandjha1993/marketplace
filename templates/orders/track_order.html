@@ -60,7 +60,7 @@
                     <h5 class="card-title mb-0">{{ vendor_tracking.vendor.business_name }}</h5>
                 </div>
                 <div class="card-body">
-                    {% with vendor_order=vendor_tracking.vendor.orders.get %}
+                    {% with vendor_order=vendor_tracking.vendor_order %}
                     {% if vendor_order.tracking_number %}
                     <div class="mb-3">
                         <strong>Tracking Number:</strong> {{ vendor_order.tracking_number }}

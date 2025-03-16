@@ -292,7 +292,7 @@ def place_order(request):
     # Clear the cart
     cart.clear()
 
-    send_order_confirmation_email(order)
+    # send_order_confirmation_email(order)
 
     # Handle payment based on method
     if payment_method == 'cod':
@@ -464,6 +464,7 @@ def track_order(request, order_number):
         history = vendor_order.tracking_history.all().order_by('timestamp')
         tracking_history.append({
             'vendor': vendor_order.vendor,
+            'vendor_order': vendor_order,
             'history': history
         })
 

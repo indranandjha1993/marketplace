@@ -341,6 +341,16 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const shippingRequiredFields = [
+            'shipping_full_name',
+            'shipping_phone',
+            'shipping_address_line1',
+            'shipping_city',
+            'shipping_state',
+            'shipping_postal_code',
+            'shipping_country'
+        ].map(id => document.getElementById(id));
+
         // Shipping address toggle
         const shippingAddressRadios = document.querySelectorAll('input[name="shipping_address_type"]');
         const newShippingAddress = document.getElementById('new-shipping-address');
@@ -351,38 +361,71 @@
                 radio.addEventListener('change', function() {
                     if (this.value === 'new') {
                         newShippingAddress.style.display = 'block';
+                        shippingRequiredFields.forEach(field => field.required = true);
                         if (savedShippingSelect) savedShippingSelect.disabled = true;
                     } else {
                         newShippingAddress.style.display = 'none';
+                        shippingRequiredFields.forEach(field => field.required = false);
                         if (savedShippingSelect) savedShippingSelect.disabled = false;
                     }
                 });
             });
+
+            // Handle initial state
+            const initialShippingType = document.querySelector('input[name="shipping_address_type"]:checked').value;
+            if (initialShippingType === 'saved') {
+                shippingRequiredFields.forEach(field => field.required = false);
+            }
         }
 
         // Billing address toggle
+        const billingRequiredFields = [
+            'billing_full_name',
+            'billing_phone',
+            'billing_address_line1',
+            'billing_city',
+            'billing_state',
+            'billing_postal_code',
+            'billing_country'
+        ].map(id => document.getElementById(id));
+
         const useShippingCheckbox = document.getElementById('use_shipping_for_billing');
         const billingAddressForm = document.getElementById('billing-address-form');
-
-        if (useShippingCheckbox && billingAddressForm) {
-            useShippingCheckbox.addEventListener('change', function() {
-                billingAddressForm.style.display = this.checked ? 'none' : 'block';
-            });
-        }
-
-        // Billing address type toggle
         const billingAddressRadios = document.querySelectorAll('input[name="billing_address_type"]');
         const newBillingAddress = document.getElementById('new-billing-address');
         const savedBillingSelect = document.getElementById('saved-billing-select');
+
+        if (useShippingCheckbox && billingAddressForm) {
+            useShippingCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    billingAddressForm.style.display = 'none';
+                    billingRequiredFields.forEach(field => field.required = false);
+                } else {
+                    billingAddressForm.style.display = 'block';
+                    const billingType = document.querySelector('input[name="billing_address_type"]:checked').value;
+                    if (billingType === 'new') {
+                        billingRequiredFields.forEach(field => field.required = true);
+                    } else {
+                        billingRequiredFields.forEach(field => field.required = false);
+                    }
+                }
+            });
+
+            if (useShippingCheckbox.checked) {
+                billingRequiredFields.forEach(field => field.required = false);
+            }
+        }
 
         if (billingAddressRadios.length > 0) {
             billingAddressRadios.forEach(radio => {
                 radio.addEventListener('change', function() {
                     if (this.value === 'new') {
                         newBillingAddress.style.display = 'block';
+                        billingRequiredFields.forEach(field => field.required = true);
                         if (savedBillingSelect) savedBillingSelect.disabled = true;
                     } else {
                         newBillingAddress.style.display = 'none';
+                        billingRequiredFields.forEach(field => field.required = false);
                         if (savedBillingSelect) savedBillingSelect.disabled = false;
                     }
                 });
