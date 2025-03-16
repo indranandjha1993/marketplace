@@ -1,5 +1,5 @@
 from django.db import models
-from django.db.models import Case, When, F, DecimalField
+from django.db.models import Case, When, F, DecimalField, Value
 from django.utils.text import slugify
 from vendors.models import Vendor
 from accounts.models import User
@@ -156,6 +156,25 @@ class Product(models.Model):
             )
         )
 
+    @classmethod
+    def annotate_sale_details(cls, queryset):
+        """
+        Annotate a queryset with calculated `effective_price` and `discount_percentage`.
+        """
+        return queryset.annotate(
+            effective_price=Case(
+                When(sale_price__isnull=False, sale_price__gt=0, sale_price__lt=F('price'), then=F('sale_price')),
+                default=F('price'),
+                output_field=DecimalField()
+            ),
+            discount_percentage=Case(
+                When(sale_price__isnull=False, sale_price__gt=0, sale_price__lt=F('price'),
+                     then=(Value(100) - (F('sale_price') * 100 / F('price')))),
+                default=Value(0),
+                output_field=DecimalField(max_digits=5, decimal_places=2)
+            )
+        )
+
 
 class ProductImage(models.Model):
     """Images for products (multiple per product)."""
@@ -220,11 +239,32 @@ class ProductVariant(models.Model):
     attribute_values = models.ManyToManyField(ProductAttributeValue, related_name='variants')
 
     def __str__(self):
-        return f"{self.product.title} - {', '.join([f'{av.attribute.name}: {av.value}' for av in self.attribute_values.all()])}"
+        return f"{self.product.title} - {self.sku}"
 
     @property
     def price(self):
-        return self.product.current_price + self.price_adjustment
+        return self.product.price + self.price_adjustment
+
+    @property
+    def sale_price(self):
+        return self.product.sale_price + self.price_adjustment
+
+    @property
+    def is_on_sale(self):
+        """Check if the product is on sale."""
+        return bool(self.sale_price and self.sale_price < self.price)
+
+    @property
+    def current_price(self):
+        """Return the current effective price (sale_price if on sale, otherwise price)."""
+        return self.sale_price if self.is_on_sale else self.price
+
+    @property
+    def discount_percentage(self):
+        """Calculate the discount percentage if the product is on sale."""
+        if self.is_on_sale:
+            return round((1 - (self.sale_price / self.price)) * 100)
+        return 0
 
     @property
     def is_in_stock(self):

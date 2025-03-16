@@ -182,7 +182,7 @@ class CartItem(models.Model):
     def unit_price(self):
         """Return the unit price of the item."""
         if self.variant:
-            return self.variant.price
+            return self.variant.current_price
         return self.product.current_price
 
     @property

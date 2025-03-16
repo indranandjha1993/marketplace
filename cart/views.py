@@ -55,6 +55,14 @@ def cart_detail(request):
             if 'coupon_id' in request.session:
                 del request.session['coupon_id']
 
+    cart_items = cart.items.select_related('product', 'variant', 'product__vendor').all()
+    for cart_item in cart_items:
+        current_price = float(cart_item.product.current_price)
+        if cart_item.variant:
+            current_price = float(cart_item.variant.price)
+
+        print(f"current_price: {current_price}")
+
     context = {
         'cart': cart,
         'cart_items': cart.items.select_related('product', 'variant', 'product__vendor').all(),

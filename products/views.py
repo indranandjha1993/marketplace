@@ -162,26 +162,19 @@ def product_detail(request, product_slug):
     variants_data = []
     default_attributes = {}
     if product.variants.exists():
-        default_variant = ProductVariant.objects.filter(product__id=product.id).filter(quantity__gt=0).first()
-        print(f"default_variant: {default_variant.attribute_values.all()}")
-        for attr_value in default_variant.attribute_values.all():
-            d = {attr_value.attribute.name: attr_value.id for attr_value in default_variant.attribute_values.all()}
-            print(f"attr_value: {d}")
+        default_variant = product.variants.filter(quantity__gt=0).first()
         if default_variant:
             default_attributes = {attr_value.attribute.name: attr_value.id for attr_value in default_variant.attribute_values.all()}
         for variant in product.variants.all():
-            sale_price = None
-            if product.is_on_sale and product.discount_percentage:
-                sale_price = float(variant.price) * (1 - float(product.discount_percentage) / 100)
             variant_data = {
                 'id': variant.id,
                 'price': float(variant.price),
-                'sale_price': sale_price,
+                'sale_price': float(variant.current_price),
                 'quantity': variant.quantity,
                 'sku': variant.sku,
                 'attributes': {attr_value.attribute.name: attr_value.id for attr_value in variant.attribute_values.all()},
-                'discount_percentage': product.discount_percentage if product.is_on_sale else 0,
-                'is_in_stock': variant.quantity > 0
+                'discount_percentage': variant.discount_percentage if variant.is_on_sale else 0,
+                'is_in_stock': variant.is_in_stock
             }
             variants_data.append(variant_data)
 
