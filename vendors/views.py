@@ -73,9 +73,9 @@ def vendor_detail(request, vendor_slug):
 
     # Apply sorting
     if sort == 'price_asc':
-        products = products.order_by('current_price')
+        products = products.order_by('price')
     elif sort == 'price_desc':
-        products = products.order_by('-current_price')
+        products = products.order_by('-price')
     elif sort == 'name_asc':
         products = products.order_by('title')
     elif sort == 'name_desc':

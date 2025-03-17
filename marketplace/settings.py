@@ -72,6 +72,9 @@ TEMPLATES = [
                 "cart.context_processors.cart_items_count",
                 'products.context_processors.categories_processor',
             ],
+            'libraries': {
+                'common_tags': 'utils.templatetags.common_tags',
+            },
         },
     },
 ]

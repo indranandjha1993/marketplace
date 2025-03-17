@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load product_tags %}
+{% load common_tags %}
 
 {% block title %}{{ product.title }}{% endblock %}
 
@@ -108,7 +108,7 @@
                     {% endif %}
 
                     <!-- Add to cart form -->
-                    <div class="mb-4">
+                    <div class="mb-4 d-flex align-items-center">
                         <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" id="add-to-cart-form">
                             {% csrf_token %}
 
@@ -144,22 +144,21 @@
 
                             <!-- Action buttons -->
                             <div class="d-flex">
-                                <button type="submit" class="btn btn-primary me-2" {% if not product.is_in_stock %}disabled{% endif %}>
+                                <button type="submit" class="btn btn-primary" {% if not product.is_in_stock %}disabled{% endif %}>
                                     <i class="fas fa-shopping-cart me-2"></i> Add to Cart
                                 </button>
-
-                                <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.path }}">
-                                    <button type="submit" class="btn btn-outline-danger">
-                                        {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
-                                        <i class="fas fa-heart"></i>
-                                        {% else %}
-                                        <i class="far fa-heart"></i>
-                                        {% endif %}
-                                    </button>
-                                </form>
                             </div>
+                        </form>
+                        <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="ms-3 mt-auto">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-sm btn-icon wishlist-btn{% if user.is_authenticated and product in user.profile.wishlist_products.all %} active{% endif %}">
+                                {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
+                                <i class="fas fa-heart"></i>
+                                {% else %}
+                                <i class="far fa-heart"></i>
+                                {% endif %}
+                            </button>
                         </form>
                     </div>
                 </div>
@@ -553,24 +552,27 @@
 
     document.getElementById('add-to-cart-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        const variantId = document.getElementById('selected-variant-id').value;
+        const variantIdElement = document.getElementById('selected-variant-id');
         const quantity = parseInt(document.querySelector('.quantity-input').value);
 
-        if (variantId) {
-            fetch(`/check-variant-quantity/${variantId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.quantity >= quantity) {
-                        this.submit();
-                    } else {
-                        alert(`Only ${data.quantity} items left in stock.`);
-                        updateAvailabilityText({ quantity: data.quantity, is_in_stock: data.quantity > 0 });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    this.submit(); // Fallback to server-side validation
-                });
+        if (variantIdElement) {
+            const variantId = variantIdElement.value;
+            if(variantId){
+                fetch(`/check-variant-quantity/${variantId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.quantity >= quantity) {
+                            this.submit();
+                        } else {
+                            alert(`Only ${data.quantity} items left in stock.`);
+                            updateAvailabilityText({ quantity: data.quantity, is_in_stock: data.quantity > 0 });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        this.submit(); // Fallback to server-side validation
+                    });
+                }
         } else {
             this.submit(); // No variant selected, proceed normally
         }

@@ -1,5 +1,5 @@
 from django import template
-from django.db.models import Avg, Count
+from django.db.models import Avg
 from django.utils.safestring import mark_safe
 
 register = template.Library()
@@ -51,6 +51,7 @@ def display_stars(rating, max_stars=5):
 
     return mark_safe(''.join(stars_html))
 
+
 @register.simple_tag
 def rating_display(rating, review_count=None, max_stars=5):
     """
@@ -65,6 +66,7 @@ def rating_display(rating, review_count=None, max_stars=5):
         count_text = ''
 
     return mark_safe(f'<div class="product-rating">{stars}{count_text}</div>')
+
 
 @register.filter
 def get_item(dictionary, key):

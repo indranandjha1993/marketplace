@@ -252,7 +252,7 @@ class ProductVariant(models.Model):
     @property
     def is_on_sale(self):
         """Check if the product is on sale."""
-        return bool(self.sale_price and self.sale_price < self.price)
+        return bool(self.product.sale_price and self.sale_price < self.price)
 
     @property
     def current_price(self):
