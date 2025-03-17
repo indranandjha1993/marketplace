@@ -17,22 +17,16 @@
                 </div>
                 <div class="card-body text-center mt-5">
                     <h5 class="card-title">{{ vendor.business_name }}</h5>
-                    <div class="mb-2">
+                    <div class="me-3">
                         {% if vendor.avg_rating %}
-                        {% for _ in "12345"|slice:":vendor.avg_rating" %}
-                        <i class="fas fa-star text-warning"></i>
-                        {% endfor %}
-                        {% for _ in "12345"|slice:vendor.avg_rating:"5" %}
-                        <i class="far fa-star text-warning"></i>
-                        {% endfor %}
-                        <span class="text-muted ms-1">({{ vendor.reviews.count }})</span>
+                        {% rating_display vendor.avg_rating vendor.reviews.count %}
                         {% else %}
                         <i class="far fa-star text-warning"></i>
                         <i class="far fa-star text-warning"></i>
                         <i class="far fa-star text-warning"></i>
                         <i class="far fa-star text-warning"></i>
                         <i class="far fa-star text-warning"></i>
-                        <span class="text-muted ms-1">(0)</span>
+                        <span class="text-muted ms-1">(0 reviews)</span>
                         {% endif %}
                     </div>
                     <p class="card-text text-muted small">{{ vendor.description|truncatewords:15 }}</p>

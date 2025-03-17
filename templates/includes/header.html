@@ -1,0 +1,196 @@
+<header class="bg-white shadow-sm sticky-top">
+    <div class="container-fluid px-md-4">
+        <nav class="navbar navbar-expand-lg navbar-light py-2">
+            <div class="d-flex align-items-center w-100">
+                <!-- Logo -->
+                <a class="navbar-brand me-3" href="/" aria-label="Marketplace Home">
+                    <img src="/static/img/logo.png" alt="" width="75" height="22" class="d-inline-block align-text-top" loading="lazy">
+                    <span class="text-primary fs-6 fw-bold d-none d-sm-inline">Marketplace</span>
+                </a>
+
+                <!-- Search Bar (Centered on desktop, full-width on mobile) -->
+                <div class="d-none d-lg-flex flex-grow-1 mx-5 w-50">
+                    <form class="d-flex w-100"
+                          action="{% url 'products:search_products' %}"
+                          method="GET"
+                          role="search">
+                        <div class="input-group">
+                            <input type="search"
+                                   name="q"
+                                   id="searchInput"
+                                   class="form-control bg-light border-end-0"
+                                   placeholder="Search for Products, Brands and More"
+                                   aria-label="Search products">
+                            <button class="btn btn-light border border-start-0" type="submit" aria-label="Search">
+                                <i class="fas fa-search text-muted" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right-aligned Nav Items -->
+                <div class="ms-auto d-flex align-items-center">
+                    <!-- Login -->
+                    <div class="nav-item dropdown me-3">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center"
+                           href="#"
+                           id="loginDropdown"
+                           role="button"
+                           data-bs-toggle="dropdown"
+                           aria-expanded="false">
+                            <i class="fas fa-user-circle me-1 d-lg-none" aria-hidden="true"></i>
+                            {% if user.is_authenticated %}
+                            <span class="fw-bold">{{ user.first_name|default:"Account" }}</span>
+                            {% else %}
+                            <span class="fw-bold">Login</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="loginDropdown">
+                            {% if user.is_authenticated %}
+                            {% if user.is_vendor %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'vendors:vendor_dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-2 text-primary" aria-hidden="true"></i> Vendor Dashboard
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'accounts:user_profile' %}">
+                                    <i class="fas fa-user-circle me-2" aria-hidden="true"></i> My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'orders:order_list' %}">
+                                    <i class="fas fa-box me-2" aria-hidden="true"></i> My Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'accounts:wishlist' %}">
+                                    <i class="fas fa-heart me-2" aria-hidden="true"></i> Wishlist
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'accounts:user_addresses' %}">
+                                    <i class="fas fa-map-marker-alt me-2" aria-hidden="true"></i> Addresses
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form id="logout-form" method="post" action="{% url 'account_logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item py-2">
+                                        <i class="fas fa-sign-out-alt me-2" aria-hidden="true"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                            {% else %}
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'account_login' %}">
+                                    <i class="fas fa-sign-in-alt me-2" aria-hidden="true"></i> Login
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="{% url 'account_signup' %}">
+                                    <i class="fas fa-user-plus me-2" aria-hidden="true"></i> Register
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2" href="#">
+                                    <i class="fas fa-box me-2" aria-hidden="true"></i> Orders
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" href="#">
+                                    <i class="fas fa-heart me-2" aria-hidden="true"></i> Wishlist
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Become a Seller -->
+                    {% if not user.is_vendor %}
+                    <div class="nav-item me-3 d-none d-lg-block" data-attribute="{{ user.is_vendor }}">
+                        <a class="nav-link fw-bold" href="{% url 'vendors:become_vendor' %}">
+                            Become a Seller
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- Cart -->
+                    <div class="nav-item me-3 d-flex align-items-center">
+                        <a class="nav-link" href="{% url 'cart:cart_detail' %}" aria-label="Shopping cart">
+                            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                            <span class="fw-bold ms-1 d-none d-lg-inline">Cart</span>
+                            {% if cart_items_count > 0 %}
+                            <span class="badge rounded-pill bg-primary ms-1">{{ cart_items_count }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+
+                    <!-- More Options (Mobile Toggle) -->
+                    <div class="nav-item d-lg-none">
+                        <button class="btn btn-link nav-link px-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Mobile Search Bar -->
+        <div class="d-lg-none pb-3 mt-2 mx-auto">
+            <form class="d-flex w-100"
+                  action="{% url 'products:search_products' %}"
+                  method="GET"
+                  role="search">
+                <div class="input-group">
+                    <input type="search"
+                           name="q"
+                           class="form-control bg-light border-end-0"
+                           placeholder="Search for Products, Brands and More"
+                           aria-label="Search products">
+                    <button class="btn btn-light border border-start-0" type="submit" aria-label="Search">
+                        <i class="fas fa-search text-muted" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Navigation Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="mobileNavLabel">Menu</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <ul class="nav flex-column">
+            {% if not user.is_vendor %}
+            <li class="nav-item">
+                <a class="nav-link py-2" href="{% url 'vendors:become_vendor' %}">
+                    <i class="fas fa-store me-2" aria-hidden="true"></i> Become a Seller
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link py-2" href="#">
+                    <i class="fas fa-bell me-2" aria-hidden="true"></i> Notifications
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-2" href="#">
+                    <i class="fas fa-download me-2" aria-hidden="true"></i> Install App
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-2" href="#">
+                    <i class="fas fa-question-circle me-2" aria-hidden="true"></i> Help Center
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>
