@@ -290,7 +290,6 @@ header {
 
 .product-image {
   max-height: 180px;
-  max-width: 90%;
   object-fit: contain;
   transition: all 0.3s ease;
 }
@@ -477,10 +476,6 @@ header {
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.15s ease;
-}
-
-.form-check-label:hover {
-  background-color: var(--gray-100);
 }
 
 .form-check-input:checked + .form-check-label {
