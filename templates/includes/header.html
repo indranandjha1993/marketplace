@@ -24,16 +24,17 @@
                     <form class="d-flex w-100"
                           action="{% url 'products:browse_products' %}"
                           method="GET"
-                          role="search">
-                        <div class="input-group">
+                          role="search"
+                          id="desktopSearchForm">
+                        <div class="input-group search-container">
                             <input type="search"
                                    name="q"
-                                   id="searchInput"
-                                   class="form-control bg-light border-end-0"
+                                   id="desktopSearchInput"
+                                   class="form-control search-input"
                                    placeholder="Search for Products, Brands and More"
                                    aria-label="Search products">
-                            <button class="btn btn-light border border-start-0" type="submit" aria-label="Search">
-                                <i class="fas fa-search text-muted" aria-hidden="true"></i>
+                            <button class="btn search-button" type="submit" aria-label="Search">
+                                <i class="fas fa-search" aria-hidden="true"></i>
                             </button>
                         </div>
                     </form>
@@ -149,15 +150,17 @@
             <form class="d-flex w-100"
                   action="{% url 'products:browse_products' %}"
                   method="GET"
-                  role="search">
-                <div class="input-group">
+                  role="search"
+                  id="mobileSearchForm">
+                <div class="input-group search-container">
                     <input type="search"
                            name="q"
-                           class="form-control bg-light border-end-0"
+                           id="mobileSearchInput"
+                           class="form-control search-input"
                            placeholder="Search for Products, Brands and More"
                            aria-label="Search products">
-                    <button class="btn btn-light border border-start-0" type="submit" aria-label="Search">
-                        <i class="fas fa-search text-muted" aria-hidden="true"></i>
+                    <button class="btn search-button" type="submit" aria-label="Search">
+                        <i class="fas fa-search" aria-hidden="true"></i>
                     </button>
                 </div>
             </form>
