@@ -443,6 +443,7 @@ header {
 }
 
 #sort-select {
+  width: auto;
   min-width: 180px;
   border-radius: 6px;
   border: 1px solid var(--gray-300);
