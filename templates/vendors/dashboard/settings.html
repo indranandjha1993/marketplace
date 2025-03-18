@@ -10,17 +10,6 @@
             {% include 'vendors/includes/sidebar.html' %}
         </div>
         <div class="col-md-9 col-lg-10">
-            <!-- Messages -->
-            {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
             <!-- Account Section -->
             <div class="card">
                 <div class="card-header bg-white">
