@@ -12,7 +12,6 @@
     .image-card {
         border-radius: 5px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         height: 100%;
         position: relative;
     }
@@ -28,6 +27,7 @@
         top: 0;
         left: 0;
         width: 100%;
+        max-width: 100%;
         height: 100%;
         object-fit: cover;
         transition: transform 0.3s ease;
@@ -45,6 +45,11 @@
         background-color: rgba(0, 0, 0, 0.7);
         padding: 10px;
         transition: opacity 0.3s ease;
+    }
+
+    .form-check .form-check-input {
+        float: left;
+        margin-left: 1.5em;
     }
 
     .image-actions {
