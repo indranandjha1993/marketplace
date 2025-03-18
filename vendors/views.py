@@ -771,7 +771,7 @@ def vendor_orders(request):
         orders = orders.filter(order__order_number__icontains=search)
 
     # Pagination
-    paginator = Paginator(orders, 10)  # 10 orders per page
+    paginator = Paginator(orders, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

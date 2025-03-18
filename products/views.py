@@ -49,8 +49,6 @@ def home(request):
     ).annotate(
         review_count=Count('reviews'),
         avg_rating=Avg('reviews__rating')
-    ).filter(
-        review_count__gt=0
     ).order_by('-avg_rating', '-review_count')[:4]
 
     context = {

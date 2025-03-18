@@ -284,9 +284,8 @@
             </div>
 
             <!-- Pagination -->
-            {% if page_obj.has_other_pages %}
-                {% render_pagination page_obj request %}
-            {% endif %}
+            {% render_pagination page_obj request %}
+
             {% else %}
             <div class="card shadow-sm text-center py-5">
                 <div class="card-body">

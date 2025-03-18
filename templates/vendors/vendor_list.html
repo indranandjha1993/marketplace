@@ -39,9 +39,7 @@
     </div>
 
     <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-        {% render_pagination page_obj request %}
-    {% endif %}
+    {% render_pagination page_obj request %}
     {% else %}
     <div class="text-center py-5">
         <i class="fas fa-store fa-4x text-muted mb-3"></i>
