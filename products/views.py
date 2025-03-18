@@ -80,11 +80,11 @@ def product_detail(request, product_slug):
     variants_data = []
     default_attributes = {}
     if product.variants.exists():
-        default_variant = product.variants.filter(quantity__gt=0).first()
+        default_variant = product.variants.filter(quantity__gt=0, is_active=True).first()
         if default_variant:
             default_attributes = {attr_value.attribute.name: attr_value.id for attr_value in
                                   default_variant.attribute_values.all()}
-        for variant in product.variants.all():
+        for variant in product.variants.filter(is_active=True).all():
             variant_data = {
                 'id': variant.id,
                 'price': float(variant.price),
@@ -94,7 +94,8 @@ def product_detail(request, product_slug):
                 'attributes': {attr_value.attribute.name: attr_value.id for attr_value in
                                variant.attribute_values.all()},
                 'discount_percentage': variant.discount_percentage if variant.is_on_sale else 0,
-                'is_in_stock': variant.is_in_stock
+                'is_in_stock': variant.is_in_stock,
+                'is_on_sale': variant.is_on_sale,
             }
             variants_data.append(variant_data)
 

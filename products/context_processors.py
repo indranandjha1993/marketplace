@@ -5,5 +5,5 @@ def categories_processor(request):
     """
     Context processor to make categories available in all templates
     """
-    categories = Category.objects.filter(parent__isnull=True, is_active=True)
+    categories = Category.objects.filter(parent__isnull=True, is_active=True)[:5]
     return {'categories': categories}

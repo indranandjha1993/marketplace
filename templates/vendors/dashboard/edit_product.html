@@ -1,0 +1,881 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Edit Product - {{ product.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .image-gallery {
+        margin: 0 -10px;
+    }
+
+    .image-card {
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        height: 100%;
+        position: relative;
+    }
+
+    .image-wrapper {
+        position: relative;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        overflow: hidden;
+    }
+
+    .product-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .image-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    .image-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        transition: opacity 0.3s ease;
+    }
+
+    .image-actions {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .form-check {
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-check label {
+        color: white;
+        font-size: 0.85rem;
+        margin-left: 5px;
+    }
+
+    .form-check input[type="radio"], .form-check input[type="checkbox"] {
+        vertical-align: middle;
+    }
+
+    .image-previews {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .image-preview-item {
+        width: 100px;
+        height: 100px;
+        position: relative;
+        border-radius: 5px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .image-preview-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .image-preview-item .remove-preview {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: rgba(255,255,255,0.8);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        color: #dc3545;
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 mb-4">
+            {% include 'vendors/includes/sidebar.html' %}
+        </div>
+        <div class="col-md-9 col-lg-10">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="messages mb-4">
+                {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Edit Product</h1>
+                <div>
+                    <a href="{% url 'vendors:vendor_products' %}" class="btn btn-outline-secondary me-2">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Products
+                    </a>
+                    <a href="{% url 'vendors:delete_product' product.slug %}" class="btn btn-outline-danger">
+                        <i class="fas fa-trash me-1"></i> Delete Product
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'basic-info' %}active{% endif %}" id="basic-info-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab" aria-controls="basic-info" aria-selected="{% if active_tab == 'basic-info' %}true{% else %}false{% endif %}">Basic Info</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'images' %}active{% endif %}" id="images-tab" data-bs-toggle="tab" data-bs-target="#images" type="button" role="tab" aria-controls="images" aria-selected="{% if active_tab == 'images' %}true{% else %}false{% endif %}">Images</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'variants' %}active{% endif %}" id="variants-tab" data-bs-toggle="tab" data-bs-target="#variants" type="button" role="tab" aria-controls="variants" aria-selected="{% if active_tab == 'variants' %}true{% else %}false{% endif %}">Variants</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link {% if active_tab == 'seo' %}active{% endif %}" id="seo-tab" data-bs-toggle="tab" data-bs-target="#seo" type="button" role="tab" aria-controls="seo" aria-selected="{% if active_tab == 'seo' %}true{% else %}false{% endif %}">SEO</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content" id="productTabsContent">
+                        <!-- Basic Info Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'basic-info' %}show active{% endif %}" id="basic-info" role="tabpanel" aria-labelledby="basic-info-tab">
+                            <form method="post" id="basic-info-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_basic_info">
+
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-3">
+                                            <label for="title" class="form-label required-field">Product Title</label>
+                                            <input type="text" class="form-control" id="title" name="title" value="{{ product.title }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="description" class="form-label required-field">Description</label>
+                                            <textarea class="form-control" id="description" name="description" rows="5" required>{{ product.description }}</textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="category" class="form-label required-field">Category</label>
+                                            <select class="form-select" id="category" name="category" required>
+                                                <option value="">Select Category</option>
+                                                {% for category in all_categories %}
+                                                <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="brand" class="form-label">Brand</label>
+                                            <select class="form-select" id="brand" name="brand">
+                                                <option value="">Select Brand (Optional)</option>
+                                                {% for brand in brands %}
+                                                <option value="{{ brand.id }}" {% if product.brand and product.brand.id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="status" class="form-label required-field">Status</label>
+                                            <select class="form-select" id="status" name="status" required>
+                                                <option value="draft" {% if product.status == 'draft' %}selected{% endif %}>Draft</option>
+                                                <option value="active" {% if product.status == 'active' %}selected{% endif %}>Active</option>
+                                                <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="price" class="form-label required-field">Regular Price (₹)</label>
+                                            <input type="number" class="form-control" id="price" name="price" value="{{ product.price|floatformat:'-1' }}" min="0" step="0.01" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="sale_price" class="form-label">Sale Price (₹)</label>
+                                            <input type="number" class="form-control" id="sale_price" name="sale_price" value="{% if product.sale_price %}{{ product.sale_price|floatformat:'-1' }}{% endif %}" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="tax_rate" class="form-label">Tax Rate (%)</label>
+                                            <input type="number" class="form-control" id="tax_rate" name="tax_rate" value="{{ product.tax_rate|floatformat:'-1' }}" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label for="quantity" class="form-label required-field">Stock Quantity</label>
+                                            <input type="number" class="form-control" id="quantity" name="quantity" value="{{ product.quantity }}" min="0" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="sku" class="form-label required-field">SKU</label>
+                                            <input type="text" class="form-control" id="sku" name="sku" value="{{ product.sku }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3 form-check mt-4">
+                                            <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" {% if product.is_featured %}checked{% endif %}>
+                                            <label class="form-check-label" for="is_featured">Feature this product on the homepage</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">Save Basic Info</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Images Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'images' %}show active{% endif %}" id="images" role="tabpanel" aria-labelledby="images-tab">
+                            <form method="post" enctype="multipart/form-data" id="images-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_images">
+
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Current Images</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        {% if product.images.exists %}
+                                        <div class="row image-gallery">
+                                            {% for image in product.images.all %}
+                                            <div class="col-md-3 col-sm-4 col-6 mb-3">
+                                                <div class="image-card">
+                                                    <div class="image-wrapper">
+                                                        <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" class="product-image">
+                                                        <div class="image-overlay">
+                                                            <div class="image-actions">
+                                                                <div class="form-check">
+                                                                    <input type="radio" class="form-check-input" name="primary_image" value="{{ image.id }}" id="image_{{ image.id }}" {% if image.is_primary %}checked{% endif %}>
+                                                                    <label class="form-check-label" for="image_{{ image.id }}">Primary</label>
+                                                                </div>
+                                                                <div class="form-check">
+                                                                    <input type="checkbox" class="form-check-input" name="delete_images" value="{{ image.id }}" id="delete_{{ image.id }}">
+                                                                    <label class="form-check-label" for="delete_{{ image.id }}">Delete</label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            No product images have been uploaded yet.
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header bg-light">
+                                        <h5 class="mb-0">Add New Images</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="new_images" class="form-label">Select Images</label>
+                                            <input type="file" class="form-control" id="new_images" name="new_images" multiple accept="image/*">
+                                            <div class="form-text text-muted mt-1">
+                                                <i class="fas fa-info-circle me-1"></i>
+                                                You can select multiple images. The first image will be set as primary if no primary image is already set.
+                                            </div>
+                                        </div>
+
+                                        <div id="image-preview-container" class="row mt-3" style="display: none;">
+                                            <div class="col-12">
+                                                <h6>Preview:</h6>
+                                                <div class="image-previews row"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Save Images
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Variants Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'variants' %}show active{% endif %}" id="variants" role="tabpanel" aria-labelledby="variants-tab">
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="has_variants" name="has_variants" {% if has_active_variants %}checked{% endif %}>
+                                <label class="form-check-label" for="has_variants">This product has multiple variants</label>
+                                <button type="button" id="save_variants_setting" class="btn btn-primary ms-3" style="display: none;">Apply</button>
+                            </div>
+
+                            <div id="variants_container" {% if not has_active_variants %}style="display: none;"{% endif %}>
+                                <h5 class="mt-4">Current Variants</h5>
+                                {% if has_any_variants %}
+                                <div class="table-responsive">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>Attributes</th>
+                                            <th>SKU</th>
+                                            <th>Price Adjustment</th>
+                                            <th>Stock</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {% for variant in product.variants.all %}
+                                        <tr {% if not variant.is_active %}class="text-muted bg-light"{% endif %}>
+                                            <td>
+                                                {% for value in variant.attribute_values.all %}
+                                                <span class="badge bg-secondary">{{ value.attribute.name }}: {{ value.value }}</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ variant.sku }}</td>
+                                            <td>₹{{ variant.price_adjustment|floatformat:'-1' }}</td>
+                                            <td>{{ variant.quantity }}</td>
+                                            <td>{% if variant.is_active %}Active{% else %}Inactive{% endif %}</td>
+                                            <td>
+                                                <form method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="delete_variant">
+                                                    <input type="hidden" name="variant_id" value="{{ variant.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this variant?')">Delete</button>
+                                                </form>
+                                                {% if not variant.is_active %}
+                                                <form method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="toggle_variant">
+                                                    <input type="hidden" name="variant_id" value="{{ variant.id }}">
+                                                    <input type="hidden" name="is_active" value="1">
+                                                    <button type="submit" class="btn btn-sm btn-outline-success">Enable</button>
+                                                </form>
+                                                {% else %}
+                                                <form method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="action" value="toggle_variant">
+                                                    <input type="hidden" name="variant_id" value="{{ variant.id }}">
+                                                    <input type="hidden" name="is_active" value="0">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Disable</button>
+                                                </form>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <p>No variants created yet.</p>
+                                {% endif %}
+
+                                <h5 class="mt-4">Add New Variant</h5>
+                                <div class="variant-row">
+                                    <form method="post" id="add-variant-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="add_variant">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Attributes</label>
+                                                    <div id="attribute_container">
+                                                        <div class="input-group mb-2">
+                                                            <select class="form-select attribute-select" name="attribute_id[]" required>
+                                                                <option value="">Select Attribute</option>
+                                                                {% for attribute in attributes %}
+                                                                <option value="{{ attribute.id }}">{{ attribute.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <select class="form-select attribute-value-select" name="attribute_value[]" required>
+                                                                <option value="">Select Value</option>
+                                                            </select>
+                                                            <button type="button" class="btn btn-outline-secondary add-attribute">
+                                                                <i class="fas fa-plus"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="variant_sku" class="form-label">SKU</label>
+                                                    <input type="text" class="form-control" id="variant_sku" name="variant_sku" required>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="price_adjustment" class="form-label">Price Adjustment (₹)</label>
+                                                    <input type="number" class="form-control" id="price_adjustment" name="price_adjustment" value="0" step="0.01">
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="variant_quantity" class="form-label">Stock Quantity</label>
+                                                    <input type="number" class="form-control" id="variant_quantity" name="variant_quantity" value="0" min="0">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary">Add Variant</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEO Tab -->
+                        <div class="tab-pane fade {% if active_tab == 'seo' %}show active{% endif %}" id="seo" role="tabpanel" aria-labelledby="seo-tab">
+                            <form method="post" id="seo-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="update_seo">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="meta_keywords" class="form-label">Meta Keywords</label>
+                                            <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" value="{{ product.meta_keywords|default:'' }}">
+                                            <small class="text-muted">Separate keywords with commas</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="meta_description" class="form-label">Meta Description</label>
+                                            <textarea class="form-control" id="meta_description" name="meta_description" rows="3">{{ product.meta_description|default:'' }}</textarea>
+                                            <small class="text-muted">Keep it under 160 characters for best SEO results</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="slug" class="form-label">URL Slug</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">/products/</span>
+                                                <input type="text" class="form-control" id="slug" name="slug" value="{{ product.slug }}">
+                                            </div>
+                                            <small class="text-muted">Changing the slug may break existing links to this product</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">Save SEO Settings</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Track unsaved changes
+    let hasUnsavedChanges = false;
+    const originalFormValues = {};
+
+    // Store original form values for change detection
+    function storeOriginalValues(form) {
+        if (!form || !form.id) return;
+
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+            // Skip csrf token
+            if (key === 'csrfmiddlewaretoken') continue;
+
+            // Store values
+            originalFormValues[form.id + '_' + key] = value;
+        }
+
+        // Special handling for checkboxes
+        form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            originalFormValues[form.id + '_' + checkbox.name] = checkbox.checked ? 'on' : '';
+        });
+    }
+
+    // Store all initial form values
+    document.querySelectorAll('form').forEach(form => {
+        storeOriginalValues(form);
+
+        // Add change listener to detect unsaved changes
+        form.addEventListener('change', function() {
+            hasUnsavedChanges = true;
+            checkFormChanges(form);
+        });
+
+        form.addEventListener('input', function() {
+            hasUnsavedChanges = true;
+            checkFormChanges(form);
+        });
+    });
+
+    // Check if form has changes compared to original values
+    function checkFormChanges(form) {
+        if (!form || !form.id) return false;
+
+        const formData = new FormData(form);
+        let changed = false;
+
+        for (let [key, value] of formData.entries()) {
+            // Skip CSRF token and action fields
+            if (key === 'csrfmiddlewaretoken' || key === 'action') continue;
+
+            // Special handling for checkboxes
+            if (key === 'is_featured' || key === 'variant_is_active' || key === 'has_variants') {
+                const checkbox = form.querySelector(`input[name="${key}"]`);
+                const wasChecked = originalFormValues[form.id + '_' + key] === 'on';
+                const isChecked = checkbox.checked;
+
+                if (wasChecked !== isChecked) {
+                    changed = true;
+                    break;
+                }
+                continue;
+            }
+
+            // For file inputs, always consider them unchanged since we can't compare files
+            if (form.querySelector(`input[name="${key}"][type="file"]`)) {
+                continue;
+            }
+
+            const originalKey = form.id + '_' + key;
+            const originalValue = originalFormValues[originalKey] || '';
+
+            // Convert to string for comparison and trim
+            const currentValue = String(value).trim();
+            const origValue = String(originalValue).trim();
+
+            if (currentValue !== origValue) {
+                changed = true;
+                break;
+            }
+        }
+
+        // Find save button for this form and highlight if changed
+        const saveBtn = form.querySelector('button[type="submit"]');
+        if (saveBtn) {
+            if (changed) {
+                saveBtn.classList.add('btn-warning');
+                saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)(\*)?$/, 'Save $1*');
+            } else {
+                saveBtn.classList.remove('btn-warning');
+                saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)\*$/, 'Save $1');
+            }
+        }
+
+        return changed;
+    }
+
+    // Tab switching with unsaved changes warning
+    const tabButtons = document.querySelectorAll('.nav-link');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Don't check for changes when clicking a form submit button
+            if (e.target.closest('button[type="submit"]')) {
+                return true;
+            }
+
+            // Don't show confirmation for Delete buttons
+            if (e.target.closest('.btn-danger')) {
+                return true;
+            }
+
+            // Check all forms in the current active tab
+            const currentTab = document.querySelector('.tab-pane.show.active');
+            if (currentTab) {
+                const forms = currentTab.querySelectorAll('form');
+                let hasChanges = false;
+
+                forms.forEach(form => {
+                    if (checkFormChanges(form)) {
+                        hasChanges = true;
+                    }
+                });
+
+                if (hasChanges) {
+                    if (!confirm('You have unsaved changes. Are you sure you want to leave this tab without saving?')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                }
+            }
+        });
+    });
+
+    // Toggle variants section based on checkbox with AJAX
+    const hasVariants = document.getElementById('has_variants');
+    const variantsContainer = document.getElementById('variants_container');
+    const saveVariantsSettingBtn = document.getElementById('save_variants_setting');
+
+    if (hasVariants && variantsContainer && saveVariantsSettingBtn) {
+        // Initial state tracking
+        const initialHasVariants = hasVariants.checked;
+
+        // Show the apply button only when state changes
+        hasVariants.addEventListener('change', function() {
+            const stateChanged = (initialHasVariants !== this.checked);
+            saveVariantsSettingBtn.style.display = stateChanged ? 'inline-block' : 'none';
+
+            // Toggle container visibility immediately for better UX
+            if (this.checked) {
+                variantsContainer.style.display = 'block';
+            } else {
+                // Only hide if user clicks Apply (show warning in Apply button handler)
+                if (document.querySelectorAll('#variants-container table tbody tr').length === 0) {
+                    variantsContainer.style.display = 'none';
+                }
+            }
+        });
+
+        // Handle the save button click
+        saveVariantsSettingBtn.addEventListener('click', function() {
+            const hasVariantsEnabled = hasVariants.checked;
+
+            // If disabling variants, show confirmation if there are variants
+            if (!hasVariantsEnabled) {
+                const existingVariants = document.querySelectorAll('#variants_container table tbody tr');
+                if (existingVariants.length > 0) {
+                    if (!confirm('Disabling variants will hide existing variants. They will be inactive but not deleted. Continue?')) {
+                        hasVariants.checked = true;
+                        saveVariantsSettingBtn.style.display = 'none';
+                        return;
+                    }
+                }
+            }
+
+            // Send AJAX request to update variant settings
+            const formData = new FormData();
+            formData.append('action', 'update_variants_settings');
+            formData.append('has_variants', hasVariantsEnabled ? 'on' : '');
+            formData.append('csrfmiddlewaretoken', document.querySelector('input[name="csrfmiddlewaretoken"]').value);
+
+            // Show loading state
+            saveVariantsSettingBtn.disabled = true;
+            saveVariantsSettingBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+
+            fetch(window.location.pathname, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                // On success, reload the page to refresh the variants list
+                window.location.href = window.location.pathname + '?tab=variants';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating variant settings. Please try again.');
+
+                // Reset button state
+                saveVariantsSettingBtn.disabled = false;
+                saveVariantsSettingBtn.innerHTML = 'Apply';
+            });
+        });
+    }
+
+    // Add attribute row
+    const addAttributeBtn = document.querySelector('.add-attribute');
+    const attributeContainer = document.getElementById('attribute_container');
+
+    if (addAttributeBtn && attributeContainer) {
+        addAttributeBtn.addEventListener('click', function() {
+            const newRow = document.createElement('div');
+            newRow.className = 'input-group mb-2';
+            newRow.innerHTML = `
+                <select class="form-select attribute-select" name="attribute_id[]" required>
+                    <option value="">Select Attribute</option>
+                    {% for attribute in attributes %}
+                    <option value="{{ attribute.id }}">{{ attribute.name }}</option>
+                    {% endfor %}
+                </select>
+                <select class="form-select attribute-value-select" name="attribute_value[]" required>
+                    <option value="">Select Value</option>
+                </select>
+                <button type="button" class="btn btn-outline-danger remove-attribute">
+                    <i class="fas fa-minus"></i>
+                </button>
+            `;
+            attributeContainer.appendChild(newRow);
+
+            // Add event listener to remove button
+            const removeBtn = newRow.querySelector('.remove-attribute');
+            removeBtn.addEventListener('click', function() {
+                attributeContainer.removeChild(newRow);
+            });
+
+            // Add event listener to attribute select
+            const attributeSelect = newRow.querySelector('.attribute-select');
+            attributeSelect.addEventListener('change', loadAttributeValues);
+        });
+    }
+
+    // Function to load attribute values based on selected attribute
+    function loadAttributeValues() {
+        const attributeId = this.value;
+        const valueSelect = this.parentNode.querySelector('.attribute-value-select');
+
+        if (!attributeId) {
+            valueSelect.innerHTML = '<option value="">Select Value</option>';
+            return;
+        }
+
+        // Show loading indicator
+        valueSelect.innerHTML = '<option value="">Loading...</option>';
+
+        // AJAX call to fetch attribute values
+        fetch(`{% url 'vendors:get_attribute_values' attribute_id=0 %}`.replace('0', attributeId))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                let options = '<option value="">Select Value</option>';
+                data.forEach(value => {
+                    options += `<option value="${value.id}">${value.value}</option>`;
+                });
+                valueSelect.innerHTML = options;
+            })
+            .catch(error => {
+                console.error('Error loading attribute values:', error);
+                valueSelect.innerHTML = '<option value="">Error loading values</option>';
+            });
+    }
+
+    // Add event listeners to existing attribute selects
+    document.querySelectorAll('.attribute-select').forEach(select => {
+        select.addEventListener('change', loadAttributeValues);
+    });
+
+    // Auto-generate slug from title
+    const titleInput = document.getElementById('title');
+    const slugInput = document.getElementById('slug');
+
+    if (titleInput && slugInput) {
+        // Store original values to detect changes
+        const originalTitle = titleInput.value;
+        const originalSlug = slugInput.value;
+
+        titleInput.addEventListener('blur', function() {
+            // Only auto-generate slug if it hasn't been manually changed
+            // or if it was originally auto-generated from the title
+            if (!slugInput.value || slugInput.value === slugify(originalTitle)) {
+                slugInput.value = slugify(this.value);
+            }
+        });
+    }
+
+    // Simple slugify function
+    function slugify(text) {
+        return text
+            .toString()
+            .toLowerCase()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+            .replace(/^-+/, '')             // Trim - from start of text
+            .replace(/-+$/, '');            // Trim - from end of text
+    }
+
+    // Before unload warning
+    window.addEventListener('beforeunload', function(e) {
+        // Check all forms for changes
+        let anyChanges = false;
+        document.querySelectorAll('form').forEach(form => {
+            if (checkFormChanges(form)) {
+                anyChanges = true;
+            }
+        });
+
+        if (anyChanges) {
+            // Standard message (most browsers override this with their own)
+            const message = 'You have unsaved changes. Are you sure you want to leave?';
+            e.returnValue = message;
+            return message;
+        }
+    });
+
+    // Reset form tracking after successful submission
+    function resetFormChanges(form) {
+        if (!form || !form.id) return;
+        storeOriginalValues(form);
+
+        const saveBtn = form.querySelector('button[type="submit"]');
+        if (saveBtn) {
+            saveBtn.classList.remove('btn-warning');
+            saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)\*$/, 'Save $1');
+        }
+    }
+
+    form.addEventListener('submit', function() {
+        setTimeout(() => resetFormChanges(form), 100);
+    });
+});
+
+// Image preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const newImagesInput = document.getElementById('new_images');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewsDiv = document.querySelector('.image-previews');
+
+    if (newImagesInput) {
+        newImagesInput.addEventListener('change', function() {
+            previewsDiv.innerHTML = '';
+
+            if (this.files.length > 0) {
+                previewContainer.style.display = 'block';
+
+                Array.from(this.files).forEach((file, index) => {
+                    if (file.type.match('image.*')) {
+                        const reader = new FileReader();
+
+                        reader.onload = function(e) {
+                            const preview = document.createElement('div');
+                            preview.className = 'image-preview-item col-auto';
+                            preview.innerHTML = `
+                                <img src="${e.target.result}" alt="Preview">
+                                <span class="remove-preview" data-index="${index}"><i class="fas fa-times"></i></span>
+                            `;
+                            previewsDiv.appendChild(preview);
+
+                            // Add remove functionality
+                            preview.querySelector('.remove-preview').addEventListener('click', function() {
+                                preview.remove();
+                                // If no previews left, hide container
+                                if (previewsDiv.children.length === 0) {
+                                    previewContainer.style.display = 'none';
+                                }
+                                // Note: Can't actually remove from FileList, just visual feedback
+                            });
+                        };
+
+                        reader.readAsDataURL(file);
+                    }
+                });
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

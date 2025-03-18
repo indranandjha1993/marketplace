@@ -5,15 +5,18 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Avg, Count, Sum
 from django.db.models.functions import TruncDay
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.utils.text import slugify
 from django.views.generic import DeleteView
 
 from orders.models import Order, OrderItem
-from products.models import Product, Category, Brand, ProductImage
+from products.models import Product, Category, Brand, ProductImage, ProductAttribute, ProductVariant, \
+    ProductAttributeValue
 from .forms import VendorAccountForm, VendorBankAccountForm, VendorDocumentForm
 from .models import Vendor, VendorBankAccount, VendorDocument
 
@@ -371,7 +374,7 @@ def add_product(request):
 @login_required
 def edit_product(request, product_slug):
     """
-    Edit an existing product as a vendor.
+    Edit an existing product as a vendor with separate form handling for each tab.
     """
     # Check if the user is a vendor
     if not request.user.is_vendor or not hasattr(request.user, 'vendor'):
@@ -383,20 +386,363 @@ def edit_product(request, product_slug):
     # Get the product
     product = get_object_or_404(Product, slug=product_slug, vendor=vendor)
 
-    # Handle form submission
-    if request.method == 'POST':
-        # Process product form
-        # This would be a more complex form handling with image uploads, variants, etc.
-        # For now, just a placeholder
-        messages.success(request, 'Product updated successfully')
-        return redirect('vendors:vendor_products')
+    # Get all categories for the form
+    all_categories = Category.objects.all()
 
+    # Get brands for the form
+    brands = Brand.objects.filter(is_active=True)
+
+    # For variant tab - get attributes
+    attributes = ProductAttribute.objects.all()
+
+    # Get any additional context from request (like active tab)
+    active_tab = request.GET.get('tab', 'basic-info')
+
+    # Handle form submission based on action
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        # Log the action for debugging
+        logger.info(f"Processing form action: {action} for product {product.id}")
+
+        if action == 'update_basic_info':
+            # Basic Info tab form handling
+            try:
+                with transaction.atomic():
+                    # Extract basic info fields
+                    title = request.POST.get('title')
+                    description = request.POST.get('description')
+                    category_id = request.POST.get('category')
+                    brand_id = request.POST.get('brand')
+                    price = request.POST.get('price')
+                    sale_price = request.POST.get('sale_price')
+                    tax_rate = request.POST.get('tax_rate', 0)
+                    quantity = request.POST.get('quantity', 0)
+                    sku = request.POST.get('sku')
+                    status = request.POST.get('status')
+                    is_featured = request.POST.get('is_featured') == 'on'
+
+                    # Validate required fields
+                    if not all([title, description, category_id, price, sku, status]):
+                        messages.error(request, 'Please fill in all required fields')
+                        return redirect(
+                            f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=basic-info")
+
+                    # Type conversion
+                    try:
+                        price = float(price)
+                        sale_price = float(sale_price) if sale_price else None
+                        tax_rate = float(tax_rate) if tax_rate else 0
+                        quantity = int(quantity) if quantity else 0
+                        category_id = int(category_id)
+                        brand_id = int(brand_id) if brand_id and brand_id != "None" else None
+                    except (ValueError, TypeError) as e:
+                        messages.error(request, f'Invalid numeric value: {str(e)}')
+                        return redirect(
+                            f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=basic-info")
+
+                    # Update the product
+                    product.title = title
+                    product.description = description
+                    product.category_id = category_id
+                    product.brand_id = brand_id
+                    product.price = price
+                    product.sale_price = sale_price
+                    product.tax_rate = tax_rate
+                    product.quantity = quantity
+                    product.sku = sku
+                    product.status = status
+                    product.is_featured = is_featured
+
+                    # Save the product
+                    product.save()
+
+                    # Refresh from DB to ensure correct values
+                    product.refresh_from_db()
+
+                    messages.success(request, 'Basic information updated successfully')
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=basic-info")
+
+            except Exception as e:
+                logger.error(f"Error updating basic info for product {product.id}: {str(e)}")
+                messages.error(request, f'Error updating basic information: {str(e)}')
+                return redirect(
+                    f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=basic-info")
+
+        elif action == 'update_images':
+            # Images tab form handling
+            try:
+                with transaction.atomic():
+                    # Handle image uploads
+                    if 'new_images' in request.FILES:
+                        images = request.FILES.getlist('new_images')
+                        has_primary = product.images.filter(is_primary=True).exists()
+
+                        for i, image in enumerate(images):
+                            # Set first image as primary if no primary exists
+                            is_primary = (i == 0 and not has_primary)
+                            ProductImage.objects.create(
+                                product=product,
+                                image=image,
+                                alt_text=f"{product.title} image",
+                                is_primary=is_primary
+                            )
+                        logger.info(f"Added {len(images)} new images to product {product.id}")
+
+                    # Handle image deletions
+                    if 'delete_images' in request.POST:
+                        image_ids_to_delete = request.POST.getlist('delete_images')
+                        if image_ids_to_delete:
+                            # Check if we're deleting the primary image
+                            is_primary_deleted = product.images.filter(
+                                id__in=image_ids_to_delete, is_primary=True
+                            ).exists()
+
+                            # Delete the selected images
+                            num_deleted = ProductImage.objects.filter(
+                                id__in=image_ids_to_delete, product=product
+                            ).delete()[0]
+
+                            # If primary was deleted, set a new primary if available
+                            if is_primary_deleted and product.images.exists():
+                                first_image = product.images.first()
+                                first_image.is_primary = True
+                                first_image.save()
+                                logger.info(f"Set image {first_image.id} as new primary after primary deletion")
+
+                            logger.info(f"Deleted {num_deleted} images from product {product.id}")
+
+                    # Set primary image
+                    if 'primary_image' in request.POST:
+                        primary_id = request.POST.get('primary_image')
+                        if primary_id:
+                            # First, unset all primary images
+                            product.images.all().update(is_primary=False)
+                            # Then set the new primary
+                            ProductImage.objects.filter(id=primary_id, product=product).update(is_primary=True)
+                            logger.info(f"Set image {primary_id} as primary for product {product.id}")
+
+                    messages.success(request, 'Product images updated successfully')
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=images")
+
+            except Exception as e:
+                logger.error(f"Error updating images for product {product.id}: {str(e)}")
+                messages.error(request, f'Error updating images: {str(e)}')
+                return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=images")
+
+        elif action == 'update_variants_settings':
+            # Variants settings tab form handling
+            try:
+                with transaction.atomic():
+                    has_variants = request.POST.get('has_variants') == 'on'
+
+                    if not has_variants:
+                        # When disabling variants, deactivate all variants
+                        product.variants.all().update(is_active=False)
+                        logger.info(f"Deactivated all variants for product {product.id}")
+                    elif has_variants:
+                        # If no active variants, reactivate them
+                        inactive_variants = product.variants.filter(is_active=False)
+                        if inactive_variants.exists() and not product.variants.filter(is_active=True).exists():
+                            inactive_variants.update(is_active=True)
+                            logger.info(f"Reactivated variants for product {product.id}")
+
+                    # For AJAX requests, return JSON
+                    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                        return JsonResponse({
+                            'success': True,
+                            'message': 'Variant settings updated successfully'
+                        })
+
+                    messages.success(request, 'Variant settings updated successfully')
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+            except Exception as e:
+                logger.error(f"Error updating variant settings for product {product.id}: {str(e)}")
+
+            # For AJAX requests, return error response
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': False,
+                    'message': f'Error updating variant settings: {str(e)}'
+                }, status=400)
+
+            messages.error(request, f'Error updating variant settings: {str(e)}')
+            return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+        elif action == 'toggle_variant':
+            # Toggle variant active status
+            try:
+                with transaction.atomic():
+                    variant_id = request.POST.get('variant_id')
+                    is_active = request.POST.get('is_active') == '1'
+
+                    if variant_id:
+                        variant = get_object_or_404(ProductVariant, id=variant_id, product=product)
+                        variant.is_active = is_active
+                        variant.save()
+
+                        status = 'enabled' if is_active else 'disabled'
+                        logger.info(f"{status.capitalize()} variant {variant_id} for product {product.id}")
+                        messages.success(request, f'Variant {status} successfully')
+
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+            except Exception as e:
+                logger.error(f"Error toggling variant {variant_id} status for product {product.id}: {str(e)}")
+                messages.error(request, f'Error toggling variant status: {str(e)}')
+                return redirect(
+                    f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+
+        elif action == 'add_variant':
+            # Add variant form handling
+            try:
+                with transaction.atomic():
+                    # Process variant form data
+                    variant_sku = request.POST.get('variant_sku')
+                    price_adjustment = request.POST.get('price_adjustment', 0)
+                    variant_quantity = request.POST.get('variant_quantity', 0)
+                    variant_is_active = request.POST.get('variant_is_active') == 'on'
+
+                    # Validate required fields
+                    if not variant_sku:
+                        messages.error(request, 'Please provide a SKU for the variant')
+                        return redirect(
+                            f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+                    # Create the variant
+                    variant = ProductVariant.objects.create(
+                        product=product,
+                        sku=variant_sku,
+                        price_adjustment=float(price_adjustment) if price_adjustment else 0,
+                        quantity=int(variant_quantity) if variant_quantity else 0,
+                        is_active=variant_is_active
+                    )
+
+                    # Process attribute values
+                    attribute_ids = request.POST.getlist('attribute_id[]')
+                    attribute_values = request.POST.getlist('attribute_value[]')
+
+                    for i in range(len(attribute_ids)):
+                        if attribute_ids[i] and attribute_values[i]:
+                            variant.attribute_values.add(ProductAttributeValue.objects.get(id=attribute_values[i]))
+
+                    messages.success(request, 'Variant added successfully')
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+            except Exception as e:
+                logger.error(f"Error adding variant to product {product.id}: {str(e)}")
+                messages.error(request, f'Error adding variant: {str(e)}')
+                return redirect(
+                    f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+        elif action == 'delete_variant':
+            # Delete variant form handling
+            try:
+                with transaction.atomic():
+                    variant_id = request.POST.get('variant_id')
+                    if variant_id:
+                        variant = get_object_or_404(ProductVariant, id=variant_id, product=product)
+                        variant.delete()
+                        logger.info(f"Deleted variant {variant_id} from product {product.id}")
+                        messages.success(request, 'Variant deleted successfully')
+                    return redirect(
+                        f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+            except Exception as e:
+                logger.error(f"Error deleting variant {variant_id} from product {product.id}: {str(e)}")
+                messages.error(request, f'Error deleting variant: {str(e)}')
+                return redirect(
+                    f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=variants")
+
+        elif action == 'update_seo':
+            # SEO tab form handling
+            try:
+                with transaction.atomic():
+                    meta_keywords = request.POST.get('meta_keywords', '')
+                    meta_description = request.POST.get('meta_description', '')
+                    slug = request.POST.get('slug', '')
+
+                    # Validate slug
+                    if not slug:
+                        messages.error(request, 'Please provide a URL slug')
+                        return redirect(
+                            f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=seo")
+
+                    # Check if slug is unique (excluding current product)
+                    if Product.objects.filter(slug=slug).exclude(id=product.id).exists():
+                        messages.error(request, 'This URL slug is already in use. Please choose a different one.')
+                        return redirect(
+                            f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=seo")
+
+                    # Update SEO fields
+                    product.meta_keywords = meta_keywords
+                    product.meta_description = meta_description
+
+                    # Only update slug if changed to avoid unnecessary URL changes
+                    if slug != product.slug:
+                        old_slug = product.slug
+                        product.slug = slug
+                        logger.info(f"Changed product slug from {old_slug} to {slug}")
+
+                    product.save()
+
+                    # If the slug was changed, redirect to the new URL
+                    if slug != product_slug:
+                        messages.success(request, 'SEO information updated successfully')
+                        return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': slug})}?tab=seo")
+
+                    messages.success(request, 'SEO information updated successfully')
+                    return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=seo")
+
+            except Exception as e:
+                logger.error(f"Error updating SEO for product {product.id}: {str(e)}")
+                messages.error(request, f'Error updating SEO information: {str(e)}')
+                return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}?tab=seo")
+
+        else:
+            # Unrecognized action
+            logger.warning(f"Unrecognized form action: {action}")
+            messages.error(request, 'Unknown action requested')
+            return redirect(f"{reverse('vendors:edit_product', kwargs={'product_slug': product.slug})}")
+
+    # Compute variant-related flags
+    has_active_variants = product.variants.filter(is_active=True).exists()
+    has_any_variants = product.variants.exists()
+
+    # Prepare context for template
     context = {
         'vendor': vendor,
         'product': product,
+        'all_categories': all_categories,
+        'brands': brands,
+        'attributes': attributes,
+        'active_tab': active_tab,
+        'has_active_variants': has_active_variants,
+        'has_any_variants': has_any_variants
     }
 
     return render(request, 'vendors/dashboard/edit_product.html', context)
+
+
+@login_required
+def get_attribute_values(request, attribute_id):
+    """API endpoint to get attribute values for a given attribute."""
+    try:
+        attribute = get_object_or_404(ProductAttribute, id=attribute_id)
+        values = attribute.values.all()
+
+        data = [{'id': value.id, 'value': value.value} for value in values]
+        return JsonResponse(data, safe=False)
+    except Exception as e:
+        logger.error(f"Error fetching attribute values for attribute {attribute_id}: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @login_required

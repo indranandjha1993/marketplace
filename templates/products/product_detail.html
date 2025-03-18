@@ -486,7 +486,7 @@
         if (!priceDisplay) return;
 
         let priceHTML = '';
-        if (variant.sale_price) {
+        if (variant.is_on_sale) {
             priceHTML = `
                 <span class="original-price fs-5 text-decoration-line-through">₹${variant.price.toFixed(2)}</span>
                 <span class="fs-3 fw-bold text-primary">₹${variant.sale_price.toFixed(2)}</span>
