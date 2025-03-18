@@ -22,7 +22,7 @@
                 <!-- Search Bar (Desktop) -->
                 <div class="d-none d-lg-flex flex-grow-1 mx-3 w-50">
                     <form class="d-flex w-100"
-                          action="{% url 'products:search_products' %}"
+                          action="{% url 'products:browse_products' %}"
                           method="GET"
                           role="search">
                         <div class="input-group">
@@ -147,7 +147,7 @@
         <!-- Mobile Search Bar -->
         <div class="d-lg-none pb-3 mt-2 mx-auto">
             <form class="d-flex w-100"
-                  action="{% url 'products:search_products' %}"
+                  action="{% url 'products:browse_products' %}"
                   method="GET"
                   role="search">
                 <div class="input-group">

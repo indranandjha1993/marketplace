@@ -62,95 +62,13 @@ def home(request):
 
     return render(request, 'products/home.html', context)
 
-
-def product_list(request):
-    """
-    View for displaying all products with filtering and sorting options.
-    """
-    # Get all active products
-    products = Product.objects.filter(status='active').select_related('vendor', 'category', 'brand')
-
-    # Apply filters from centralized utility
-    products = apply_product_filters(products, request)
-
-    # Get all categories and brands for filtering sidebar
-    categories = Category.objects.filter(parent__isnull=True, is_active=True).prefetch_related('children')
-    brands = Brand.objects.filter(is_active=True)
-
-    # Get current category and brand objects for breadcrumbs
-    current_category_obj = None
-    current_brand_obj = None
-    breadcrumb_categories = []
-
-    if request.GET.get('category'):
-        try:
-            current_category_obj = Category.objects.get(slug=request.GET.get('category'))
-
-            # Build breadcrumb path
-            category = current_category_obj
-            while category:
-                breadcrumb_categories.insert(0, category)
-                category = category.parent
-        except Category.DoesNotExist:
-            pass
-
-    if request.GET.get('brand'):
-        try:
-            current_brand_obj = Brand.objects.get(slug=request.GET.get('brand'))
-        except Brand.DoesNotExist:
-            pass
-
-    # Check if there are any active filters
-    has_active_filters = any([
-        request.GET.get('category'),
-        request.GET.get('brand'),
-        request.GET.get('min_price'),
-        request.GET.get('max_price'),
-        request.GET.get('rating'),
-        request.GET.get('sort') and request.GET.get('sort') != 'newest'
-    ])
-
-    # Pagination
-    paginator = Paginator(products, 20)  # 20 products per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
-    context = {
-        'page_obj': page_obj,
-        'categories': categories,
-        'brands': brands,
-        'current_category': request.GET.get('category'),
-        'current_brand': request.GET.get('brand'),
-        'current_min_price': request.GET.get('min_price'),
-        'current_max_price': request.GET.get('max_price'),
-        'current_rating': request.GET.get('rating'),
-        'current_sort': request.GET.get('sort', 'newest'),
-        'current_category_obj': current_category_obj,
-        'current_brand_obj': current_brand_obj,
-        'breadcrumb_categories': breadcrumb_categories,
-        'has_active_filters': has_active_filters,
-    }
-
-    return render(request, 'products/product_list.html', context)
-
-
-def product_list_by_category(request, category_slug):
-    """
-    View for displaying products filtered by category.
-    """
-    # Redirect to product_list view with category filter
-    return redirect(f"{reverse('products:product_list')}?category={category_slug}")
-
-
-def product_list_by_brand(request, brand_slug):
-    """
-    View for displaying products filtered by brand.
-    """
-    # Redirect to product_list view with brand filter
-    return redirect(f"{reverse('products:product_list')}?brand={brand_slug}")
-
-
 def product_detail(request, product_slug):
+    """
+    View for displaying a single product with details, reviews, and questions.
+    :param request:
+    :param product_slug:
+    :return:
+    """
     product = get_object_or_404(
         Product.objects.select_related('vendor', 'brand', 'category')
         .prefetch_related('variants__attribute_values__attribute', 'images', 'reviews', 'questions__answers'),
@@ -209,30 +127,66 @@ def product_detail(request, product_slug):
 
     return render(request, 'products/product_detail.html', context)
 
-
-def search_products(request):
+def product_list_by_category(request, category_slug):
     """
-    View for searching products with advanced filtering.
+    View for displaying products filtered by category.
+    """
+    return redirect(f"{reverse('products:browse_products')}?category={category_slug}")
+
+
+def product_list_by_brand(request, brand_slug):
+    """
+    View for displaying products filtered by brand.
+    """
+    return redirect(f"{reverse('products:browse_products')}?brand={brand_slug}")
+
+
+def browse_products(request):
+    """
+    View for browsing and searching products with filtering and sorting options.
     """
     # Start with all active products
     products = Product.objects.filter(status='active').select_related('vendor', 'category', 'brand')
 
-    # Apply filters which will also handle the search query from 'q' parameter
+    # Track if there's a search query
+    search_query = request.GET.get('q', '')
+
+    # Apply filters from centralized utility - this already handles search
     products = apply_product_filters(products, request)
 
-    # If no search query and no filters, return empty queryset
-    if not request.GET.get('q') and not any(
-            param in request.GET for param in ['category', 'brand', 'min_price', 'max_price', 'rating']
-    ):
-        products = Product.objects.none()
+    # If there's no search query and no filters, show all products (browse mode)
+    # If there's a search query but no results, show empty results (search mode)
+    is_search_mode = bool(search_query)
 
-    # Get current category and brand objects for display
+    # Determine if there are any active filters beyond sorting
+    has_active_filters = any([
+        request.GET.get('q'),
+        request.GET.get('category'),
+        request.GET.get('brand'),
+        request.GET.get('min_price'),
+        request.GET.get('max_price'),
+        request.GET.get('rating'),
+        request.GET.get('sort') and request.GET.get('sort') not in ['newest', 'relevance']
+    ])
+
+    # Get all categories and brands for filtering sidebar
+    categories = Category.objects.filter(parent__isnull=True, is_active=True).prefetch_related('children')
+    brands = Brand.objects.filter(is_active=True)
+
+    # Get current category and brand objects for breadcrumbs
     current_category_obj = None
     current_brand_obj = None
+    breadcrumb_categories = []
 
     if request.GET.get('category'):
         try:
             current_category_obj = Category.objects.get(slug=request.GET.get('category'))
+
+            # Build breadcrumb path
+            category = current_category_obj
+            while category:
+                breadcrumb_categories.insert(0, category)
+                category = category.parent
         except Category.DoesNotExist:
             pass
 
@@ -242,44 +196,34 @@ def search_products(request):
         except Brand.DoesNotExist:
             pass
 
-    # Check if there are any active filters
-    has_active_filters = any([
-        request.GET.get('category'),
-        request.GET.get('brand'),
-        request.GET.get('min_price'),
-        request.GET.get('max_price'),
-        request.GET.get('rating'),
-        request.GET.get('sort') and request.GET.get('sort') != 'relevance'
-    ]) or request.GET.get('q')
-
-    # Get filter options
-    categories = Category.objects.filter(parent__isnull=True, is_active=True).prefetch_related('children')
-    brands = Brand.objects.filter(is_active=True)
-
     # Pagination
     paginator = Paginator(products, 20)  # 20 products per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    # Determine default sort based on mode
+    default_sort = 'relevance' if is_search_mode else 'newest'
+    current_sort = request.GET.get('sort', default_sort)
+
     context = {
-        'query': request.GET.get('q', ''),
         'page_obj': page_obj,
         'categories': categories,
         'brands': brands,
+        'query': search_query,
+        'is_search_mode': is_search_mode,
         'current_category': request.GET.get('category'),
         'current_brand': request.GET.get('brand'),
         'current_min_price': request.GET.get('min_price'),
         'current_max_price': request.GET.get('max_price'),
         'current_rating': request.GET.get('rating'),
-        'current_sort': request.GET.get('sort', 'relevance' if request.GET.get('q') else 'newest'),
+        'current_sort': current_sort,
         'current_category_obj': current_category_obj,
         'current_brand_obj': current_brand_obj,
+        'breadcrumb_categories': breadcrumb_categories,
         'has_active_filters': has_active_filters,
-        'current_query': request.GET.get('q'),
     }
 
-    return render(request, 'products/search_results.html', context)
-
+    return render(request, 'products/product_browse.html', context)
 
 @login_required
 @require_POST
