@@ -33,7 +33,7 @@ def vendor_list(request):
     ).order_by('-joined_date')
 
     # Pagination
-    paginator = Paginator(vendors, 16)  # 16 vendors per page
+    paginator = Paginator(vendors, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 

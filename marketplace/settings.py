@@ -74,6 +74,7 @@ TEMPLATES = [
             ],
             'libraries': {
                 'common_tags': 'utils.templatetags.common_tags',
+                'pagination_tags': 'utils.templatetags.pagination_tags',
             },
         },
     },

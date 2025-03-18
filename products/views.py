@@ -197,7 +197,7 @@ def browse_products(request):
             pass
 
     # Pagination
-    paginator = Paginator(products, 20)  # 20 products per page
+    paginator = Paginator(products, 18)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
