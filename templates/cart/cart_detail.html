@@ -96,78 +96,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Saved For Later Items -->
-            {% if saved_items %}
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Saved For Later ({{ saved_items|length }})</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% for item in saved_items %}
-                    <div class="saved-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
-                        <div class="row align-items-center">
-                            <div class="col-md-2 col-3">
-                                <a href="{% url 'products:product_detail' item.product.slug %}">
-                                    {% if item.product.primary_image %}
-                                    <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}"
-                                         class="img-fluid cart-item-image">
-                                    {% else %}
-                                    <img src="/static/img/no-image.png" alt="{{ item.product.title }}"
-                                         class="img-fluid cart-item-image">
-                                    {% endif %}
-                                </a>
-                            </div>
-                            <div class="col-md-6 col-9">
-                                <h6 class="mb-1">
-                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
-                                </h6>
-                                <div class="text-muted small">
-                                    <span>Sold by: <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">{{ item.product.vendor.business_name }}</a></span>
-                                </div>
-                                {% if item.variant %}
-                                <div class="text-muted small">
-                                    {% for value in item.variant.attribute_values.all %}
-                                    <span>{{ value.attribute.name }}: {{ value.value }}</span>{% if not forloop.last %}, {% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                <div class="mt-2">
-                                    <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-link p-0">Move to Cart</button>
-                                    </form>
-                                    <span>|</span>
-                                    <form action="{% url 'accounts:remove_from_wishlist' item.product.id %}" method="POST" class="d-inline">
-                                        {% csrf_token %}
-                                        {% if item.variant %}
-                                        <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
-                                        {% endif %}
-                                        <button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button>
-                                    </form>
-                                </div>
-                            </div>
-                            <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0">
-                                <div class="product-price">
-                                    {% if item.product.is_on_sale %}
-                                    <span class="original-price">₹{{ item.product.price }}</span>
-                                    {% endif %}
-                                    <span class="fw-bold">₹{{ item.product.current_price }}</span>
-                                </div>
-                                <div>
-                                    {% if item.product.is_in_stock %}
-                                    <span class="badge bg-success">In Stock</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Out of Stock</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
         </div>
 
         <!-- Order Summary -->
@@ -261,6 +189,80 @@
         <a href="{% url 'products:browse_products' %}" class="btn btn-primary mt-3">
             Start Shopping
         </a>
+    </div>
+    {% endif %}
+
+    <!-- Saved For Later Items -->
+    {% if saved_items %}
+    <div class="row mt-4">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h5 class="card-title mb-0">Saved For Later ({{ saved_items|length }})</h5>
+            </div>
+            <div class="card-body p-0">
+                {% for item in saved_items %}
+                <div class="saved-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 col-3">
+                            <a href="{% url 'products:product_detail' item.product.slug %}">
+                                {% if item.product.primary_image %}
+                                <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}"
+                                     class="img-fluid cart-item-image">
+                                {% else %}
+                                <img src="/static/img/no-image.png" alt="{{ item.product.title }}"
+                                     class="img-fluid cart-item-image">
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="col-md-6 col-9">
+                            <h6 class="mb-1">
+                                <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
+                            </h6>
+                            <div class="text-muted small">
+                                <span>Sold by: <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">{{ item.product.vendor.business_name }}</a></span>
+                            </div>
+                            {% if item.variant %}
+                            <div class="text-muted small">
+                                {% for value in item.variant.attribute_values.all %}
+                                <span>{{ value.attribute.name }}: {{ value.value }}</span>{% if not forloop.last %}, {% endif %}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <div class="mt-2">
+                                <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-link p-0">Move to Cart</button>
+                                </form>
+                                <span>|</span>
+                                <form action="{% url 'accounts:remove_from_wishlist' item.product.id %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    {% if item.variant %}
+                                    <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
+                                    {% endif %}
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0">
+                            <div class="product-price">
+                                {% if item.product.is_on_sale %}
+                                <span class="original-price">₹{{ item.product.price }}</span>
+                                {% endif %}
+                                <span class="fw-bold">₹{{ item.product.current_price }}</span>
+                            </div>
+                            <div>
+                                {% if item.product.is_in_stock %}
+                                <span class="badge bg-success">In Stock</span>
+                                {% else %}
+                                <span class="badge bg-danger">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
     {% endif %}
 </div>
