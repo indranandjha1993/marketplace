@@ -194,74 +194,125 @@
 
     <!-- Saved For Later Items -->
     {% if saved_items %}
-    <div class="row mt-4">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h5 class="card-title mb-0">Saved For Later ({{ saved_items|length }})</h5>
+    <div class="saved-for-later mt-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="far fa-bookmark me-2 text-primary"></i> Saved For Later <span class="badge rounded-pill bg-primary ms-2">{{ saved_items|length }}</span>
+                </h5>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="savedItemsActions" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="savedItemsActions">
+                        <li>
+                            <form action="{% url 'cart:move_all_to_cart' %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-shopping-cart me-2"></i> Move All to Cart
+                                </button>
+                            </form>
+                        </li>
+                        <li>
+                            <form action="{% url 'cart:clear_saved_items' %}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to remove all saved items?');">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="fas fa-trash-alt me-2"></i> Clear All Saved Items
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="card-body p-0">
-                {% for item in saved_items %}
-                <div class="saved-item p-3 {% if not forloop.last %}border-bottom{% endif %}">
-                    <div class="row align-items-center">
-                        <div class="col-md-2 col-3">
-                            <a href="{% url 'products:product_detail' item.product.slug %}">
-                                {% if item.product.primary_image %}
-                                <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}"
-                                     class="img-fluid cart-item-image">
-                                {% else %}
-                                <img src="/static/img/no-image.png" alt="{{ item.product.title }}"
-                                     class="img-fluid cart-item-image">
-                                {% endif %}
-                            </a>
-                        </div>
-                        <div class="col-md-6 col-9">
-                            <h6 class="mb-1">
-                                <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
-                            </h6>
-                            <div class="text-muted small">
-                                <span>Sold by: <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}">{{ item.product.vendor.business_name }}</a></span>
-                            </div>
-                            {% if item.variant %}
-                            <div class="text-muted small">
-                                {% for value in item.variant.attribute_values.all %}
-                                <span>{{ value.attribute.name }}: {{ value.value }}</span>{% if not forloop.last %}, {% endif %}
-                                {% endfor %}
-                            </div>
+
+            <div class="saved-items-grid p-3">
+                <div class="row g-3">
+                    {% for item in saved_items %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="saved-item-card h-100 position-relative">
+                            {% if item.product.is_on_sale %}
+                            <div class="discount-badge">-{{ item.product.discount_percentage }}%</div>
                             {% endif %}
-                            <div class="mt-2">
-                                <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-link p-0">Move to Cart</button>
-                                </form>
-                                <span>|</span>
-                                <form action="{% url 'cart:remove_from_saved' item.id %}" method="POST" class="d-inline">
-                                    {% csrf_token %}
-                                    {% if item.variant %}
-                                    <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
-                                    {% endif %}
-                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0">Remove</button>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="col-md-4 col-12 text-md-end mt-2 mt-md-0">
-                            <div class="product-price">
-                                {% if item.product.is_on_sale %}
-                                <span class="original-price">₹{{ item.product.price }}</span>
-                                {% endif %}
-                                <span class="fw-bold">₹{{ item.product.current_price }}</span>
-                            </div>
-                            <div>
-                                {% if item.product.is_in_stock %}
-                                <span class="badge bg-success">In Stock</span>
-                                {% else %}
-                                <span class="badge bg-danger">Out of Stock</span>
-                                {% endif %}
+
+                            <div class="row g-0 h-100">
+                                <div class="col-4">
+                                    <a href="{% url 'products:product_detail' item.product.slug %}" class="saved-item-image-container d-block">
+                                        {% if item.product.primary_image %}
+                                        <img src="{{ item.product.primary_image.image.url }}" alt="{{ item.product.title }}"
+                                             class="saved-item-image">
+                                        {% else %}
+                                        <img src="/static/img/no-image.png" alt="{{ item.product.title }}"
+                                             class="saved-item-image">
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div class="col-8">
+                                    <div class="card-body p-2">
+                                        <h6 class="item-title mb-1">
+                                            <a href="{% url 'products:product_detail' item.product.slug %}" class="text-dark">{{ item.product.title }}</a>
+                                        </h6>
+
+                                        <div class="text-muted small">
+                                            <span>By <a href="{% url 'vendors:vendor_detail' item.product.vendor.slug %}" class="vendor-link">{{ item.product.vendor.business_name }}</a></span>
+                                        </div>
+
+                                        {% if item.variant %}
+                                        <div class="variants-list my-1">
+                                            {% for value in item.variant.attribute_values.all %}
+                                            <span class="variant-badge">{{ value.attribute.name }}: {{ value.value }}</span>{% if not forloop.last %} {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="d-flex justify-content-between align-items-center mt-2">
+                                            <div class="product-price">
+                                                {% if item.product.is_on_sale %}
+                                                <span class="original-price">₹{{ item.product.price }}</span>
+                                                {% endif %}
+                                                <span class="current-price">₹{{ item.product.current_price }}</span>
+                                            </div>
+                                            <div>
+                                                {% if item.product.is_in_stock %}
+                                                <span class="stock-badge in-stock">In Stock</span>
+                                                {% else %}
+                                                <span class="stock-badge out-of-stock">Out of Stock</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="item-actions mt-2">
+                                            <form action="{% url 'cart:move_to_cart' item.id %}" method="POST" class="d-inline-block">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-primary" {% if not item.product.is_in_stock %}disabled{% endif %}>
+                                                    <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                                                </button>
+                                            </form>
+                                            <form action="{% url 'cart:remove_from_saved' item.id %}" method="POST" class="d-inline-block">
+                                                {% csrf_token %}
+                                                {% if item.variant %}
+                                                <input type="hidden" name="variant_id" value="{{ item.variant.id }}">
+                                                {% endif %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger remove-btn">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
+
+            {% if saved_items|length > 6 %}
+            <div class="card-footer bg-white text-center py-3">
+                <button type="button" class="btn btn-outline-primary" id="loadMoreSavedItems">
+                    <i class="fas fa-sync-alt me-2"></i> Load More Items
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
     {% endif %}

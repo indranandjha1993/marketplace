@@ -14,4 +14,6 @@ urlpatterns = [
     path('remove-from-saved/<int:item_id>/', views.remove_from_saved, name='remove_from_saved'),
     path('apply-coupon/', views.apply_coupon, name='apply_coupon'),
     path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
+    path('move-all-to-cart/', views.move_all_to_cart, name='move_all_to_cart'),
+    path('clear-saved-items/', views.clear_saved_items, name='clear_saved_items'),
 ]

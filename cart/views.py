@@ -373,6 +373,112 @@ def remove_from_saved(request, item_id):
     return redirect(next_url)
 
 
+@login_required
+@require_POST
+def move_all_to_cart(request):
+    """
+    View for moving all items from the saved items list to the cart.
+    """
+    next_url = request.POST.get('next', 'cart:cart_detail')
+
+    # Get all saved items for the user
+    saved_items = SavedForLater.objects.filter(user=request.user)
+
+    if not saved_items.exists():
+        messages.info(request, 'You have no saved items to move to cart')
+        return redirect(next_url)
+
+    cart = get_or_create_cart(request)
+    success_count = 0
+    error_count = 0
+
+    for saved_item in saved_items:
+        product = saved_item.product
+
+        # Skip unavailable products
+        if product.status != 'active':
+            saved_item.delete()  # Remove unavailable product from saved items
+            error_count += 1
+            continue
+
+        # Skip out of stock products
+        if not product.is_in_stock:
+            error_count += 1
+            continue
+
+        # If it's a variant, check variant status
+        if saved_item.variant and not saved_item.variant.is_in_stock:
+            error_count += 1
+            continue
+
+        # Check if the item already exists in the cart
+        try:
+            cart_item = CartItem.objects.get(
+                cart=cart,
+                product=product,
+                variant=saved_item.variant
+            )
+
+            # Check available quantity before updating
+            available_qty = saved_item.variant.quantity if saved_item.variant else product.quantity
+
+            if cart_item.quantity + 1 > available_qty:
+                error_count += 1
+                continue
+            else:
+                cart_item.quantity += 1
+                cart_item.save()
+                saved_item.delete()
+                success_count += 1
+
+        except CartItem.DoesNotExist:
+            # Create new cart item with quantity 1
+            CartItem.objects.create(
+                cart=cart,
+                product=product,
+                variant=saved_item.variant,
+                quantity=1
+            )
+
+            # Remove from saved items
+            saved_item.delete()
+            success_count += 1
+
+    # Display appropriate messages based on the results
+    if success_count > 0:
+        messages.success(request, f'{success_count} item(s) moved to cart successfully')
+
+    if error_count > 0:
+        messages.warning(request, f'{error_count} item(s) could not be moved to cart due to availability issues')
+
+    return redirect(next_url)
+
+
+@login_required
+@require_POST
+def clear_saved_items(request):
+    """
+    View for removing all items from the saved items list.
+    """
+    next_url = request.POST.get('next', 'cart:cart_detail')
+
+    # Get all saved items for the user
+    saved_items = SavedForLater.objects.filter(user=request.user)
+
+    if not saved_items.exists():
+        messages.info(request, 'You have no saved items to clear')
+        return redirect(next_url)
+
+    # Count items before deletion for the message
+    item_count = saved_items.count()
+
+    # Delete all saved items
+    saved_items.delete()
+
+    messages.success(request, f'All {item_count} saved item(s) have been removed')
+    return redirect(next_url)
+
+
 @require_POST
 def apply_coupon(request):
     """
