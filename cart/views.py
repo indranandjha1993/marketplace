@@ -116,7 +116,7 @@ def add_to_cart(request, product_id):
             if has_variants:
                 # If variant ID is not provided or empty
                 if not variant_id or variant_id.strip() == '':
-                    messages.error(request, 'Please select a product variant')
+                    messages.info(request, 'Please select a product variant')
                     return redirect('products:product_detail', product_slug=product.slug)
 
                 try:

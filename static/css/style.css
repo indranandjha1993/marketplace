@@ -276,7 +276,6 @@ header {
 
 .product-image-container {
   height: 220px;
-  padding: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -771,7 +770,6 @@ header {
   height: 400px;
   object-fit: contain;
   background-color: white;
-  padding: 1rem;
 }
 
 .thumbnail-image {
