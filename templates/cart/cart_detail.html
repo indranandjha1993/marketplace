@@ -318,3 +318,40 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load more saved items functionality
+    const loadMoreBtn = document.getElementById('loadMoreSavedItems');
+    if (loadMoreBtn) {
+        const savedItems = document.querySelectorAll('.saved-item-card');
+        const itemsPerPage = 6;
+        let currentItems = itemsPerPage;
+
+        // Initially hide items beyond the first page
+        savedItems.forEach((item, index) => {
+            if (index >= itemsPerPage) {
+                item.closest('.col-md-6').style.display = 'none';
+            }
+        });
+
+        // Show more items when button is clicked
+        loadMoreBtn.addEventListener('click', function() {
+            for (let i = currentItems; i < currentItems + itemsPerPage; i++) {
+                if (savedItems[i]) {
+                    savedItems[i].closest('.col-md-6').style.display = 'block';
+                }
+            }
+
+            currentItems += itemsPerPage;
+
+            // Hide button if all items are shown
+            if (currentItems >= savedItems.length) {
+                loadMoreBtn.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

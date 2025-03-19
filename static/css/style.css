@@ -29,12 +29,15 @@
   --font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
-
 body {
   font-family: var(--font-family-sans-serif);
   color: var(--gray-800);
   background-color: var(--gray-100);
   line-height: 1.6;
+}
+
+.form-control:focus {
+    border-color: #FFFFFF;
 }
 
 a {
@@ -92,7 +95,7 @@ a:hover {
 
 .search-input:focus {
     background-color: #ffffff;
-    border-color: #007aff;
+    border-color: #FFFFFF;
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
     outline: none;
 }
@@ -132,20 +135,20 @@ a:hover {
 }
 
 .wishlist-btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: white;
-  color: var(--gray-600);
-  transition: all 0.2s ease;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
 }
 
-.wishlist-btn:hover {
-  color: var(--danger-color);
-  transform: translateY(-2px);
+.wishlist-btn:hover:not(.active) {
+    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.wishlist-btn.active {
+    transform: scale(1.1);
 }
 
 .wishlist-btn.active {
@@ -155,6 +158,17 @@ a:hover {
 
 .wishlist-btn.active i {
   color: var(--danger-color);
+}
+
+.stars {
+    color: #ffc107;
+}
+
+.discount-badge {
+    font-weight: 600;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
+    padding-left: 10px !important;
+    padding-right: 10px !important;
 }
 
 /* Header Styling */
@@ -227,8 +241,7 @@ header {
 /* Form Controls */
 .form-control:focus,
 .form-select:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+  box-shadow: 0 0 0 0.1rem rgba(67, 97, 238, 0.25);
 }
 
 .form-check-input:checked {
@@ -263,15 +276,25 @@ header {
 
 /* Product Cards */
 .product-card {
-  border-radius: 10px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+.product-card .object-fit-cover {
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.product-card:hover .object-fit-cover {
+    transform: scale(1.05);
+}
+
+.hover-text-primary:hover {
+    color: var(--bs-primary) !important;
 }
 
 .product-image-container {
@@ -413,18 +436,9 @@ header {
   margin-right: 0.5rem;
 }
 
-.discount-badge {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background-color: var(--danger-color);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 0.75rem;
-  z-index: 1;
-  box-shadow: 0 3px 6px rgba(var(--danger-color-rgb), 0.3);
+
+.z-index-1 {
+    z-index: 1;
 }
 
 /* Rating Stars */
@@ -600,6 +614,7 @@ header {
 
 #filter-form .input-group .btn {
   background-color: white;
+  border: var(--bs-border-width) solid var(--bs-border-color);
   border-left: none;
   color: var(--gray-600);
 }
@@ -1337,6 +1352,33 @@ body.loading::before {
     .size-btn, .material-btn {
         padding: 6px 12px;
         min-width: 40px;
+    }
+
+    .product-card .card-body {
+        padding: 0.75rem;
+    }
+
+    .product-title {
+        font-size: 0.9rem;
+    }
+
+    .product-actions {
+        flex-direction: column;
+    }
+
+    .product-actions form {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-actions .wishlist-btn {
+        margin-top: 0.5rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .product-image-container {
+        padding-bottom: 80%; /* Adjust for larger screens to make image cover 40% of card */
     }
 }
 
