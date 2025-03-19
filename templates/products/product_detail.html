@@ -15,9 +15,13 @@
 
     <div class="row">
         <!-- Product Images -->
-        <div class="col-lg-5 mb-4">
+        <div class="col-lg-5 mb-4 product-gallery">
+            <!-- Main Image Container with Zoom functionality -->
             <div class="card">
-                <div class="card-body p-2 m-auto">
+                <div class="card-body p-2 m-auto position-relative product-image-container" id="img-container">
+                    <div class="zoom-icon">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
                     {% if product.primary_image %}
                     <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
                          class="product-detail-image img-fluid" id="main-product-image">
@@ -27,15 +31,44 @@
                     {% endif %}
                 </div>
             </div>
-            {% if product.images.count > 1 %}
-            <div class="mt-3 d-flex flex-wrap">
-                {% for image in product.images.all %}
-                <div class="me-2 mb-2">
-                    <img src="{{ image.image.url }}" alt="{{ product.title }}"
-                         class="thumbnail-image {% if image.is_primary %}active{% endif %}"
-                         onclick="document.getElementById('main-product-image').src='{{ image.image.url }}'">
+
+            <!-- Image popup modal (lighter, more modern design) -->
+            <div class="product-zoom-modal" id="zoom-modal">
+                <div class="product-zoom-modal-content">
+                    <div class="product-zoom-header">
+                        <h5 class="product-zoom-title">{{ product.title }}</h5>
+                        <button class="product-zoom-close" id="zoom-close">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="product-zoom-body">
+                        <img id="zoomed-image" class="product-zoomed-image">
+                    </div>
                 </div>
-                {% endfor %}
+            </div>
+
+            <!-- Thumbnails with horizontal scroll (will hide when not needed) -->
+            {% if product.images.count > 1 %}
+            <div class="mt-3">
+                <div class="product-thumbnails-container" id="thumbnails-container">
+                    <button class="product-scroll-button product-scroll-left" id="scroll-left">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+
+                    <div class="product-thumbnails-scroll" id="thumbnails-scroll">
+                        {% for image in product.images.all %}
+                        <div class="product-thumbnail-wrapper">
+                            <img src="{{ image.image.url }}" alt="{{ product.title }}"
+                                 class="product-thumbnail-image {% if image.is_primary %}active{% endif %}"
+                                 data-full-img="{{ image.image.url }}">
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button class="product-scroll-button product-scroll-right" id="scroll-right">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
             </div>
             {% endif %}
         </div>
