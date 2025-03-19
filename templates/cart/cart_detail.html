@@ -234,7 +234,7 @@
                                     <button type="submit" class="btn btn-sm btn-link p-0">Move to Cart</button>
                                 </form>
                                 <span>|</span>
-                                <form action="{% url 'accounts:remove_from_wishlist' item.product.id %}" method="POST" class="d-inline">
+                                <form action="{% url 'cart:remove_from_saved' item.id %}" method="POST" class="d-inline">
                                     {% csrf_token %}
                                     {% if item.variant %}
                                     <input type="hidden" name="variant_id" value="{{ item.variant.id }}">

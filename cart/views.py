@@ -355,6 +355,24 @@ def move_to_cart(request, item_id):
     return redirect(next_url)
 
 
+@login_required
+@require_POST
+def remove_from_saved(request, item_id):
+    """
+    View for removing an item from the saved items list.
+    """
+    next_url = request.POST.get('next', 'cart:cart_detail')
+
+    try:
+        saved_item = SavedForLater.objects.get(id=item_id, user=request.user)
+        saved_item.delete()
+        messages.success(request, 'Item removed from saved items')
+    except SavedForLater.DoesNotExist:
+        messages.error(request, 'Saved item not found')
+
+    return redirect(next_url)
+
+
 @require_POST
 def apply_coupon(request):
     """
