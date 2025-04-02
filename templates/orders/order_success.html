@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Order Placed Successfully{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orders/order-success.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -106,53 +111,5 @@
     </div>
 </div>
 
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-        list-style: none;
-    }
 
-    .timeline:before {
-        content: "";
-        position: absolute;
-        left: 9px;
-        top: 0;
-        height: 100%;
-        width: 2px;
-        background-color: #dee2e6;
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 25px;
-    }
-
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: -30px;
-        top: 0;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 2px solid #3498db;
-        background-color: #fff;
-    }
-
-    .timeline-content {
-        padding-bottom: 10px;
-    }
-
-    .timeline-content h5 {
-        margin-bottom: 5px;
-    }
-
-    .timeline-content p {
-        margin-bottom: 0;
-    }
-</style>
 {% endblock %}

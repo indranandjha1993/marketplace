@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Vendor Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor/dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -181,69 +186,17 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/vendor/dashboard.js' %}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Sales chart
+        // Initialize dashboard charts with data from the server
         const salesData = {{ daily_sales|safe }};
         const dates = salesData.map(d => new Date(d.day).toLocaleDateString());
         const revenues = salesData.map(d => d.revenue);
         const orderCounts = salesData.map(d => d.orders);
 
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [
-                    {
-                        label: 'Revenue',
-                        data: revenues,
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        yAxisID: 'y',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Orders',
-                        data: orderCounts,
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        yAxisID: 'y1',
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Revenue (₹)'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
-                        },
-                        title: {
-                            display: true,
-                            text: 'Order Count'
-                        }
-                    }
-                }
-            }
-        });
+        // Initialize the sales chart
+        initializeSalesChart('salesChart', dates, revenues, orderCounts);
     });
 </script>
 {% endblock %}

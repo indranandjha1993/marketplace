@@ -1,0 +1,199 @@
+/* Payment Methods Page Styles */
+
+/* Payment Method Cards */
+.payment-method-card {
+    height: 100%;
+    transition: box-shadow 0.3s ease;
+}
+
+.payment-method-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.payment-method-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.payment-method-title {
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.payment-method-icon {
+    margin-right: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.payment-method-badge {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+}
+
+/* Payment Method Details */
+.payment-method-details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.payment-method-logo {
+    font-size: 2rem;
+    margin-right: 1rem;
+    color: var(--primary-color);
+}
+
+.payment-method-info {
+    flex-grow: 1;
+}
+
+.payment-method-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.payment-method-number {
+    margin-bottom: 0;
+}
+
+.payment-method-expiry {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Payment Method Actions */
+.payment-method-actions {
+    position: relative;
+}
+
+.payment-method-actions-button {
+    background: none;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.payment-method-actions-button:hover {
+    background-color: #f8f9fa;
+}
+
+.payment-method-actions-menu {
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.payment-method-action-item {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.payment-method-action-icon {
+    margin-right: 0.5rem;
+    width: 1rem;
+    text-align: center;
+}
+
+/* Empty State */
+.empty-payment-methods {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-payment-methods-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.empty-payment-methods-title {
+    margin-bottom: 0.5rem;
+}
+
+.empty-payment-methods-message {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+/* Available Payment Options */
+.payment-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.payment-option-icon {
+    font-size: 2rem;
+    margin-right: 1rem;
+    color: var(--primary-color);
+}
+
+.payment-option-info {
+    flex-grow: 1;
+}
+
+.payment-option-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.payment-option-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0;
+}
+
+/* Add Payment Method Form */
+.payment-method-tabs {
+    margin-bottom: 1.5rem;
+}
+
+.payment-method-tab {
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.payment-method-tab-icon {
+    margin-right: 0.5rem;
+}
+
+.payment-form-group {
+    margin-bottom: 1rem;
+}
+
+.payment-form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.payment-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Security Notice */
+.security-notice {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.security-notice-icon {
+    margin-right: 0.5rem;
+}

@@ -1,0 +1,157 @@
+/* Order List Page Styles */
+
+/* Order Table */
+.order-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.order-table th {
+    font-weight: 600;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.order-table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.order-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.order-table tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Order Number Link */
+.order-number-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.order-number-link:hover {
+    color: var(--primary-dark-color);
+    text-decoration: underline;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 50rem;
+}
+
+.status-badge-pending {
+    background-color: var(--warning-color);
+    color: #212529;
+}
+
+.status-badge-processing {
+    background-color: var(--info-color);
+    color: #fff;
+}
+
+.status-badge-shipped {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.status-badge-delivered {
+    background-color: var(--success-color);
+    color: #fff;
+}
+
+.status-badge-cancelled {
+    background-color: var(--danger-color);
+    color: #fff;
+}
+
+.status-badge-refunded {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.25rem;
+}
+
+.action-button-view {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.action-button-view:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.action-button-track {
+    color: var(--info-color);
+    border-color: var(--info-color);
+}
+
+.action-button-track:hover {
+    background-color: var(--info-color);
+    color: #fff;
+}
+
+.action-button-invoice {
+    color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.action-button-invoice:hover {
+    background-color: var(--secondary-color);
+    color: #fff;
+}
+
+/* Empty State */
+.empty-orders {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-orders-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.empty-orders-title {
+    margin-bottom: 0.5rem;
+}
+
+.empty-orders-message {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .order-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}

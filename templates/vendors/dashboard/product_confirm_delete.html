@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Delete Product{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor/product-management.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -22,4 +27,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/vendor/product-management.js' %}"></script>
 {% endblock %}

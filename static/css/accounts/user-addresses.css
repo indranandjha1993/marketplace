@@ -1,0 +1,119 @@
+/* User Addresses Page Styles */
+
+/* Address Cards */
+.address-card {
+    height: 100%;
+    transition: box-shadow 0.3s ease;
+}
+
+.address-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.address-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.address-card-title {
+    margin-bottom: 0;
+    font-size: 1.1rem;
+}
+
+.address-type-badge {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.address-card-body {
+    padding: 1rem;
+}
+
+.address-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.address-phone {
+    margin-bottom: 0.5rem;
+}
+
+.address-line {
+    margin-bottom: 0.25rem;
+}
+
+/* Address Actions */
+.address-actions-dropdown {
+    position: relative;
+}
+
+.address-actions-button {
+    background: none;
+    border: 1px solid #dee2e6;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.address-actions-button:hover {
+    background-color: #f8f9fa;
+}
+
+.address-actions-menu {
+    min-width: 10rem;
+    padding: 0.5rem 0;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.address-action-item {
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.address-action-icon {
+    margin-right: 0.5rem;
+    width: 1rem;
+    text-align: center;
+}
+
+/* Empty State */
+.empty-addresses-container {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.empty-addresses-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.empty-addresses-title {
+    margin-bottom: 0.5rem;
+}
+
+.empty-addresses-message {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+/* Add Address Button */
+.add-address-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+}
+
+.add-address-icon {
+    margin-right: 0.5rem;
+}

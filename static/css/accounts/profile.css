@@ -1,0 +1,586 @@
+/* User Profile Styles */
+
+.profile-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Profile Header */
+.profile-header {
+    padding: 2rem;
+    background-color: var(--primary-color);
+    color: white;
+    position: relative;
+}
+
+.profile-header-content {
+    display: flex;
+    align-items: center;
+}
+
+.profile-image-container {
+    position: relative;
+    margin-right: 1.5rem;
+}
+
+.profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background-color: #f8f9fa;
+}
+
+.profile-image-upload {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 32px;
+    height: 32px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.profile-image-upload:hover {
+    background-color: var(--light);
+}
+
+.profile-image-input {
+    display: none;
+}
+
+.profile-info {
+    flex-grow: 1;
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.profile-email {
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.profile-meta-item {
+    display: flex;
+    align-items: center;
+}
+
+.profile-meta-icon {
+    margin-right: 0.5rem;
+}
+
+/* Profile Navigation */
+.profile-nav {
+    display: flex;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.profile-nav::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.profile-tab {
+    padding: 1rem 1.5rem;
+    font-weight: 500;
+    color: #666;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.profile-tab:hover {
+    color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+}
+
+.profile-tab.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.profile-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+/* Profile Content */
+.profile-content {
+    padding: 2rem;
+}
+
+.profile-tab-content {
+    display: none;
+}
+
+.profile-tab-content.active {
+    display: block;
+}
+
+.profile-section-title {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eee;
+}
+
+/* Profile Form */
+.profile-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.profile-form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.profile-form-control {
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.profile-form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25);
+}
+
+.profile-form-control.is-invalid {
+    border-color: var(--danger-color);
+}
+
+.profile-form-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.profile-form-submit {
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+}
+
+/* Address Cards */
+.address-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.address-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.address-card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.address-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.address-card-title {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.address-card-badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+
+.address-card-content {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.address-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.address-card-btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Address Form */
+.address-form {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.address-form-title {
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.address-form-row {
+    margin-bottom: 1rem;
+}
+
+.address-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+/* Orders */
+.order-list {
+    margin-bottom: 1.5rem;
+}
+
+.order-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.order-card-header {
+    background-color: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.order-card-id {
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.order-card-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.order-card-status {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+}
+
+.order-card-status.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #856404;
+}
+
+.order-card-status.processing {
+    background-color: rgba(13, 110, 253, 0.2);
+    color: #004085;
+}
+
+.order-card-status.shipped {
+    background-color: rgba(23, 162, 184, 0.2);
+    color: #0c5460;
+}
+
+.order-card-status.delivered {
+    background-color: rgba(40, 167, 69, 0.2);
+    color: #155724;
+}
+
+.order-card-status.cancelled {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #721c24;
+}
+
+.order-card-body {
+    padding: 1.5rem;
+}
+
+.order-items {
+    margin-bottom: 1.5rem;
+}
+
+.order-item {
+    display: flex;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.order-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.order-item-image {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-right: 1rem;
+}
+
+.order-item-details {
+    flex-grow: 1;
+}
+
+.order-item-title {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.order-item-variant {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+}
+
+.order-item-price {
+    font-weight: 500;
+}
+
+.order-item-quantity {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.order-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.order-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.order-summary-row:last-child {
+    margin-bottom: 0;
+    padding-top: 0.5rem;
+    border-top: 1px solid #eee;
+    font-weight: 600;
+}
+
+.order-card-footer {
+    background-color: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.order-card-btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Wishlist */
+.wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.wishlist-item {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.wishlist-item:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transform: translateY(-2px);
+}
+
+.wishlist-item-image-container {
+    position: relative;
+    padding-top: 100%; /* 1:1 Aspect Ratio */
+    background-color: #f8f9fa;
+}
+
+.wishlist-item-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 1rem;
+}
+
+.wishlist-item-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 30px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1;
+}
+
+.wishlist-item-remove:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.wishlist-item-body {
+    padding: 1rem;
+}
+
+.wishlist-item-title {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 2.8rem;
+}
+
+.wishlist-item-price {
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.wishlist-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.wishlist-item-btn {
+    flex: 1;
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+/* Password Change */
+.password-change-form {
+    max-width: 500px;
+}
+
+.password-strength-container {
+    margin-top: 0.5rem;
+}
+
+.password-strength-meter {
+    width: 100%;
+    height: 5px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.password-strength-meter::-webkit-meter-bar {
+    background: #eee;
+    border-radius: 3px;
+}
+
+.password-strength-meter::-webkit-meter-optimum-value {
+    background: var(--success-color);
+    border-radius: 3px;
+}
+
+.password-strength-meter::-webkit-meter-suboptimum-value {
+    background: var(--warning-color);
+    border-radius: 3px;
+}
+
+.password-strength-meter::-webkit-meter-even-less-good-value {
+    background: var(--danger-color);
+    border-radius: 3px;
+}
+
+.password-strength-text {
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .profile-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-image-container {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-meta {
+        justify-content: center;
+    }
+    
+    .profile-tab {
+        padding: 0.75rem 1rem;
+    }
+    
+    .profile-content {
+        padding: 1.5rem;
+    }
+    
+    .address-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .wishlist-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}

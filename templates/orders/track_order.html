@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Track Order #{{ order.order_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/orders/track-order.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -98,37 +103,5 @@
     </div>
 </div>
 
-<style>
-    .timeline {
-        position: relative;
-        padding-left: 20px;
-    }
 
-    .tracking-step {
-        position: relative;
-        padding-left: 30px;
-        padding-bottom: 20px;
-        border-left: 2px solid #ddd;
-    }
-
-    .tracking-step:last-child {
-        padding-bottom: 0;
-    }
-
-    .tracking-step:before {
-        content: "";
-        position: absolute;
-        left: -8px;
-        top: 0;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background-color: #ddd;
-        border: 2px solid #fff;
-    }
-
-    .tracking-step.active:before {
-        background-color: #28a745;
-    }
-</style>
 {% endblock %}

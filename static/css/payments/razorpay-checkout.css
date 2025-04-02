@@ -1,0 +1,70 @@
+/* Razorpay Checkout Page Styles */
+
+/* Payment Card */
+.payment-card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.payment-card-header {
+    padding: 1.5rem;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.payment-card-title {
+    margin-bottom: 0;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.payment-card-body {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+/* Payment Amount */
+.payment-amount {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+
+/* Payment Message */
+.payment-message {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+/* Payment Button */
+.payment-button {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Order Summary */
+.order-summary-card {
+    margin-top: 1.5rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.order-info-section {
+    margin-bottom: 1rem;
+}
+
+.order-info-item {
+    margin-bottom: 0.25rem;
+}
+
+.order-info-item:last-child {
+    margin-bottom: 0;
+}
+
+.shipping-address {
+    line-height: 1.5;
+}

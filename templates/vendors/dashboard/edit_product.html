@@ -4,7 +4,9 @@
 {% block title %}Edit Product - {{ product.title }}{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor/product-management.css' %}">
 <style>
+    /* Additional custom styles for edit product page */
     .image-wrapper {
         position: relative;
         padding-top: 100%; /* 1:1 Aspect Ratio */
@@ -44,58 +46,6 @@
     .image-actions {
         display: flex;
         justify-content: space-between;
-    }
-
-    .form-check {
-        margin: 0;
-        padding: 0;
-    }
-
-    .form-check label {
-        color: white;
-        font-size: 0.85rem;
-        margin-left: 5px;
-    }
-
-    .form-check input[type="radio"], .form-check input[type="checkbox"] {
-        vertical-align: middle;
-    }
-
-    .image-previews {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .image-preview-item {
-        width: 100px;
-        height: 100px;
-        position: relative;
-        border-radius: 5px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    }
-
-    .image-preview-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .image-preview-item .remove-preview {
-        position: absolute;
-        top: 3px;
-        right: 3px;
-        background: rgba(255,255,255,0.8);
-        border-radius: 50%;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        color: #dc3545;
-        font-size: 12px;
     }
 </style>
 {% endblock %}
@@ -465,140 +415,10 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{% static 'js/vendor/product-management.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Track unsaved changes
-    let hasUnsavedChanges = false;
-    const originalFormValues = {};
-
-    // Store original form values for change detection
-    function storeOriginalValues(form) {
-        if (!form || !form.id) return;
-
-        const formData = new FormData(form);
-        for (let [key, value] of formData.entries()) {
-            // Skip csrf token
-            if (key === 'csrfmiddlewaretoken') continue;
-
-            // Store values
-            originalFormValues[form.id + '_' + key] = value;
-        }
-
-        // Special handling for checkboxes
-        form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            originalFormValues[form.id + '_' + checkbox.name] = checkbox.checked ? 'on' : '';
-        });
-    }
-
-    // Store all initial form values
-    document.querySelectorAll('form').forEach(form => {
-        storeOriginalValues(form);
-
-        // Add change listener to detect unsaved changes
-        form.addEventListener('change', function() {
-            hasUnsavedChanges = true;
-            checkFormChanges(form);
-        });
-
-        form.addEventListener('input', function() {
-            hasUnsavedChanges = true;
-            checkFormChanges(form);
-        });
-    });
-
-    // Check if form has changes compared to original values
-    function checkFormChanges(form) {
-        if (!form || !form.id) return false;
-
-        const formData = new FormData(form);
-        let changed = false;
-
-        for (let [key, value] of formData.entries()) {
-            // Skip CSRF token and action fields
-            if (key === 'csrfmiddlewaretoken' || key === 'action') continue;
-
-            // Special handling for checkboxes
-            if (key === 'is_featured' || key === 'variant_is_active' || key === 'has_variants') {
-                const checkbox = form.querySelector(`input[name="${key}"]`);
-                const wasChecked = originalFormValues[form.id + '_' + key] === 'on';
-                const isChecked = checkbox.checked;
-
-                if (wasChecked !== isChecked) {
-                    changed = true;
-                    break;
-                }
-                continue;
-            }
-
-            // For file inputs, always consider them unchanged since we can't compare files
-            if (form.querySelector(`input[name="${key}"][type="file"]`)) {
-                continue;
-            }
-
-            const originalKey = form.id + '_' + key;
-            const originalValue = originalFormValues[originalKey] || '';
-
-            // Convert to string for comparison and trim
-            const currentValue = String(value).trim();
-            const origValue = String(originalValue).trim();
-
-            if (currentValue !== origValue) {
-                changed = true;
-                break;
-            }
-        }
-
-        // Find save button for this form and highlight if changed
-        const saveBtn = form.querySelector('button[type="submit"]');
-        if (saveBtn) {
-            if (changed) {
-                saveBtn.classList.add('btn-warning');
-                saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)(\*)?$/, 'Save $1*');
-            } else {
-                saveBtn.classList.remove('btn-warning');
-                saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)\*$/, 'Save $1');
-            }
-        }
-
-        return changed;
-    }
-
-    // Tab switching with unsaved changes warning
-    const tabButtons = document.querySelectorAll('.nav-link');
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Don't check for changes when clicking a form submit button
-            if (e.target.closest('button[type="submit"]')) {
-                return true;
-            }
-
-            // Don't show confirmation for Delete buttons
-            if (e.target.closest('.btn-danger')) {
-                return true;
-            }
-
-            // Check all forms in the current active tab
-            const currentTab = document.querySelector('.tab-pane.show.active');
-            if (currentTab) {
-                const forms = currentTab.querySelectorAll('form');
-                let hasChanges = false;
-
-                forms.forEach(form => {
-                    if (checkFormChanges(form)) {
-                        hasChanges = true;
-                    }
-                });
-
-                if (hasChanges) {
-                    if (!confirm('You have unsaved changes. Are you sure you want to leave this tab without saving?')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    }
-                }
-            }
-        });
-    });
+    // Product-specific functionality for the edit page
 
     // Toggle variants section based on checkbox with AJAX
     const hasVariants = document.getElementById('has_variants');
@@ -674,42 +494,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Add attribute row
-    const addAttributeBtn = document.querySelector('.add-attribute');
-    const attributeContainer = document.getElementById('attribute_container');
-
-    if (addAttributeBtn && attributeContainer) {
-        addAttributeBtn.addEventListener('click', function() {
-            const newRow = document.createElement('div');
-            newRow.className = 'input-group mb-2';
-            newRow.innerHTML = `
-                <select class="form-select attribute-select" name="attribute_id[]" required>
-                    <option value="">Select Attribute</option>
-                    {% for attribute in attributes %}
-                    <option value="{{ attribute.id }}">{{ attribute.name }}</option>
-                    {% endfor %}
-                </select>
-                <select class="form-select attribute-value-select" name="attribute_value[]" required>
-                    <option value="">Select Value</option>
-                </select>
-                <button type="button" class="btn btn-outline-danger remove-attribute">
-                    <i class="fas fa-minus"></i>
-                </button>
-            `;
-            attributeContainer.appendChild(newRow);
-
-            // Add event listener to remove button
-            const removeBtn = newRow.querySelector('.remove-attribute');
-            removeBtn.addEventListener('click', function() {
-                attributeContainer.removeChild(newRow);
-            });
-
-            // Add event listener to attribute select
-            const attributeSelect = newRow.querySelector('.attribute-select');
-            attributeSelect.addEventListener('change', loadAttributeValues);
-        });
-    }
-
     // Function to load attribute values based on selected attribute
     function loadAttributeValues() {
         const attributeId = this.value;
@@ -748,117 +532,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.attribute-select').forEach(select => {
         select.addEventListener('change', loadAttributeValues);
     });
-
-    // Auto-generate slug from title
-    const titleInput = document.getElementById('title');
-    const slugInput = document.getElementById('slug');
-
-    if (titleInput && slugInput) {
-        // Store original values to detect changes
-        const originalTitle = titleInput.value;
-        const originalSlug = slugInput.value;
-
-        titleInput.addEventListener('blur', function() {
-            // Only auto-generate slug if it hasn't been manually changed
-            // or if it was originally auto-generated from the title
-            if (!slugInput.value || slugInput.value === slugify(originalTitle)) {
-                slugInput.value = slugify(this.value);
-            }
-        });
-    }
-
-    // Simple slugify function
-    function slugify(text) {
-        return text
-            .toString()
-            .toLowerCase()
-            .replace(/\s+/g, '-')           // Replace spaces with -
-            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-            .replace(/^-+/, '')             // Trim - from start of text
-            .replace(/-+$/, '');            // Trim - from end of text
-    }
-
-    // Before unload warning
-    window.addEventListener('beforeunload', function(e) {
-        // Check all forms for changes
-        let anyChanges = false;
-        document.querySelectorAll('form').forEach(form => {
-            if (checkFormChanges(form)) {
-                anyChanges = true;
-            }
-        });
-
-        if (anyChanges) {
-            // Standard message (most browsers override this with their own)
-            const message = 'You have unsaved changes. Are you sure you want to leave?';
-            e.returnValue = message;
-            return message;
-        }
-    });
-
-    // Reset form tracking after successful submission
-    function resetFormChanges(form) {
-        if (!form || !form.id) return;
-        storeOriginalValues(form);
-
-        const saveBtn = form.querySelector('button[type="submit"]');
-        if (saveBtn) {
-            saveBtn.classList.remove('btn-warning');
-            saveBtn.innerHTML = saveBtn.innerHTML.replace(/Save (.*?)\*$/, 'Save $1');
-        }
-    }
-
-    form.addEventListener('submit', function() {
-        setTimeout(() => resetFormChanges(form), 100);
-    });
-});
-
-// Image preview functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const newImagesInput = document.getElementById('new_images');
-    const previewContainer = document.getElementById('image-preview-container');
-    const previewsDiv = document.querySelector('.image-previews');
-
-    if (newImagesInput) {
-        newImagesInput.addEventListener('change', function() {
-            previewsDiv.innerHTML = '';
-
-            if (this.files.length > 0) {
-                previewContainer.style.display = 'block';
-
-                Array.from(this.files).forEach((file, index) => {
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-
-                        reader.onload = function(e) {
-                            const preview = document.createElement('div');
-                            preview.className = 'image-preview-item col-auto';
-                            preview.innerHTML = `
-                                <img src="${e.target.result}" alt="Preview">
-                                <span class="remove-preview" data-index="${index}"><i class="fas fa-times"></i></span>
-                            `;
-                            previewsDiv.appendChild(preview);
-
-                            // Add remove functionality
-                            preview.querySelector('.remove-preview').addEventListener('click', function() {
-                                preview.remove();
-                                // If no previews left, hide container
-                                if (previewsDiv.children.length === 0) {
-                                    previewContainer.style.display = 'none';
-                                }
-                                // Note: Can't actually remove from FileList, just visual feedback
-                            });
-                        };
-
-                        reader.readAsDataURL(file);
-                    }
-                });
-            } else {
-                previewContainer.style.display = 'none';
-            }
-        });
-    }
 });
 </script>
 {% endblock %}

@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 {% load common_tags %}
+{% load static %}
 
 {% block title %}My Wishlist{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts/wishlist.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">

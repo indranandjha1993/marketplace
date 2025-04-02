@@ -1,0 +1,135 @@
+/* Vendor Pages Styles */
+
+/* Vendor List Page */
+.vendor-card {
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.vendor-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.vendor-banner {
+    height: 100px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.vendor-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background-color: white;
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
+}
+
+/* Vendor Detail Page */
+.vendor-detail-banner {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+
+.vendor-detail-logo {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background-color: white;
+    position: absolute;
+    bottom: -50px;
+    left: 50px;
+    object-fit: contain;
+}
+
+.vendor-info-section {
+    padding-top: 60px;
+}
+
+.vendor-stats {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.vendor-stat-item {
+    display: flex;
+    align-items: center;
+}
+
+.vendor-stat-divider {
+    color: #dee2e6;
+    margin: 0 0.5rem;
+}
+
+.vendor-contact-info {
+    margin-top: 1rem;
+}
+
+.vendor-contact-item {
+    margin-bottom: 0.5rem;
+}
+
+.vendor-contact-icon {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.5rem;
+}
+
+/* Become Vendor Page */
+.become-vendor-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.become-vendor-section {
+    margin-bottom: 2rem;
+}
+
+.become-vendor-section-title {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.document-upload-section {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.document-upload-info {
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767.98px) {
+    .vendor-detail-logo {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .vendor-info-section {
+        text-align: center;
+    }
+    
+    .vendor-stats {
+        justify-content: center;
+    }
+}

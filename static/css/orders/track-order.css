@@ -1,0 +1,91 @@
+/* Order Tracking Page Styles */
+
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.tracking-step {
+    position: relative;
+    padding-left: 30px;
+    padding-bottom: 20px;
+    border-left: 2px solid #ddd;
+}
+
+.tracking-step:last-child {
+    padding-bottom: 0;
+}
+
+.tracking-step:before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background-color: #ddd;
+    border: 2px solid #fff;
+}
+
+.tracking-step.active:before {
+    background-color: #28a745;
+}
+
+/* Order Information Card */
+.order-info-card {
+    margin-bottom: 1.5rem;
+}
+
+.order-info-item {
+    margin-bottom: 0.5rem;
+}
+
+.order-info-item:last-child {
+    margin-bottom: 0;
+}
+
+/* Shipping Address Card */
+.shipping-address-card {
+    margin-top: 1.5rem;
+}
+
+.address-line {
+    margin-bottom: 0.25rem;
+}
+
+.address-line:last-child {
+    margin-bottom: 0;
+}
+
+/* Vendor Tracking Card */
+.vendor-tracking-card {
+    margin-bottom: 1.5rem;
+}
+
+.tracking-number {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* No Tracking Info */
+.no-tracking-container {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.no-tracking-icon {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.no-tracking-title {
+    margin-bottom: 0.5rem;
+}
+
+.no-tracking-message {
+    color: #6c757d;
+}

@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}My Addresses{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/accounts/user-addresses.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">

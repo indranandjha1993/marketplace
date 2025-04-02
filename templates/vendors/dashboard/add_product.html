@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Product{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor/product-management.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-3 col-lg-2 mb-4">
+            {% include 'vendors/includes/sidebar.html' %}
+        </div>
+        <div class="col-md-9 col-lg-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">Add New Product</h1>
+                <div>
+                    <a href="{% url 'vendors:vendor_products' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Products
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" id="product-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label required-field">Product Title</label>
+                                    <input type="text" class="form-control" id="title" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="description" class="form-label required-field">Description</label>
+                                    <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label required-field">Category</label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Select Category</option>
+                                        {% for category in categories %}
+                                        <option value="{{ category.id }}">{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="brand" class="form-label">Brand</label>
+                                    <select class="form-select" id="brand" name="brand">
+                                        <option value="">Select Brand (Optional)</option>
+                                        {% for brand in brands %}
+                                        <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-3 form-check mt-4">
+                                    <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured">
+                                    <label class="form-check-label" for="is_featured">Feature this product on the homepage</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="price" class="form-label required-field">Regular Price (₹)</label>
+                                    <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="sale_price" class="form-label">Sale Price (₹)</label>
+                                    <input type="number" class="form-control" id="sale_price" name="sale_price" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="tax_rate" class="form-label">Tax Rate (%)</label>
+                                    <input type="number" class="form-control" id="tax_rate" name="tax_rate" value="0" min="0" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label required-field">Stock Quantity</label>
+                                    <input type="number" class="form-control" id="quantity" name="quantity" value="0" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sku" class="form-label required-field">SKU</label>
+                                    <input type="text" class="form-control" id="sku" name="sku" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 form-check mt-4">
+                                    <input type="checkbox" class="form-check-input" id="has_variants" name="has_variants">
+                                    <label class="form-check-label" for="has_variants">This product has multiple variants</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="images" class="form-label">Product Images</label>
+                            <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                            <div class="form-text text-muted mt-1">
+                                <i class="fas fa-info-circle me-1"></i>
+                                You can select multiple images. The first image will be set as primary.
+                            </div>
+                        </div>
+
+                        <div id="image-preview-container" class="row mt-3" style="display: none;">
+                            <div class="col-12">
+                                <h6>Image Previews</h6>
+                                <div class="image-previews"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/vendor/product-management.js' %}"></script>
+{% endblock %}

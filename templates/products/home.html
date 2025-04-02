@@ -1,7 +1,12 @@
 {% extends 'base.html' %}
 {% load common_tags %}
+{% load static %}
 
 {% block title %}Multi-Vendor Marketplace - Your One-Stop Shopping Destination{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/products/home.css' %}">
+{% endblock %}
 
 {% block content %}
 <!-- Hero Banner -->
@@ -245,146 +250,4 @@
         </div>
     </div>
 </section>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    /* Carousel enhancements */
-    .carousel-item {
-        position: relative;
-        height: 500px; /* Fixed height for consistent appearance */
-    }
-
-    .carousel-item img {
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .carousel-item::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.3);
-    }
-
-    .carousel-caption {
-        bottom: 50%;
-        transform: translateY(50%);
-        padding-bottom: 0;
-        z-index: 1;
-    }
-
-    .carousel-indicators {
-        z-index: 2;
-    }
-
-    .carousel-control-prev, .carousel-control-next {
-        z-index: 2;
-    }
-
-    /* Category cards styling */
-    .category-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        overflow: hidden;
-    }
-
-    .category-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    }
-
-    .category-img-container {
-        overflow: hidden;
-    }
-
-    /* Brand cards styling */
-    .brand-card {
-        transition: transform 0.3s ease;
-        background-color: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    }
-
-    .brand-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    /* Benefits cards styling */
-    .benefit-card {
-        transition: transform 0.3s ease;
-        border-radius: 8px;
-    }
-
-    .benefit-card:hover {
-        transform: translateY(-5px);
-    }
-
-    .benefit-icon-wrapper {
-        height: 80px;
-        width: 80px;
-        border-radius: 50%;
-        background-color: rgba(52, 152, 219, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-        transition: all 0.3s ease;
-    }
-
-    .benefit-card:hover .benefit-icon-wrapper {
-        background-color: rgba(52, 152, 219, 0.2);
-        transform: scale(1.1);
-    }
-
-    /* Vendor card styling */
-    .vendor-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    }
-
-    .vendor-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    }
-
-    .vendor-banner {
-        height: 120px;
-        background-size: cover;
-        background-position: center;
-        position: relative;
-    }
-
-    .vendor-logo {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: 3px solid white;
-        background-color: white;
-        position: absolute;
-        bottom: -40px;
-        left: 50%;
-        transform: translateX(-50%);
-        object-fit: contain;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    /* Newsletter form */
-    .newsletter-form .form-control {
-        height: 50px;
-        border-radius: 4px 0 0 4px;
-    }
-
-    .newsletter-form .btn {
-        border-radius: 0 4px 4px 0;
-        height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
-</style>
 {% endblock %}

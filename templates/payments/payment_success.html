@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Payment Successful{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/payments/payment-success.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-5">

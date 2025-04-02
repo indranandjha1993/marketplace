@@ -1,8 +1,13 @@
 {% extends 'base.html' %}
 {% load common_tags %}
 {% load pagination_tags %}
+{% load static %}
 
 {% block title %}Sellers{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/vendor/vendor-pages.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -48,4 +53,8 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/vendor/vendor-pages.js' %}"></script>
 {% endblock %}
