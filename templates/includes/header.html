@@ -1,30 +1,30 @@
 <!-- Header for Desktop and Mobile -->
-<header class="header-gradient sticky-top">
+<header class="marketplace-header sticky-top">
     <div class="container-fluid px-md-4">
-        <nav class="navbar navbar-expand-lg navbar-light py-3 px-1">
+        <nav class="navbar navbar-expand-lg navbar-light py-2 px-1">
             <div class="d-flex align-items-center w-100">
                 <!-- Hamburger Menu Toggle (Mobile - Left Side) -->
-                <button class="btn btn-link nav-link d-lg-none me-2 p-1 menu-toggle-btn"
+                <button class="btn btn-link nav-link d-lg-none me-2 p-1 marketplace-menu-toggle"
                         type="button"
                         data-bs-toggle="offcanvas"
                         data-bs-target="#categoryOffcanvas"
                         aria-controls="categoryOffcanvas"
                         aria-label="Categories menu">
-                    <i class="fas fa-stream" aria-hidden="true"></i>
+                    <i class="fas fa-bars" aria-hidden="true"></i>
                     <span class="visually-hidden">Categories</span>
                 </button>
 
-                <!-- Logo with animation -->
-                <a class="navbar-brand me-3 logo-container" href="/" aria-label="Marketplace Home">
+                <!-- Brand Logo -->
+                <a class="navbar-brand me-3 marketplace-logo" href="/" aria-label="Marketplace Home">
                     <img src="/static/img/logo.png" 
                          alt="Marketplace Logo" 
-                         width="110" 
-                         height="33"
-                         class="d-inline-block align-text-top logo-image" 
+                         width="120" 
+                         height="36"
+                         class="d-inline-block align-text-top" 
                          loading="lazy">
                 </a>
 
-                <!-- Search Bar (Desktop) with enhanced styling -->
+                <!-- Flipkart-inspired Search Bar (Desktop) -->
                 <div class="d-none d-lg-flex flex-grow-1 mx-3 w-50">
                     <form class="d-flex w-100"
                           action="{% url 'products:browse_products' %}"
@@ -32,26 +32,28 @@
                           role="search"
                           id="desktopSearchForm"
                           aria-label="Desktop search form">
-                        <div class="input-group search-container enhanced-search">
-                            <input type="search"
-                                   name="q"
-                                   id="desktopSearchInput"
-                                   class="form-control search-input"
-                                   placeholder="Search for Products, Brands and More"
-                                   aria-label="Search products">
-                            <button class="btn search-button pulse-effect" type="submit" aria-label="Search">
-                                <i class="fas fa-search" aria-hidden="true"></i>
-                                <span class="visually-hidden">Search</span>
-                            </button>
+                        <div class="marketplace-search-wrapper">
+                            <div class="marketplace-search-container">
+                                <input type="search"
+                                       name="q"
+                                       id="desktopSearchInput"
+                                       class="marketplace-search-input"
+                                       placeholder="Search for Products, Brands and More"
+                                       aria-label="Search products">
+                                <button class="marketplace-search-button" type="submit" aria-label="Search">
+                                    <i class="fas fa-search" aria-hidden="true"></i>
+                                    <span class="search-text">Search</span>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
 
-                <!-- Right-aligned Nav Items with enhanced styling -->
+                <!-- Right-aligned Nav Items -->
                 <div class="ms-auto d-flex align-items-center">
                     <!-- Account Menu -->
                     <div class="nav-item dropdown me-3">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center header-nav-link"
+                        <a class="nav-link dropdown-toggle d-flex align-items-center marketplace-nav-link user-account-link"
                            href="#"
                            id="accountDropdown"
                            role="button"
@@ -65,7 +67,7 @@
                             <span class="fw-bold">Login</span>
                             {% endif %}
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg animated-dropdown" aria-labelledby="accountDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg marketplace-dropdown" aria-labelledby="accountDropdown">
                             {% if user.is_authenticated %}
                                 {% if user.is_vendor %}
                                 <li>
@@ -130,22 +132,22 @@
                         </ul>
                     </div>
 
-                    <!-- Become a Seller - Desktop only with enhanced styling -->
+                    <!-- Become a Seller - Desktop only -->
                     {% if not user.is_vendor %}
                     <div class="nav-item me-3 d-none d-lg-block">
-                        <a class="nav-link fw-bold become-seller-btn" href="{% url 'vendors:become_vendor' %}" aria-label="Become a seller">
+                        <a class="nav-link fw-bold marketplace-seller-btn" href="{% url 'vendors:become_vendor' %}" aria-label="Become a seller">
                             Become a Seller
                         </a>
                     </div>
                     {% endif %}
 
-                    <!-- Cart with enhanced styling and animation -->
+                    <!-- Cart with badge -->
                     <div class="nav-item me-3 d-flex align-items-center">
-                        <a class="nav-link position-relative header-nav-link cart-link" href="{% url 'cart:cart_detail' %}" aria-label="Shopping cart">
+                        <a class="nav-link position-relative marketplace-nav-link marketplace-cart-link" href="{% url 'cart:cart_detail' %}" aria-label="Shopping cart">
                             <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             <span class="fw-bold ms-1 d-none d-lg-inline">Cart</span>
                             {% if cart_items_count > 0 %}
-                            <span class="badge rounded-pill bg-primary ms-1 position-relative cart-badge" aria-label="{{ cart_items_count }} items in cart">{{ cart_items_count }}</span>
+                            <span class="badge rounded-pill marketplace-cart-badge ms-1 position-relative" aria-label="{{ cart_items_count }} items in cart">{{ cart_items_count }}</span>
                             {% endif %}
                         </a>
                     </div>
@@ -153,7 +155,7 @@
             </div>
         </nav>
 
-        <!-- Mobile Search Bar with enhanced styling -->
+        <!-- Mobile Search Bar -->
         <div class="d-lg-none pb-3 mt-2 mx-auto">
             <form class="d-flex w-100"
                   action="{% url 'products:browse_products' %}"
@@ -161,17 +163,18 @@
                   role="search"
                   id="mobileSearchForm"
                   aria-label="Mobile search form">
-                <div class="input-group search-container enhanced-search">
-                    <input type="search"
-                           name="q"
-                           id="mobileSearchInput"
-                           class="form-control search-input"
-                           placeholder="Search for Products, Brands and More"
-                           aria-label="Search products">
-                    <button class="btn search-button pulse-effect" type="submit" aria-label="Search">
-                        <i class="fas fa-search" aria-hidden="true"></i>
-                        <span class="visually-hidden">Search</span>
-                    </button>
+                <div class="marketplace-search-wrapper mobile-search">
+                    <div class="marketplace-search-container">
+                        <input type="search"
+                               name="q"
+                               id="mobileSearchInput"
+                               class="marketplace-search-input"
+                               placeholder="Search for Products, Brands and More"
+                               aria-label="Search products">
+                        <button class="marketplace-search-button" type="submit" aria-label="Search">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -179,15 +182,15 @@
 </header>
 
 <!-- Desktop Category Navigation -->
-<div class="category-nav category-nav-enhanced d-none d-lg-block">
+<div class="marketplace-category-nav d-none d-lg-block">
     <div class="container-fluid px-md-4">
         <nav class="navbar navbar-expand-lg py-0" aria-label="Category Navigation">
             <div class="container-fluid">
                 <div class="navbar-collapse justify-content-start">
-                    <ul class="navbar-nav gap-3 py-2 mx-auto">
+                    <ul class="navbar-nav marketplace-nav-list mx-auto">
                         {% for category in categories %}
                         <li class="nav-item dropdown position-static">
-                            <a class="nav-link category-link-enhanced px-3 py-2 text-dark fw-medium d-flex align-items-center gap-2"
+                            <a class="marketplace-category-link px-3 py-2 d-flex align-items-center"
                                href="{% url 'products:product_list_by_category' category.slug %}"
                                id="cat{{ category.id }}"
                                data-bs-toggle="dropdown"
@@ -198,55 +201,68 @@
                                 {% if category.image %}
                                 <img src="{{ category.image.url }}"
                                      alt=""
-                                     class="root-category-img rounded category-img-enhanced"
+                                     class="marketplace-category-img me-2"
                                      width="24"
                                      height="24"
                                      loading="lazy">
                                 {% else %}
-                                <span class="placeholder-img rounded" aria-hidden="true"></span>
+                                <i class="fas fa-th-large me-2" aria-hidden="true"></i>
                                 {% endif %}
                                 <span>{{ category.name }}</span>
                                 {% if category.children.exists %}
-                                <i class="bi bi-chevron-down ms-auto small d-none d-lg-block category-icon" aria-hidden="true"></i>
+                                <i class="fas fa-chevron-down ms-2 small category-dropdown-icon" aria-hidden="true"></i>
                                 {% endif %}
                             </a>
 
                             {% if category.children.exists %}
-                            <div class="dropdown-menu mega-menu w-100 animate__animated animate__fadeIn border-0 shadow-lg mega-menu-enhanced"
+                            <div class="dropdown-menu marketplace-mega-menu w-100 animate__animated animate__fadeIn"
                                  aria-labelledby="cat{{ category.id }}">
                                 <div class="container">
                                     <div class="row py-4">
+                                        <!-- Category Header -->
+                                        <div class="col-12 mb-3">
+                                            <div class="d-flex align-items-center">
+                                                {% if category.image %}
+                                                <img src="{{ category.image.url }}" alt="" width="32" height="32" class="me-2">
+                                                {% else %}
+                                                <i class="fas fa-th-large me-2 category-header-icon" aria-hidden="true"></i>
+                                                {% endif %}
+                                                <h4 class="marketplace-mega-menu-title mb-0">{{ category.name }}</h4>
+                                            </div>
+                                            <div class="marketplace-divider"></div>
+                                        </div>
+                                        
                                         <!-- Subcategories Grid -->
                                         <div class="col-12">
-                                            <h5 class="mega-menu-title mb-3">{{ category.name }} Categories</h5>
                                             <div class="row row-cols-1 row-cols-md-4 g-4">
                                                 {% for subcategory in category.children.all %}
                                                 <div class="col">
-                                                    <a class="subcategory-link d-block text-decoration-none text-dark p-3 rounded d-flex align-items-center gap-3"
+                                                    <a class="marketplace-subcategory-link d-block text-decoration-none"
                                                        href="{% url 'products:product_list_by_category' subcategory.slug %}"
                                                        aria-label="{{ subcategory.name }} subcategory">
-                                                        {% if subcategory.image %}
-                                                        <div class="subcategory-img-container">
+                                                        <div class="d-flex align-items-center">
+                                                            {% if subcategory.image %}
                                                             <img src="{{ subcategory.image.url }}"
                                                                  alt=""
-                                                                 class="subcategory-img rounded-circle"
-                                                                 width="40"
-                                                                 height="40"
+                                                                 class="marketplace-subcategory-img"
+                                                                 width="32"
+                                                                 height="32"
                                                                  loading="lazy">
+                                                            {% else %}
+                                                            <i class="fas fa-tag marketplace-subcategory-icon" aria-hidden="true"></i>
+                                                            {% endif %}
+                                                            <span class="marketplace-subcategory-name ms-2">{{ subcategory.name }}</span>
                                                         </div>
-                                                        {% else %}
-                                                        <span class="placeholder-img rounded-circle" aria-hidden="true"></span>
-                                                        {% endif %}
-                                                        <span class="fw-medium subcategory-name">{{ subcategory.name }}</span>
                                                     </a>
                                                 </div>
                                                 {% endfor %}
                                             </div>
                                             <div class="mt-4 text-center">
                                                 <a href="{% url 'products:product_list_by_category' category.slug %}"
-                                                   class="view-all-link"
+                                                   class="marketplace-view-all"
                                                    aria-label="Shop all {{ category.name }}">
-                                                    Shop All {{ category.name }} <i class="bi bi-arrow-right ms-1 view-all-icon" aria-hidden="true"></i>
+                                                    Shop All {{ category.name }}
+                                                    <i class="fas fa-arrow-right ms-2" aria-hidden="true"></i>
                                                 </a>
                                             </div>
                                         </div>
