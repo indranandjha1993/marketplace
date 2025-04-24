@@ -14,27 +14,33 @@
         </div>
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img src="/static/img/banner1.jpg" class="d-block w-100" alt="New Arrivals Every Day" style="height: 400px; object-fit: cover;">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>New Arrivals Every Day</h2>
-                    <p>Be the first to discover the latest products</p>
-                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg">Shop Now</a>
+                <div class="banner-img-container">
+                    <img src="/static/img/banner1.jpg" class="d-block w-100" alt="New Arrivals Every Day">
+                </div>
+                <div class="carousel-caption">
+                    <h2 class="banner-title">New Arrivals Every Day</h2>
+                    <p class="banner-subtitle">Be the first to discover the latest products</p>
+                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg banner-btn">Shop Now</a>
                 </div>
             </div>
             <div class="carousel-item">
-                <img src="/static/img/banner2.jpg" class="d-block w-100" alt="Special Offers" style="height: 400px; object-fit: cover;">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>Special Offers</h2>
-                    <p>Save big on our featured products</p>
-                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg">Shop Now</a>
+                <div class="banner-img-container">
+                    <img src="/static/img/banner2.jpg" class="d-block w-100" alt="Special Offers">
+                </div>
+                <div class="carousel-caption">
+                    <h2 class="banner-title">Special Offers</h2>
+                    <p class="banner-subtitle">Save big on our featured products</p>
+                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg banner-btn">Shop Now</a>
                 </div>
             </div>
             <div class="carousel-item">
-                <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor" style="height: 400px; object-fit: cover;">
-                <div class="carousel-caption d-none d-md-block">
-                    <h2>Start Selling Today</h2>
-                    <p>Join thousands of successful vendors on our platform</p>
-                    <a href="{% url 'vendors:become_vendor' %}" class="btn btn-success btn-lg">Become a Vendor</a>
+                <div class="banner-img-container">
+                    <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor">
+                </div>
+                <div class="carousel-caption">
+                    <h2 class="banner-title">Start Selling Today</h2>
+                    <p class="banner-subtitle">Join thousands of successful vendors on our platform</p>
+                    <a href="{% url 'vendors:become_vendor' %}" class="btn btn-success btn-lg banner-btn">Become a Vendor</a>
                 </div>
             </div>
         </div>
@@ -250,16 +256,32 @@
 {% block extra_css %}
 <style>
     /* Carousel enhancements */
+    .hero-banner {
+        margin-bottom: 2rem;
+    }
+    
     .carousel-item {
         position: relative;
-        height: 500px; /* Fixed height for consistent appearance */
     }
-
-    .carousel-item img {
+    
+    .banner-img-container {
+        position: relative;
+        width: 100%;
+        height: 0;
+        padding-bottom: 36.13%; /* 542/1500 = 0.3613 or 36.13% - maintains aspect ratio 1500x542 */
+        overflow: hidden;
+    }
+    
+    .banner-img-container img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
         height: 100%;
         object-fit: cover;
+        object-position: center;
     }
-
+    
     .carousel-item::after {
         content: '';
         position: absolute;
@@ -267,22 +289,89 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.3);
+        background: rgba(0, 0, 0, 0.4);
     }
-
+    
     .carousel-caption {
-        bottom: 50%;
-        transform: translateY(50%);
-        padding-bottom: 0;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        padding: 0 15px;
+        text-align: center;
         z-index: 1;
     }
-
+    
+    .banner-title {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .banner-subtitle {
+        font-size: 1.2rem;
+        margin-bottom: 1.5rem;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+    
+    .banner-btn {
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+    }
+    
     .carousel-indicators {
         z-index: 2;
+        margin-bottom: 1rem;
     }
-
+    
     .carousel-control-prev, .carousel-control-next {
         z-index: 2;
+        width: 10%;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 991.98px) {
+        .banner-title {
+            font-size: 2rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 1rem;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .banner-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .banner-btn {
+            padding: 0.4rem 1.2rem;
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .banner-title {
+            font-size: 1.2rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .banner-btn {
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+        }
     }
 
     /* Category cards styling */
