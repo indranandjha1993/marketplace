@@ -1,8 +1,45 @@
-/* Global Styles */
+/**
+ * Marketplace - Main Stylesheet
+ * 
+ * This stylesheet contains all the styles for the marketplace application.
+ * It is organized into logical sections for better maintainability.
+ */
+
+/**
+ * =============================================================================
+ * TABLE OF CONTENTS
+ * =============================================================================
+ * 
+ * 1. CSS Variables & Root Settings
+ * 2. Base Elements & Typography
+ * 3. Layout Components
+ * 4. Navigation & Header
+ * 5. Buttons & Form Controls
+ * 6. Product Cards & Listings
+ * 7. Product Details & Gallery
+ * 8. Cart & Checkout
+ * 9. User Dashboard
+ * 10. Filters & Search
+ * 11. Notifications & Alerts
+ * 12. Animations & Transitions
+ * 13. Utilities & Helper Classes
+ * 14. Responsive Adjustments
+ * =============================================================================
+ */
+
+/**
+ * 1. CSS Variables & Root Settings
+ * -----------------------------------------------------------------------------
+ * Global CSS variables for consistent theming across the application.
+ * Includes colors, spacing, typography, and common UI properties.
+ */
 :root {
+  /* Color System - RGB values for alpha operations */
   --primary-color-rgb: 67, 97, 238;
   --secondary-color-rgb: 58, 12, 163;
   --danger-color-rgb: 247, 37, 133;
+  
+  /* Main Color Palette */
   --primary-color: #4361ee;
   --secondary-color: #3a0ca3;
   --accent-color: #7209b7;
@@ -10,8 +47,12 @@
   --danger-color: #f72585;
   --warning-color: #f8961e;
   --info-color: #4361ee;
+  
+  /* Neutral Colors */
   --light-color: #f8f9fa;
   --dark-color: #212529;
+  
+  /* Gray Scale */
   --gray-100: #f8f9fa;
   --gray-200: #e9ecef;
   --gray-300: #dee2e6;
@@ -22,13 +63,21 @@
   --gray-800: #343a40;
   --gray-900: #212529;
 
+  /* UI Properties */
   --border-radius: 0.5rem;
   --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
   --transition: all 0.3s ease;
 
+  /* Typography */
   --font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
+
+/**
+ * 2. Base Elements & Typography
+ * -----------------------------------------------------------------------------
+ * Styles for basic HTML elements and typography settings.
+ */
 body {
   font-family: var(--font-family-sans-serif);
   color: var(--gray-800);
@@ -36,30 +85,30 @@ body {
   line-height: 1.6;
 }
 
-.form-control:focus {
-    border-color: #FFFFFF;
-}
-
 a {
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: var(--transition);
 }
 
 a:hover {
   opacity: 0.85;
 }
 
-/* Buttons */
+/**
+ * 3. Buttons & Interactive Elements
+ * -----------------------------------------------------------------------------
+ * Styles for buttons, links, and other interactive elements.
+ */
 .btn {
   font-weight: 500;
   border-radius: 0.375rem;
   transition: all 0.2s ease;
 }
 
+/* Primary button with elevation effect on hover */
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
-  transition: all 0.2s ease;
   box-shadow: 0 4px 6px rgba(var(--primary-color-rgb), 0.15);
 }
 
@@ -68,20 +117,28 @@ a:hover {
   box-shadow: 0 6px 8px rgba(var(--primary-color-rgb), 0.25);
 }
 
+/* Outline button with subtle hover effect */
 .btn-outline-primary:hover {
   transform: translateY(-2px);
 }
 
+/* Success button using secondary color for visual distinction */
 .btn-success {
   background-color: var(--secondary-color);
   border-color: var(--secondary-color);
 }
 
+/**
+ * 4. Search Components
+ * -----------------------------------------------------------------------------
+ * Styles for search inputs, buttons, and related animations.
+ */
 .search-container {
     position: relative;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
+/* Search input with subtle styling and focus effects */
 .search-input {
     border-radius: 8px;
     height: 40px;
@@ -89,7 +146,7 @@ a:hover {
     background-color: #f5f5f7;
     border: 1px solid transparent;
     font-size: 14px;
-    transition: all 0.3s ease;
+    transition: var(--transition);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -100,6 +157,7 @@ a:hover {
     outline: none;
 }
 
+/* Search button positioned inside the input */
 .search-button {
     position: absolute;
     left: 0;
@@ -110,75 +168,37 @@ a:hover {
     width: 40px;
     z-index: 5;
     color: #86868b;
-    transition: all 0.3s ease;
+    transition: var(--transition);
 }
 
+/* Interactive states for search button */
 .search-input:focus + .search-button,
 .search-button:hover {
     color: #007aff;
 }
 
-/* Animation for focus */
+/* Subtle animation when search is focused */
 .search-container:focus-within {
     transform: scale(1.01);
 }
 
-/* Navbar styling adjustments */
-.navbar {
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-}
+/**
+ * 5. Navigation & Header Components
+ * -----------------------------------------------------------------------------
+ * Styles for navigation bar, header, and related elements.
+ */
 
-/* Adjust badge for cart */
-.badge.bg-primary {
-    background-color: #007aff !important;
-}
-
-.wishlist-btn {
-    width: 38px;
-    height: 38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.wishlist-btn:hover:not(.active) {
-    background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
-}
-
-.wishlist-btn.active {
-    transform: scale(1.1);
-}
-
-.wishlist-btn.active {
-    border: none;
-    color: var(--danger-color);
-}
-
-.wishlist-btn.active i {
-  color: var(--danger-color);
-}
-
-.stars {
-    color: #ffc107;
-}
-
-.discount-badge {
-    font-weight: 600;
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-}
-
-/* Header Styling */
+/* Main header element */
 header {
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
+/* Navbar styling */
 .navbar {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
@@ -190,7 +210,61 @@ header {
   font-weight: 500;
 }
 
-/* Breadcrumb */
+/* Badge styling for cart notifications */
+.badge.bg-primary {
+  background-color: #007aff !important;
+}
+
+/**
+ * 6. Interactive Product Elements
+ * -----------------------------------------------------------------------------
+ * Styles for wishlist buttons, rating stars, and product badges.
+ */
+
+/* Wishlist button styling */
+.wishlist-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.wishlist-btn:hover:not(.active) {
+  background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+}
+
+.wishlist-btn.active {
+  transform: scale(1.1);
+  border: none;
+  color: var(--danger-color);
+}
+
+.wishlist-btn.active i {
+  color: var(--danger-color);
+}
+
+/* Product rating stars */
+.stars {
+  color: #ffc107;
+}
+
+/* Discount badge with custom shape */
+.discount-badge {
+  font-weight: 600;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+/**
+ * 7. Navigation Aids
+ * -----------------------------------------------------------------------------
+ * Styles for breadcrumbs, pagination, and other navigation aids.
+ */
+
+/* Breadcrumb navigation */
 .breadcrumb {
   background-color: transparent;
   padding: 0;
@@ -198,10 +272,10 @@ header {
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
-  content: ">";
+  content: ">"; /* Custom separator */
 }
 
-/* Pagination */
+/* Pagination with circular buttons */
 .pagination {
   margin-top: 2rem;
 }
@@ -221,35 +295,52 @@ header {
   transition: all 0.2s ease;
 }
 
+/* Active page styling */
 .pagination .page-item.active .page-link {
   background-color: var(--primary-color);
   color: white;
-  box-shadow: 0 4px 6px rgba(67, 97, 238, 0.3);
+  box-shadow: 0 4px 6px rgba(var(--primary-color-rgb), 0.3);
 }
 
+/* Hover effect for pagination links */
 .pagination .page-item .page-link:hover {
   background-color: var(--gray-200);
   transform: translateY(-2px);
 }
 
+/* Disabled pagination state */
 .pagination .page-item.disabled .page-link {
   background-color: var(--gray-100);
   color: var(--gray-400);
   cursor: not-allowed;
 }
 
-/* Form Controls */
+/**
+ * 8. Form Controls & Inputs
+ * -----------------------------------------------------------------------------
+ * Styles for form elements, inputs, and related components.
+ */
+
+/* Focus states for form controls */
 .form-control:focus,
 .form-select:focus {
-  box-shadow: 0 0 0 0.1rem rgba(67, 97, 238, 0.25);
+  box-shadow: 0 0 0 0.1rem rgba(var(--primary-color-rgb), 0.25);
+  border-color: #FFFFFF;
 }
 
+/* Checked state for checkboxes and radio buttons */
 .form-check-input:checked {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
 }
 
-/* Category Menu */
+/**
+ * 9. Navigation Menus
+ * -----------------------------------------------------------------------------
+ * Styles for category menus and navigation lists.
+ */
+
+/* Category menu styling */
 .category-menu .nav-link {
   color: var(--dark-color);
   font-weight: 500;
@@ -260,6 +351,13 @@ header {
   color: var(--primary-color);
 }
 
+/**
+ * 10. Cards & Containers
+ * -----------------------------------------------------------------------------
+ * Styles for cards and container elements.
+ */
+
+/* Base card styling */
 .card {
   border: none;
   border-radius: var(--border-radius);
@@ -268,13 +366,20 @@ header {
   transition: var(--transition);
 }
 
+/* Card header styling */
 .card-header {
   background-color: white;
   border-bottom: 1px solid var(--gray-200);
   padding: 1rem 1.25rem;
 }
 
-/* Product Cards */
+/**
+ * 11. Product Cards
+ * -----------------------------------------------------------------------------
+ * Styles for product cards and related elements in product listings.
+ */
+
+/* Base product card with hover effects */
 .product-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -284,6 +389,7 @@ header {
     box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
 }
 
+/* Product image cover with zoom effect */
 .product-card .object-fit-cover {
     object-fit: cover;
     transition: transform 0.5s ease;
@@ -293,535 +399,675 @@ header {
     transform: scale(1.05);
 }
 
+/* Text hover effect */
 .hover-text-primary:hover {
-    color: var(--bs-primary) !important;
+    color: var(--primary-color) !important;
 }
 
+/* Product image container */
 .product-image-container {
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f8f9fa;
-  transition: all 0.3s ease;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-100);
+    transition: var(--transition);
 }
 
 .product-card:hover .product-image-container {
-  background-color: white;
+    background-color: white;
 }
 
+/* Product image with hover zoom effect */
 .product-image {
-  max-height: 180px;
-  object-fit: contain;
-  transition: all 0.3s ease;
+    max-height: 180px;
+    object-fit: contain;
+    transition: var(--transition);
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.08);
+    transform: scale(1.08);
 }
 
+/* Product title with line clamping for consistent height */
 .product-title {
-  font-weight: 600;
-  font-size: 1rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.5rem;
-  height: 2.8rem;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    height: 2.8rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
+/* Product link styling */
 .product-link {
-  color: var(--dark-color);
-  text-decoration: none;
-  transition: color 0.2s ease;
+    color: var(--dark-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .product-link:hover {
-  color: var(--primary-color);
+    color: var(--primary-color);
 }
 
+/* Vendor link styling */
 .vendor-link {
-  font-size: 0.8rem;
-  text-decoration: none;
-  color: var(--gray-600);
-  transition: color 0.2s ease;
+    font-size: 0.8rem;
+    text-decoration: none;
+    color: var(--gray-600);
+    transition: color 0.2s ease;
 }
 
 .vendor-link:hover {
-  color: var(--primary-color);
+    color: var(--primary-color);
 }
+
+/**
+ * 12. Product Status Indicators
+ * -----------------------------------------------------------------------------
+ * Styles for product status indicators like out-of-stock overlays.
+ */
 
 /* Out of stock overlay */
 .out-of-stock-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
 }
 
 .out-of-stock-overlay span {
-  background-color: var(--danger-color);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  transform: rotate(-10deg);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    background-color: var(--danger-color);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    transform: rotate(-10deg);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
 
-/* Empty state */
+/**
+ * 13. Empty States
+ * -----------------------------------------------------------------------------
+ * Styles for empty state displays when no content is available.
+ */
+
+/* Empty state card */
 .card.shadow-sm.text-center.py-5 {
-  border-radius: 12px;
-  padding: 40px 20px;
+    border-radius: 12px;
+    padding: 40px 20px;
 }
 
+/* Empty state icon */
 .card.shadow-sm.text-center.py-5 i {
-  color: var(--gray-400);
-  margin-bottom: 20px;
+    color: var(--gray-400);
+    margin-bottom: 20px;
 }
 
+/* Empty state heading */
 .card.shadow-sm.text-center.py-5 h3 {
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--gray-700);
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--gray-700);
 }
 
+/* Empty state action button */
 .card.shadow-sm.text-center.py-5 .btn {
-  margin-top: 20px;
-  padding: 8px 24px;
-  border-radius: 50px;
-  font-weight: 500;
+    margin-top: 20px;
+    padding: 8px 24px;
+    border-radius: 50px;
+    font-weight: 500;
 }
 
-/**** Product Card ****/
+/**
+ * 14. Product Card Details
+ * -----------------------------------------------------------------------------
+ * Styles for product card details like title, price, and ratings.
+ */
+
+/* Product title with line clamping for consistent height */
 .product-title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  margin-top: 0.75rem;
-  margin-bottom: 0.5rem;
-  color: var(--gray-800);
-  height: 2.5rem;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: var(--gray-800);
+    height: 2.5rem;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
+/* Product card body padding */
 .product-card .card-body {
-  padding: 1rem;
+    padding: 1rem;
 }
 
+/* Product price container */
 .product-price {
-  font-weight: 600;
-  margin-top: 0.5rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
 }
 
+/* Current price styling */
 .product-price .current-price {
-  color: var(--primary-color);
-  font-size: 1.1rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
 }
 
+/* Original price with strikethrough for discounts */
 .product-price .original-price {
-  color: var(--gray-500);
-  text-decoration: line-through;
-  font-size: 0.85rem;
-  margin-right: 0.5rem;
+    color: var(--gray-500);
+    text-decoration: line-through;
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
 }
 
-
+/* Utility class for z-index control */
 .z-index-1 {
     z-index: 1;
 }
 
-/* Rating Stars */
+/* Product rating stars */
 .product-rating {
-  color: #f8c01a;
-  font-size: 0.85rem;
+    color: #f8c01a; /* Star color */
+    font-size: 0.85rem;
 }
 
+/* Muted text in ratings */
 .product-rating .text-muted {
-  color: var(--gray-600) !important;
+    color: var(--gray-600) !important;
 }
 
-/* Filter */
+/**
+ * 15. Filtering Components
+ * -----------------------------------------------------------------------------
+ * Styles for filtering components, category lists, and form controls.
+ */
+
+/* Filter container with smooth transitions */
 .filter-container {
-  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
 }
 
-
-/* Category and Brand List */
+/* Category and brand lists with custom scrollbars */
 .category-list, .brand-list {
-  scrollbar-width: thin;
-  border-radius: 6px;
-  padding: 4px;
+    scrollbar-width: thin;
+    border-radius: 6px;
+    padding: 4px;
 }
 
+/* Webkit scrollbar styling */
 .category-list::-webkit-scrollbar, .brand-list::-webkit-scrollbar {
-  width: 6px;
+    width: 6px;
 }
 
 .category-list::-webkit-scrollbar-track, .brand-list::-webkit-scrollbar-track {
-  background: var(--gray-200);
-  border-radius: 3px;
+    background: var(--gray-200);
+    border-radius: 3px;
 }
 
 .category-list::-webkit-scrollbar-thumb, .brand-list::-webkit-scrollbar-thumb {
-  background-color: var(--gray-400);
-  border-radius: 3px;
+    background-color: var(--gray-400);
+    border-radius: 3px;
 }
 
 .category-list::-webkit-scrollbar-thumb:hover, .brand-list::-webkit-scrollbar-thumb:hover {
-  background-color: var(--gray-500);
+    background-color: var(--gray-500);
 }
 
+/* Form check label styling */
 .form-check-label {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.15s ease;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.15s ease;
 }
 
+/* Checked state for form check labels */
 .form-check-input:checked + .form-check-label {
-  background-color: rgba(var(--primary-color-rgb), 0.08);
-  color: var(--primary-color);
-  font-weight: 500;
+    background-color: rgba(var(--primary-color-rgb), 0.08);
+    color: var(--primary-color);
+    font-weight: 500;
 }
 
-/* Sort dropdown */
+/**
+ * 16. Sorting Controls
+ * -----------------------------------------------------------------------------
+ * Styles for sorting controls and related components.
+ */
+
+/* Sort controls container */
 .sort-controls-container {
-  background-color: white;
-  padding: 12px 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
+    background-color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
 }
 
+/* Sort select dropdown */
 #sort-select {
-  width: auto;
-  min-width: 180px;
-  border-radius: 6px;
-  border: 1px solid var(--gray-300);
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  box-shadow: none;
-  background-color: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    width: auto;
+    min-width: 180px;
+    border-radius: 6px;
+    border: 1px solid var(--gray-300);
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    box-shadow: none;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+/* Hover state for sort select */
 #sort-select:hover {
-  border-color: var(--primary-color);
+    border-color: var(--primary-color);
 }
 
+/* Focus state for sort select */
 #sort-select:focus {
-  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
-  border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
+    border-color: var(--primary-color);
 }
 
+/**
+ * 17. Badges & Indicators
+ * -----------------------------------------------------------------------------
+ * Styles for badges and visual indicators.
+ */
+
+/* Light background badge */
 .badge.bg-light {
-  background-color: rgba(var(--primary-color-rgb), 0.15) !important;
-  color: var(--primary-color) !important;
-  font-weight: 600;
-  min-width: 24px;
-  text-align: center;
+    background-color: rgba(var(--primary-color-rgb), 0.15) !important;
+    color: var(--primary-color) !important;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
 }
 
-.filter-pill {
-  display: inline-flex;
-  align-items: center;
-  background-color: rgba(var(--primary-color-rgb), 0.08);
-  border: 1px solid rgba(var(--primary-color-rgb), 0.2);
-  border-radius: 50px;
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  color: var(--primary-color);
-  transition: all 0.2s ease;
-}
+/**
+ * 18. Filter Pills
+ * -----------------------------------------------------------------------------
+ * Styles for filter pills and related components.
+ */
 
-.filter-pill:hover {
-  background-color: rgba(var(--primary-color-rgb), 0.12);
-  border-color: rgba(var(--primary-color-rgb), 0.3);
-  transform: translateY(-2px);
-}
-
-.filter-pill .pill-label {
-  font-weight: 600;
-  margin-right: 4px;
-  color: var(--gray-700);
-}
-
-.filter-pill .pill-remove {
-  margin-left: 6px;
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  color: var(--primary-color);
-  transition: all 0.2s ease;
-}
-
-.filter-pill .pill-remove:hover {
-  background-color: rgba(var(--primary-color-rgb), 0.15);
-  color: var(--danger-color);
-}
-
+/* Filter pill container */
 .filter-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
+/* Individual filter pill */
+.filter-pill {
+    display: inline-flex;
+    align-items: center;
+    background-color: rgba(var(--primary-color-rgb), 0.08);
+    border: 1px solid rgba(var(--primary-color-rgb), 0.2);
+    border-radius: 50px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+/* Hover state for filter pill */
+.filter-pill:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.12);
+    border-color: rgba(var(--primary-color-rgb), 0.3);
+    transform: translateY(-2px);
+}
+
+/* Filter pill label */
+.filter-pill .pill-label {
+    font-weight: 600;
+    margin-right: 4px;
+    color: var(--gray-700);
+}
+
+/* Remove button for filter pill */
+.filter-pill .pill-remove {
+    margin-left: 6px;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--primary-color);
+    transition: all 0.2s ease;
+}
+
+/* Hover state for remove button */
+.filter-pill .pill-remove:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.15);
+    color: var(--danger-color);
+}
+
+/* Clear all filters button */
 .clear-all-btn {
-  border-radius: 50px;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
 }
 
+/* Hover state for clear all button */
 .clear-all-btn:hover {
-  background-color: var(--danger-color);
-  border-color: var(--danger-color);
-  color: white;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
 }
 
+/**
+ * 19. Filter Form Components
+ * -----------------------------------------------------------------------------
+ * Styles for filter form and related input components.
+ */
+
+/* Filter form input group */
 #filter-form .input-group {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  border-radius: 6px;
-  overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 6px;
+    overflow: hidden;
 }
 
+/* Filter form search input */
 #filter-form input[name="q"] {
-  border-right: none;
-  padding-left: 12px;
-  transition: all 0.2s ease;
+    border-right: none;
+    padding-left: 12px;
+    transition: all 0.2s ease;
 }
 
+/* Focus state for search input */
 #filter-form input[name="q"]:focus {
-  box-shadow: none;
+    box-shadow: none;
 }
 
+/* Filter form button */
 #filter-form .input-group .btn {
-  background-color: white;
-  border: var(--bs-border-width) solid var(--bs-border-color);
-  border-left: none;
-  color: var(--gray-600);
+    background-color: white;
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-left: none;
+    color: var(--gray-600);
 }
 
+/* Focus state for input group */
 #filter-form .input-group:focus-within {
-  box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2);
 }
 
-/* Price Range Inputs */
+/* Small input groups for price range */
 .input-group-sm .form-control {
-  height: 36px;
-  font-size: 0.9rem;
+    height: 36px;
+    font-size: 0.9rem;
 }
 
 .input-group-sm .input-group-text {
-  height: 36px;
-  background-color: white;
-  border-right: none;
-  color: var(--gray-700);
+    height: 36px;
+    background-color: white;
+    border-right: none;
+    color: var(--gray-700);
 }
 
-/* Active Filters Display */
+/* Active filters container */
 .active-filters {
-  margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
-/* Price Range Slider */
+/**
+ * 20. Price Range Slider
+ * -----------------------------------------------------------------------------
+ * Styles for price range slider component.
+ */
+
+/* Price slider container */
 .price-slider {
-  margin-top: 1.5rem;
-  margin-bottom: 1rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
 }
 
+/* Connected part of the slider */
 .noUi-connect {
-  background-color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
+/* Slider handle */
 .noUi-horizontal .noUi-handle {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--primary-color);
-  background-color: white;
-  box-shadow: none;
-  cursor: pointer;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--primary-color);
+    background-color: white;
+    box-shadow: none;
+    cursor: pointer;
 }
 
+/* Focus state for slider handle */
 .noUi-horizontal .noUi-handle:focus {
-  outline: none;
+    outline: none;
 }
 
+/* Remove default handle lines */
 .noUi-horizontal .noUi-handle::before,
 .noUi-horizontal .noUi-handle::after {
-  display: none;
+    display: none;
 }
 
-/* Spinner overlay */
+/**
+ * 21. Loading Indicators
+ * -----------------------------------------------------------------------------
+ * Styles for loading spinners and overlay indicators.
+ */
+
+/* Full-screen spinner overlay */
 .spinner-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(3px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1050;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
+/* Active state for spinner overlay */
 .spinner-overlay.active {
-  opacity: 1;
-  visibility: visible;
+    opacity: 1;
+    visibility: visible;
 }
 
+/* Spinner border styling */
 .spinner-border {
-  width: 3rem;
-  height: 3rem;
-  border-width: 0.25rem;
-  color: var(--primary-color);
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.25rem;
+    color: var(--primary-color);
 }
 
 
-/* Vendor Store */
+/**
+ * 22. Vendor Store Components
+ * -----------------------------------------------------------------------------
+ * Styles for vendor store pages and related components.
+ */
+
+/* Vendor banner with background image */
 .vendor-banner {
-  height: 200px;
-  background-size: cover;
-  background-position: center;
-  position: relative;
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
 }
 
+/* Vendor logo positioned over the banner */
 .vendor-logo {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 3px solid white;
-  background-color: white;
-  position: absolute;
-  bottom: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-  object-fit: contain;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid white;
+    background-color: white;
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    object-fit: contain;
 }
 
+/* Vendor card with hover effects */
 .vendor-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 6px;
-  overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
+/* Hover state for vendor card */
 .vendor-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Cart */
+/**
+ * 23. Shopping Cart Components
+ * -----------------------------------------------------------------------------
+ * Styles for shopping cart and related components.
+ */
+
+/* Cart item container */
 .cart-item {
-  padding: 15px;
-  border-bottom: 1px solid var(--gray-300);
-  position: relative;
-  transition: all 0.3s ease;
+    padding: 15px;
+    border-bottom: 1px solid var(--gray-300);
+    position: relative;
+    transition: var(--transition);
 }
 
+/* Cart item product image */
 .cart-item-image {
-  max-width: 100%;
-  height: auto;
-  max-height: 80px;
-  object-fit: contain;
+    max-width: 100%;
+    height: auto;
+    max-height: 80px;
+    object-fit: contain;
 }
 
+/* Quantity control container */
 .quantity-control {
-  display: flex;
-  align-items: center;
-  max-width: 120px;
+    display: flex;
+    align-items: center;
+    max-width: 120px;
 }
 
+/* Quantity control buttons */
 .quantity-control button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--gray-100);
-  border: 1px solid var(--gray-300);
-  transition: all 0.2s ease;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    transition: all 0.2s ease;
 }
 
+/* Hover state for quantity buttons */
 .quantity-control button:hover {
-  background-color: var(--gray-200);
+    background-color: var(--gray-200);
 }
 
+/* Quantity input field */
 .quantity-control .quantity-input {
-  width: 40px;
-  text-align: center;
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
-  margin: 0;
-  padding: 0.375rem 0;
+    width: 40px;
+    text-align: center;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    margin: 0;
+    padding: 0.375rem 0;
 }
 
-/* Product Detail */
+/**
+ * 24. Product Detail Components
+ * -----------------------------------------------------------------------------
+ * Styles for product detail pages and related components.
+ */
+
+/* Main product detail image */
 .product-detail-image {
-  height: 400px;
-  object-fit: contain;
-  background-color: white;
+    height: 400px;
+    object-fit: contain;
+    background-color: white;
 }
 
+/* Thumbnail images for product gallery */
 .thumbnail-image {
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-  border: 2px solid transparent;
-  cursor: pointer;
-  border-radius: 0.25rem;
-  transition: var(--transition);
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    border: 2px solid transparent;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition: var(--transition);
 }
 
+/* Hover and active states for thumbnails */
 .thumbnail-image:hover,
 .thumbnail-image.active {
-  border-color: var(--primary-color);
-  transform: translateY(-2px);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
 }
 
-/* Checkout */
+/**
+ * 25. Checkout Components
+ * -----------------------------------------------------------------------------
+ * Styles for checkout process and related components.
+ */
+
+/* Checkout form labels */
 .checkout-form label {
-  font-weight: 500;
+    font-weight: 500;
 }
 
+/* Checkout summary container */
 .checkout-summary {
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 1.5rem;
+    background-color: var(--gray-100);
+    border-radius: 6px;
+    padding: 1.5rem;
 }
 
-/* Image Zoom Effect */
+/**
+ * 26. Image Zoom Components
+ * -----------------------------------------------------------------------------
+ * Styles for image zoom functionality.
+ */
+
+/* Image zoom lens */
 .img-zoom-lens {
-  position: absolute;
-  border: 1px solid var(--gray-300);
-  width: 80px;
-  height: 80px;
-  background-color: rgba(255, 255, 255, 0.3);
-  cursor: crosshair;
+    position: absolute;
+    border: 1px solid var(--gray-300);
+    width: 80px;
+    height: 80px;
+    background-color: rgba(255, 255, 255, 0.3);
+    cursor: crosshair;
 }
 
 
