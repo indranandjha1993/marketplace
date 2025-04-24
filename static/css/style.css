@@ -1071,81 +1071,108 @@ header {
 }
 
 
-/* Order Tracking */
+/**
+ * 27. Order Tracking Components
+ * -----------------------------------------------------------------------------
+ * Styles for order tracking and status visualization.
+ */
+
+/* Individual tracking step */
 .tracking-step {
-  position: relative;
-  padding-left: 30px;
+    position: relative;
+    padding-left: 30px;
 }
 
+/* Vertical line connecting steps */
 .tracking-step:before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 2px;
-  background-color: #ddd;
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background-color: #ddd;
 }
 
+/* Last step's vertical line adjustment */
 .tracking-step:last-child:before {
-  height: 50%;
+    height: 50%;
 }
 
+/* Step indicator dot */
 .tracking-step:after {
-  content: "";
-  position: absolute;
-  left: -4px;
-  top: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #ddd;
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ddd;
 }
 
+/* Active step styling */
 .tracking-step.active:before,
 .tracking-step.active:after {
-  background-color: var(--success-color);
+    background-color: var(--success-color);
 }
 
-/* Dashboard */
+/**
+ * 28. Dashboard Components
+ * -----------------------------------------------------------------------------
+ * Styles for user dashboard and admin interfaces.
+ */
+
+/* Dashboard sidebar */
 .dashboard-sidebar {
-  background-color: var(--dark-color);
-  min-height: calc(100vh - 72px);
-  color: white;
+    background-color: var(--dark-color);
+    min-height: calc(100vh - 72px);
+    color: white;
 }
 
+/* Dashboard navigation links */
 .dashboard-sidebar .nav-link {
-  color: rgba(255, 255, 255, 0.8);
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
 }
 
+/* Hover and active states for dashboard links */
 .dashboard-sidebar .nav-link:hover,
 .dashboard-sidebar .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
+/* Icons in dashboard navigation */
 .dashboard-sidebar .nav-link i {
-  width: 20px;
-  text-align: center;
-  margin-right: 10px;
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
 }
 
+/* Dashboard content area */
 .dashboard-content {
-  padding: 1.5rem;
+    padding: 1.5rem;
 }
 
+/* Dashboard card component */
 .dashboard-card {
-  border-radius: 6px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  background-color: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    background-color: white;
 }
 
-/* In static/css/style.css - add toast notification styles */
+/**
+ * 29. Toast Notifications
+ * -----------------------------------------------------------------------------
+ * Styles for toast notifications and alerts.
+ */
+
+/* Base toast notification */
 .toast-notification {
     position: fixed;
     bottom: 20px;
@@ -1158,22 +1185,27 @@ header {
     max-width: 300px;
 }
 
+/* Success toast variant */
 .toast-success {
     background-color: var(--success-color);
 }
 
+/* Info toast variant */
 .toast-info {
     background-color: var(--info-color);
 }
 
+/* Warning toast variant */
 .toast-warning {
     background-color: var(--warning-color);
 }
 
+/* Error toast variant */
 .toast-error {
     background-color: var(--danger-color);
 }
 
+/* Toast animation */
 @keyframes fadeInOut {
     0% { opacity: 0; transform: translateY(20px); }
     10% { opacity: 1; transform: translateY(0); }
@@ -1181,22 +1213,31 @@ header {
     100% { opacity: 0; transform: translateY(-20px); }
 }
 
-/* Variant selection styling */
+/**
+ * 30. Product Variant Selection
+ * -----------------------------------------------------------------------------
+ * Styles for product variant selection components.
+ */
+
+/* Variant selection container */
 .variant-selection {
-  margin-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
+/* Form check for variants */
 .variant-selection .form-check {
-  display: inline-block;
-  margin-right: 10px;
-  margin-bottom: 10px;
+    display: inline-block;
+    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
+/* Checked state for variant form check */
 .variant-selection .form-check-input:checked + .form-check-label {
-  font-weight: 500;
-  color: var(--primary-color);
+    font-weight: 500;
+    color: var(--primary-color);
 }
 
+/* Variant options container */
 .variant-options {
     display: flex;
     flex-wrap: wrap;
@@ -1204,6 +1245,7 @@ header {
     margin-top: 8px;
 }
 
+/* Variant label styling */
 .variant-label {
     padding: 8px 16px;
     border: 1px solid var(--gray-300);
@@ -1212,21 +1254,25 @@ header {
     transition: all 0.2s;
 }
 
+/* Hidden variant option input */
 .variant-option {
     position: absolute;
     opacity: 0;
 }
 
+/* Checked state for variant label */
 .variant-option:checked + .variant-label {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
 }
 
+/* Hover state for variant label */
 .variant-label:hover {
     border-color: var(--primary-color);
 }
 
+/* Disabled variant label */
 .variant-label.disabled {
     opacity: 0.5;
     cursor: not-allowed;
@@ -1234,25 +1280,28 @@ header {
     border-color: #dee2e6;
 }
 
-.variant-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
+/**
+ * 31. Color Variant Selection
+ * -----------------------------------------------------------------------------
+ * Styles for color variant selection components.
+ */
 
+/* Color label styling */
 .color-label {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--gray-300);
-  cursor: pointer;
-  position: relative;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--gray-300);
+    cursor: pointer;
+    position: relative;
 }
 
+/* Checked state for color label */
 .variant-option:checked + .color-label {
     border: 2px solid blue !important;
 }
 
+/* Highlight effect for checked color */
 .variant-option:checked + .color-label::before {
     content: "";
     position: absolute;
@@ -1261,6 +1310,7 @@ header {
     border-radius: 50%; /* Ensures it matches the shape */
 }
 
+/* Checkmark for selected color */
 .variant-option:checked + .color-label::after {
     content: "✔"; /* Unicode checkmark */
     font-size: 16px; /* Adjust size as needed */
@@ -1272,12 +1322,20 @@ header {
     font-weight: bold;
 }
 
+/**
+ * 32. Color Options Components
+ * -----------------------------------------------------------------------------
+ * Styles for color option buttons and selectors.
+ */
+
+/* Color options container */
 .color-options {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
+/* Color button styling */
 .color-btn {
     width: 36px;
     height: 36px;
@@ -1291,16 +1349,19 @@ header {
     transition: all 0.2s;
 }
 
+/* Hover state for color button */
 .color-btn:hover {
     transform: scale(1.1);
     box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
 }
 
+/* Checked state for color button */
 .btn-check:checked + .color-btn {
     border: 2px solid #0d6efd;
     box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.4);
 }
 
+/* Checkmark for selected color button */
 .btn-check:checked + .color-btn::after {
     content: '✓';
     color: white;
@@ -1309,7 +1370,13 @@ header {
     font-weight: bold;
 }
 
-/* Alert styling */
+/**
+ * 33. Alert Components
+ * -----------------------------------------------------------------------------
+ * Styles for alert messages and notifications.
+ */
+
+/* Base alert styling */
 .alert {
     border-radius: 6px;
     padding: 12px 16px;
@@ -1317,18 +1384,26 @@ header {
     font-weight: 500;
 }
 
+/* Warning alert variant */
 .alert-warning {
     background-color: #fff3cd;
     border-left: 4px solid #ffc107;
     color: #664d03;
 }
 
-/* Cart item animation styles */
+/**
+ * 34. Cart Item Animations
+ * -----------------------------------------------------------------------------
+ * Styles for cart item animations and state changes.
+ */
+
+/* Cart item with position for overlays */
 .cart-item {
     transition: all 0.3s ease;
     position: relative;
 }
 
+/* Loading overlay for updating cart item */
 .cart-item.updating::after {
     content: "";
     position: absolute;
@@ -1343,6 +1418,7 @@ header {
     z-index: 10;
 }
 
+/* Loading spinner for updating cart item */
 .cart-item.updating::before {
     content: "";
     position: absolute;
@@ -1358,18 +1434,26 @@ header {
     z-index: 11;
 }
 
+/* Fade out animation for removing cart item */
 .cart-item.fade-out {
     opacity: 0;
     transform: translateY(-10px);
 }
 
-/* Quantity input styling */
+/**
+ * 35. Quantity Input Controls
+ * -----------------------------------------------------------------------------
+ * Styles for quantity input controls and related components.
+ */
+
+/* Quantity control container */
 .quantity-control-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Quantity input field */
 .quantity-input {
     width: 50px;
     text-align: center;
@@ -1378,6 +1462,7 @@ header {
     padding: 0.375rem 0.75rem;
 }
 
+/* Quantity adjustment buttons */
 .quantity-minus,
 .quantity-plus {
     width: 30px;
@@ -1392,20 +1477,29 @@ header {
     transition: all 0.2s ease;
 }
 
+/* Hover state for quantity buttons */
 .quantity-minus:hover,
 .quantity-plus:hover {
     background-color: #e9ecef;
 }
 
+/* Left button with rounded corners */
 .quantity-minus {
     border-radius: 4px 0 0 4px;
 }
 
+/* Right button with rounded corners */
 .quantity-plus {
     border-radius: 0 4px 4px 0;
 }
 
-/* Animation styles */
+/**
+ * 36. Animations
+ * -----------------------------------------------------------------------------
+ * Animation keyframes and animation utility classes.
+ */
+
+/* Spinning animation for loaders */
 @keyframes spin {
     0% {
         transform: rotate(0deg);
@@ -1415,10 +1509,12 @@ header {
     }
 }
 
+/* Pulse animation class */
 .pulse {
     animation: pulse 0.5s ease-in-out;
 }
 
+/* Pulse animation keyframes */
 @keyframes pulse {
     0% {
         transform: scale(1);
@@ -1431,10 +1527,12 @@ header {
     }
 }
 
+/* Highlight change animation class */
 .highlight-change {
     animation: highlight 0.7s ease-in-out;
 }
 
+/* Highlight animation keyframes */
 @keyframes highlight {
     0% {
         background-color: transparent;
@@ -1447,10 +1545,12 @@ header {
     }
 }
 
+/* Section highlight animation class */
 .highlight-section {
     animation: highlight-section 2s ease-in-out;
 }
 
+/* Section highlight animation keyframes */
 @keyframes highlight-section {
     0% {
         box-shadow: none;
@@ -1463,7 +1563,13 @@ header {
     }
 }
 
-/* Toast notification */
+/**
+ * 37. Toast Notifications
+ * -----------------------------------------------------------------------------
+ * Styles for toast notifications with slide-in animation.
+ */
+
+/* Base toast notification */
 .toast-notification {
     position: fixed;
     bottom: 20px;
@@ -1479,29 +1585,40 @@ header {
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* Visible state for toast */
 .toast-notification.show {
     transform: translateY(0);
     opacity: 1;
 }
 
+/* Success toast variant */
 .toast-success {
     background-color: #28a745;
 }
 
+/* Error toast variant */
 .toast-error {
     background-color: #dc3545;
 }
 
+/* Warning toast variant */
 .toast-warning {
     background-color: #ffc107;
-    color: #212529;
+    color: #212529; /* Dark text for better contrast on yellow */
 }
 
+/* Info toast variant */
 .toast-info {
     background-color: #17a2b8;
 }
 
-/* Loading overlay */
+/**
+ * 38. Loading Overlay
+ * -----------------------------------------------------------------------------
+ * Styles for full-page loading overlay.
+ */
+
+/* Loading overlay background */
 body.loading::after {
     content: "";
     position: fixed;
@@ -1513,6 +1630,7 @@ body.loading::after {
     z-index: 9999;
 }
 
+/* Loading spinner */
 body.loading::before {
     content: "";
     position: fixed;
@@ -1528,15 +1646,27 @@ body.loading::before {
     z-index: 10000;
 }
 
-/* For dark color swatches, ensure the checkmark is visible */
+/**
+ * 39. Color Swatch Accessibility
+ * -----------------------------------------------------------------------------
+ * Styles for ensuring color swatches are accessible.
+ */
+
+/* Special handling for dark color swatches */
 .btn-check:checked + .color-btn[style*="background-color: black"],
 .btn-check:checked + .color-btn[style*="background-color: #000"],
 .btn-check:checked + .color-btn[style*="background-color: navy"],
 .btn-check:checked + .color-btn[style*="background-color: #000080"] {
-    border: 2px solid white;
+    border: 2px solid white; /* White border for visibility on dark colors */
 }
 
-/* Size buttons */
+/**
+ * 40. Size and Material Buttons
+ * -----------------------------------------------------------------------------
+ * Styles for size and material selection buttons.
+ */
+
+/* Base styling for size and material buttons */
 .size-btn, .material-btn {
     min-width: 44px;
     padding: 8px 16px;
@@ -1545,11 +1675,13 @@ body.loading::before {
     transition: all 0.2s;
 }
 
+/* Hover state for size and material buttons */
 .size-btn:hover, .material-btn:hover {
     border-color: #0d6efd;
     color: #0d6efd;
 }
 
+/* Checked state for size and material buttons */
 .btn-check:checked + .size-btn,
 .btn-check:checked + .material-btn {
     background-color: #0d6efd;
@@ -1557,13 +1689,20 @@ body.loading::before {
     border-color: #0d6efd;
 }
 
-/* Out of stock variants */
+/**
+ * 41. Out of Stock Variants
+ * -----------------------------------------------------------------------------
+ * Styles for indicating out of stock product variants.
+ */
+
+/* Unavailable variant styling */
 .variant-unavailable {
     opacity: 0.5;
     cursor: not-allowed;
     position: relative;
 }
 
+/* Strikethrough line for unavailable variants */
 .variant-unavailable::after {
     content: '';
     position: absolute;
@@ -1575,39 +1714,59 @@ body.loading::before {
     transform: rotate(-10deg);
 }
 
-/* Animation for selected options */
+/**
+ * 42. Selection Animations
+ * -----------------------------------------------------------------------------
+ * Animations for selected options and interactive elements.
+ */
+
+/* Pulse animation for selected options */
 @keyframes pulse {
     0% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4); }
     70% { box-shadow: 0 0 0 6px rgba(13, 110, 253, 0); }
     100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
 }
 
+/* Apply pulse animation to selected buttons */
 .btn-check:checked + .color-btn,
 .btn-check:checked + .size-btn,
 .btn-check:checked + .material-btn {
     animation: pulse 0.5s;
 }
 
-/* Responsive adjustments */
+/**
+ * 43. Responsive Adjustments
+ * -----------------------------------------------------------------------------
+ * Media queries for responsive design across different screen sizes.
+ */
+
+/**
+ * Small devices (phones, less than 576px)
+ */
 @media (max-width: 576px) {
+    /* Smaller color buttons on mobile */
     .color-btn {
         width: 32px;
         height: 32px;
     }
 
+    /* Smaller size and material buttons */
     .size-btn, .material-btn {
         padding: 6px 12px;
         min-width: 40px;
     }
 
+    /* Adjust card padding for smaller screens */
     .product-card .card-body {
         padding: 0.75rem;
     }
 
+    /* Smaller product title */
     .product-title {
         font-size: 0.9rem;
     }
 
+    /* Stack product actions vertically */
     .product-actions {
         flex-direction: column;
     }
@@ -1622,117 +1781,149 @@ body.loading::before {
     }
 }
 
+/**
+ * Medium devices (tablets, 768px and up)
+ */
 @media (min-width: 768px) {
+    /* Adjust image container proportions */
     .product-image-container {
-        padding-bottom: 80%; /* Adjust for larger screens to make image cover 40% of card */
+        padding-bottom: 80%; /* Adjust for larger screens */
     }
 }
 
+/**
+ * Large devices (desktops, less than 992px)
+ */
 @media (max-width: 992px) {
-  .product-image {
-    height: 180px;
-  }
+    /* Adjust product image sizes */
+    .product-image {
+        height: 180px;
+    }
 
-  .product-detail-image {
-    height: 300px;
-  }
+    .product-detail-image {
+        height: 300px;
+    }
 
-  .dashboard-sidebar {
-    min-height: auto;
-  }
+    /* Adjust dashboard sidebar height */
+    .dashboard-sidebar {
+        min-height: auto;
+    }
 }
 
+/**
+ * Medium devices (tablets, less than 768px)
+ */
 @media (max-width: 768px) {
-  .filter-pill {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-  }
-  .filter-pill .pill-label {
-     display: none; /* Hide labels on mobile to save space */
-  }
+    /* Smaller filter pills on mobile */
+    .filter-pill {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+    
+    /* Hide filter labels on mobile to save space */
+    .filter-pill .pill-label {
+        display: none;
+    }
 
-  .product-image-container {
-    height: 180px;
-  }
+    /* Adjust product image containers */
+    .product-image-container {
+        height: 180px;
+    }
 
-  .product-image {
-    height: 140px;
-  }
+    .product-image {
+        height: 140px;
+    }
 
-  .product-title {
-    font-size: 0.9rem;
-    height: 2.6rem;
-  }
+    /* Adjust product title size */
+    .product-title {
+        font-size: 0.9rem;
+        height: 2.6rem;
+    }
 
-  .product-detail-image {
-    height: 300px;
-  }
+    .product-detail-image {
+        height: 300px;
+    }
 
-  .sort-controls-container {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+    /* Stack sort controls vertically */
+    .sort-controls-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 
-  .sort-controls-container p {
-    margin-bottom: 8px;
-  }
+    .sort-controls-container p {
+        margin-bottom: 8px;
+    }
 
-  #sort-select {
-    width: 100%;
-  }
+    #sort-select {
+        width: 100%;
+    }
 
-  .product-actions {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
+    /* Stack product actions vertically */
+    .product-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
 
-  .product-actions form {
-    width: 100%;
-  }
+    .product-actions form {
+        width: 100%;
+    }
 
-  .product-actions button {
-    width: 100%;
-  }
+    .product-actions button {
+        width: 100%;
+    }
 
-  .product-title {
-    font-size: 0.9rem;
-  }
+    /* Hide collapsed filter container */
+    .filter-container.collapsed {
+        display: none;
+    }
 
-  .filter-container.collapsed {
-    display: none;
-  }
+    /* Adjust vendor banner and logo sizes */
+    .vendor-banner {
+        height: 150px;
+    }
 
-  .vendor-banner {
-    height: 150px;
-  }
-
-  .vendor-logo {
-    width: 80px;
-    height: 80px;
-    bottom: -40px;
-  }
+    .vendor-logo {
+        width: 80px;
+        height: 80px;
+        bottom: -40px;
+    }
 }
 
-/* Saved Items */
+/**
+ * 44. Saved Items & Order Summary
+ * -----------------------------------------------------------------------------
+ * Styles for saved items and order summary components.
+ */
+
+/* Saved item container */
 .saved-item {
-  padding: 15px;
-  border-bottom: 1px solid var(--gray-300);
+    padding: 15px;
+    border-bottom: 1px solid var(--gray-300);
 }
 
+/* Order summary container */
 .order-summary {
-  background-color: var(--gray-100);
-  border-radius: var(--border-radius);
-  padding: 1rem;
+    background-color: var(--gray-100);
+    border-radius: var(--border-radius);
+    padding: 1rem;
 }
 
+/* Hide animation effects in certain contexts */
 .cart-item.updating::after,
 .cart-item.updating::before,
 .cart-item.fade-out {
-  display: none;
+    display: none;
 }
 
+/**
+ * 45. Placeholder & UI Elements
+ * -----------------------------------------------------------------------------
+ * Styles for placeholder elements and UI components.
+ */
+
+/* Placeholder image for loading states */
 .placeholder-img {
     display: inline-block;
     width: 24px;
@@ -1746,33 +1937,48 @@ body.loading::before {
     background-color: #f8f9fa;
 }
 
+/**
+ * 46. Transitions
+ * -----------------------------------------------------------------------------
+ * Global transition styles for smooth UI updates.
+ */
 
-/* Add Transitions for Smooth UI Updates */
+/* Add consistent transitions to interactive elements */
 .product-card,
 .filter-pill,
 .form-check-label,
 .page-link,
 .btn {
-  transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
 }
 
-/* Added accessibility focus styles */
+/**
+ * 47. Accessibility Enhancements
+ * -----------------------------------------------------------------------------
+ * Styles to improve accessibility and keyboard navigation.
+ */
+
+/* Enhanced focus styles for better keyboard navigation */
 button:focus,
 a:focus,
 input:focus,
 select:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
+/**
+ * 48. Product Gallery
+ * -----------------------------------------------------------------------------
+ * Styles for product gallery and image zoom functionality.
+ */
 
-
-/* Scoped Product Gallery Styles */
+/* Gallery container */
 .product-gallery {
     position: relative;
 }
 
-/* Image Container and Main Image */
+/* Image container with zoom cursor */
 .product-gallery .product-image-container {
     position: relative;
     overflow: hidden;
@@ -1784,6 +1990,7 @@ select:focus {
     justify-content: center;
 }
 
+/* Main product detail image */
 .product-gallery .product-detail-image {
     transition: transform 0.2s;
     max-height: 390px; /* Allow some padding */
@@ -1793,7 +2000,7 @@ select:focus {
     margin: 0 auto;
 }
 
-/* Zoom icon that appears on hover */
+/* Zoom icon indicator */
 .product-gallery .zoom-icon {
     position: absolute;
     top: 10px;
@@ -1812,16 +2019,24 @@ select:focus {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+/* Show zoom icon on hover */
 .product-gallery .product-image-container:hover .zoom-icon {
     opacity: 1;
 }
 
+/* Zoom icon styling */
 .product-gallery .zoom-icon i {
     color: #333;
     font-size: 18px;
 }
 
-/* Modern Popup-style Zoom Modal */
+/**
+ * 49. Product Zoom Modal
+ * -----------------------------------------------------------------------------
+ * Styles for product zoom modal and related components.
+ */
+
+/* Zoom modal container */
 .product-gallery .product-zoom-modal {
     display: none;
     position: fixed;
@@ -1834,11 +2049,13 @@ select:focus {
     animation: fadeIn 0.2s ease-in-out;
 }
 
+/* Fade in animation for modal */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
+/* Modal content container */
 .product-gallery .product-zoom-modal-content {
     position: relative;
     background-color: white;
@@ -1854,11 +2071,13 @@ select:focus {
     overflow: hidden;
 }
 
+/* Slide up animation for modal content */
 @keyframes slideUp {
     from { transform: translateY(20px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
 
+/* Modal header */
 .product-gallery .product-zoom-header {
     display: flex;
     justify-content: space-between;
@@ -1867,12 +2086,14 @@ select:focus {
     border-bottom: 1px solid #eee;
 }
 
+/* Modal title */
 .product-gallery .product-zoom-title {
     margin: 0;
     font-size: 1.1rem;
     color: #333;
 }
 
+/* Modal close button */
 .product-gallery .product-zoom-close {
     background: transparent;
     border: none;
@@ -1887,10 +2108,12 @@ select:focus {
     transition: all 0.2s ease;
 }
 
+/* Hover state for close button */
 .product-gallery .product-zoom-close:hover {
     background-color: rgba(0, 0, 0, 0.05);
 }
 
+/* Modal body */
 .product-gallery .product-zoom-body {
     padding: 16px;
     display: flex;
@@ -1900,6 +2123,7 @@ select:focus {
     overflow: auto;
 }
 
+/* Zoomed image */
 .product-gallery .product-zoomed-image {
     max-width: 100%;
     max-height: 100%;
@@ -1907,11 +2131,18 @@ select:focus {
     cursor: grab;
 }
 
+/* Active state for zoomed image */
 .product-gallery .product-zoomed-image:active {
     cursor: grabbing;
 }
 
-/* Thumbnails Scrolling - with auto-hide when not needed */
+/**
+ * 50. Product Thumbnails
+ * -----------------------------------------------------------------------------
+ * Styles for product thumbnails and scrolling functionality.
+ */
+
+/* Thumbnails container */
 .product-gallery .product-thumbnails-container {
     display: flex;
     align-items: center;
@@ -1920,6 +2151,7 @@ select:focus {
     max-width: 100%;
 }
 
+/* Scrollable thumbnails container */
 .product-gallery .product-thumbnails-scroll {
     display: flex;
     overflow-x: auto;
@@ -1932,14 +2164,17 @@ select:focus {
     justify-content: center; /* Center thumbnails when they fit */
 }
 
+/* Hide scrollbar for webkit browsers */
 .product-gallery .product-thumbnails-scroll::-webkit-scrollbar {
     display: none; /* Chrome/Safari/Opera */
 }
 
+/* Thumbnail wrapper */
 .product-gallery .product-thumbnail-wrapper {
     flex: 0 0 auto;
 }
 
+/* Thumbnail image */
 .product-gallery .product-thumbnail-image {
     width: 70px;
     height: 70px;
@@ -1951,6 +2186,7 @@ select:focus {
     background-color: white;
 }
 
+/* Hover and active states for thumbnails */
 .product-gallery .product-thumbnail-image:hover,
 .product-gallery .product-thumbnail-image.active {
     border-color: var(--primary-color, #4361ee);
@@ -1958,6 +2194,7 @@ select:focus {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
+/* Scroll button for thumbnails */
 .product-gallery .product-scroll-button {
     position: absolute;
     background-color: white;
@@ -1975,42 +2212,53 @@ select:focus {
     opacity: 0; /* Hide by default */
 }
 
-/* Only show scroll buttons when hovering the thumbnail area and when scrolling is needed */
+/* Show scroll buttons on hover when needed */
 .product-gallery .product-thumbnails-container:hover .product-scroll-button:not(.hidden) {
     opacity: 1;
 }
 
+/* Hover state for scroll buttons */
 .product-gallery .product-scroll-button:hover {
     background-color: var(--primary-color, #4361ee);
     color: white;
     transform: scale(1.1);
 }
 
+/* Left scroll button */
 .product-gallery .product-scroll-left {
     left: -5px;
 }
 
+/* Right scroll button */
 .product-gallery .product-scroll-right {
     right: -5px;
 }
 
-/* Adjust scroll buttons visibility based on scroll position */
+/* Hidden state for scroll buttons */
 .product-gallery .product-scroll-button.hidden {
     opacity: 0 !important;
     pointer-events: none;
 }
 
-/* Hide thumbnail container when not needed */
+/* Hide scroll buttons when not needed */
 .product-gallery .product-thumbnails-container.no-scroll-needed .product-scroll-button {
     display: none;
 }
 
-/* Responsive adjustments */
+/**
+ * 51. Product Gallery Responsive Adjustments
+ * -----------------------------------------------------------------------------
+ * Responsive styles for product gallery across different screen sizes.
+ */
+
+/* Large devices (desktops, less than 992px) */
 @media (max-width: 992px) {
+    /* Smaller image container */
     .product-gallery .product-image-container {
         height: 350px;
     }
 
+    /* Adjusted modal content */
     .product-gallery .product-zoom-modal-content {
         width: 95%;
         margin: 5% auto;
@@ -2018,20 +2266,25 @@ select:focus {
     }
 }
 
+/* Medium devices (tablets, less than 768px) */
 @media (max-width: 768px) {
+    /* Further reduced image container */
     .product-gallery .product-image-container {
         height: 300px;
     }
 
+    /* Adjusted detail image */
     .product-gallery .product-detail-image {
         max-height: 290px;
     }
 
+    /* Smaller thumbnails */
     .product-gallery .product-thumbnail-image {
         width: 60px;
         height: 60px;
     }
 
+    /* Full-screen modal on mobile */
     .product-gallery .product-zoom-modal-content {
         width: 100%;
         height: 100%;
@@ -2040,36 +2293,49 @@ select:focus {
         max-height: 100vh;
     }
 
+    /* Adjusted modal body height */
     .product-gallery .product-zoom-body {
         height: calc(100vh - 60px);
     }
 }
 
+/* Small devices (phones, less than 576px) */
 @media (max-width: 576px) {
+    /* Smallest image container */
     .product-gallery .product-image-container {
         height: 250px;
     }
 
+    /* Smallest detail image */
     .product-gallery .product-detail-image {
         max-height: 240px;
     }
 
+    /* Smallest thumbnails */
     .product-gallery .product-thumbnail-image {
         width: 50px;
         height: 50px;
     }
 }
 
-/* Saved For Later Section Styling */
+/**
+ * 52. Saved For Later Components
+ * -----------------------------------------------------------------------------
+ * Styles for saved items and wishlist components.
+ */
+
+/* Card header for saved items section */
 .saved-for-later .card-header {
     border-bottom: 2px solid #f8f9fa;
 }
 
+/* Badge styling in saved items */
 .saved-for-later .badge {
     font-weight: 500;
     font-size: 0.7rem;
 }
 
+/* Saved item card */
 .saved-item-card {
     border: 1px solid #e9ecef;
     border-radius: 8px;
@@ -2078,12 +2344,14 @@ select:focus {
     background: white;
 }
 
+/* Hover effect for saved item card */
 .saved-item-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0,0,0,0.08);
     border-color: #dee2e6;
 }
 
+/* Image container for saved item */
 .saved-item-image-container {
     height: 100%;
     padding: 0.5rem;
@@ -2092,6 +2360,7 @@ select:focus {
     justify-content: center;
 }
 
+/* Saved item image */
 .saved-item-image {
     max-width: 100%;
     max-height: 120px;
@@ -2099,10 +2368,12 @@ select:focus {
     transition: transform 0.3s ease;
 }
 
+/* Hover effect for saved item image */
 .saved-item-card:hover .saved-item-image {
     transform: scale(1.05);
 }
 
+/* Item title in saved items */
 .saved-for-later .item-title {
     font-size: 0.9rem;
     font-weight: 600;
@@ -2115,6 +2386,7 @@ select:focus {
     height: 2.4rem;
 }
 
+/* Variant badge in saved items */
 .saved-for-later .variant-badge {
     display: inline-block;
     font-size: 0.7rem;
@@ -2124,6 +2396,7 @@ select:focus {
     white-space: nowrap;
 }
 
+/* Variants list container */
 .saved-for-later .variants-list {
     height: 1.6rem;
     overflow: hidden;
@@ -2132,6 +2405,7 @@ select:focus {
     -webkit-box-orient: vertical;
 }
 
+/* Discount badge for saved items */
 .saved-for-later .discount-badge {
     position: absolute;
     top: 5px;
@@ -2145,24 +2419,28 @@ select:focus {
     z-index: 1;
 }
 
+/* Product price container */
 .saved-for-later .product-price {
     display: flex;
     flex-direction: column;
     line-height: 1.2;
 }
 
+/* Original price with strikethrough */
 .saved-for-later .original-price {
     text-decoration: line-through;
     color: #6c757d;
     font-size: 0.75rem;
 }
 
+/* Current price styling */
 .saved-for-later .current-price {
     font-weight: 600;
     color: #dc3545;
     font-size: 0.9rem;
 }
 
+/* Stock badge base styling */
 .saved-for-later .stock-badge {
     font-size: 0.7rem;
     font-weight: 500;
@@ -2171,58 +2449,73 @@ select:focus {
     white-space: nowrap;
 }
 
+/* In stock badge */
 .saved-for-later .in-stock {
     background-color: #d4edda;
     color: #155724;
 }
 
+/* Out of stock badge */
 .saved-for-later .out-of-stock {
     background-color: #f8d7da;
     color: #721c24;
 }
 
+/* Item actions container */
 .saved-for-later .item-actions {
     display: flex;
     justify-content: space-between;
 }
 
+/* Form spacing in item actions */
 .saved-for-later .item-actions form {
     margin-right: 5px;
 }
 
+/* Last form in item actions */
 .saved-for-later .item-actions form:last-child {
     margin-right: 0;
 }
 
+/* Remove button styling */
 .saved-for-later .remove-btn {
     padding: 0.25rem 0.5rem;
 }
 
+/* Vendor link styling */
 .saved-for-later .vendor-link {
     color: #6c757d;
     transition: color 0.2s ease;
 }
 
+/* Hover state for vendor link */
 .saved-for-later .vendor-link:hover {
     color: var(--primary-color, #4361ee);
     text-decoration: underline;
 }
 
+/**
+ * Responsive adjustments for saved items
+ */
 @media (max-width: 767.98px) {
+    /* Add bottom margin on mobile */
     .saved-for-later .saved-item-card {
         margin-bottom: 1rem;
     }
 
+    /* Stack actions vertically on mobile */
     .saved-for-later .item-actions {
         flex-direction: column;
         gap: 0.5rem;
     }
 
+    /* Full width forms on mobile */
     .saved-for-later .item-actions form {
         width: 100%;
         margin-right: 0;
     }
 
+    /* Full width buttons on mobile */
     .saved-for-later .item-actions .btn {
         width: 100%;
     }
