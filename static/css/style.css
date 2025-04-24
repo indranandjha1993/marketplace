@@ -2903,67 +2903,445 @@ select:focus {
     }
 }
 
-/* Custom styles for reviews and questions */
-.review-questions-tabs .hover-shadow:hover {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+/**
+ * 15. Footer Styling
+ * -----------------------------------------------------------------------------
+ * Styles for the marketplace footer with enhanced visual appeal and interactions.
+ */
+
+/* Main footer container */
+.marketplace-footer {
+    background-color: var(--dark-color);
+    color: #f8f9fa;
+    font-family: var(--font-family-sans-serif);
+    position: relative;
+    overflow: hidden;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
-.review-questions-tabs .transition-all {
+/* Footer background animation */
+.marketplace-footer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), var(--accent-color), var(--primary-color));
+    background-size: 300% 100%;
+    animation: footerGradient 6s linear infinite;
+}
+
+@keyframes footerGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Footer top section with main content */
+.footer-top {
+    padding: 4rem 0 3rem;
+    position: relative;
+    background: linear-gradient(to bottom, #212529, #343a40);
+}
+
+/* Footer middle section with additional info */
+.footer-middle {
+    padding: 2rem 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Footer bottom section with copyright */
+.footer-bottom {
+    padding: 1.5rem 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    font-size: 0.875rem;
+}
+
+/* Footer headings */
+.footer-heading {
+    color: white;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.75rem;
+}
+
+.footer-heading::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    width: 50px;
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+/* Footer subheadings */
+.footer-subheading {
+    color: white;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+/* Footer text styling */
+.footer-text {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+}
+
+/* Footer about section */
+.footer-about {
+    position: relative;
+}
+
+/* Footer links section */
+.footer-links {
+    position: relative;
+}
+
+/* Footer link list */
+.footer-link-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-link-list li {
+    margin-bottom: 0.75rem;
+}
+
+/* Footer link styling */
+.footer-link {
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    padding: 0.35rem 0;
+    position: relative;
+}
+
+.footer-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 1.5rem;
+    width: 0;
+    height: 1px;
+    background-color: var(--primary-color);
+    transition: width 0.3s ease, left 0.3s ease;
+    opacity: 0;
+}
+
+.footer-link i {
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+    position: relative;
+    top: 0;
+}
+
+.footer-link:hover {
+    color: white;
+    transform: translateX(5px);
+    text-decoration: none;
+}
+
+.footer-link:hover::after {
+    width: calc(100% - 1.5rem);
+    opacity: 1;
+}
+
+.footer-link:hover i {
+    color: var(--secondary-color);
+    transform: scale(1.2);
+}
+
+/* Active footer link state */
+.footer-link.active {
+    color: white;
+    font-weight: 500;
+}
+
+.footer-link.active i {
+    color: var(--secondary-color);
+}
+
+.footer-link.active::after {
+    width: calc(100% - 1.5rem);
+    opacity: 1;
+    background-color: var(--secondary-color);
+}
+
+/* Footer newsletter section */
+.footer-newsletter {
+    position: relative;
+}
+
+/* Social links container */
+.social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Individual social link */
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.social-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(0);
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: -1;
+    border-radius: 50%;
+}
+
+.social-link:hover::before {
+    transform: scale(1);
+}
+
+.social-link:hover {
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Brand-specific social link colors */
+.social-link[aria-label="Facebook"]:hover {
+    background-color: #3b5998;
+    box-shadow: 0 5px 15px rgba(59, 89, 152, 0.4);
+}
+
+.social-link[aria-label="Twitter"]:hover {
+    background-color: #1da1f2;
+    box-shadow: 0 5px 15px rgba(29, 161, 242, 0.4);
+}
+
+.social-link[aria-label="Instagram"]:hover {
+    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    box-shadow: 0 5px 15px rgba(214, 36, 159, 0.4);
+}
+
+.social-link[aria-label="LinkedIn"]:hover {
+    background-color: #0077b5;
+    box-shadow: 0 5px 15px rgba(0, 119, 181, 0.4);
+}
+
+.social-link[aria-label="YouTube"]:hover {
+    background-color: #ff0000;
+    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.4);
+}
+
+/* Newsletter form */
+.newsletter-form {
+    position: relative;
+    margin-top: 1rem;
+}
+
+.newsletter-form .input-group {
+    border-radius: 50px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     transition: all 0.3s ease;
 }
 
-.review-questions-tabs .stars {
-    color: #ffc107;
+.newsletter-form .input-group:focus-within {
+    box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
+    transform: translateY(-2px);
 }
 
-.review-questions-tabs .rating-star:hover {
-    cursor: pointer;
-    transform: scale(1.2);
-}
-
-.review-questions-tabs .rating-input input[type="radio"] {
-    display: none;
-}
-
-.review-questions-tabs .rating-input input[type="radio"] + label {
-    cursor: pointer;
-    font-size: 1.25rem;
-}
-
-.review-questions-tabs .rating-input input[type="radio"]:checked + label .rating-star {
-    transform: scale(1.2);
-}
-
-.review-questions-tabs .nav-tabs .nav-link {
+.newsletter-form .form-control {
     border: none;
-    color: #495057;
+    padding: 0.75rem 1.25rem;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: var(--gray-800);
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form .form-control:focus {
+    box-shadow: none;
+    background-color: white;
+}
+
+.newsletter-form .form-control::placeholder {
+    color: var(--gray-600);
+    font-style: italic;
+    transition: all 0.3s ease;
+}
+
+.newsletter-form .form-control:focus::placeholder {
+    opacity: 0.7;
+    transform: translateX(5px);
+}
+
+.newsletter-form .btn {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
 }
 
-.review-questions-tabs .nav-tabs .nav-link:hover {
-    color: var(--bs-primary);
-    background-color: rgba(var(--bs-primary-rgb), 0.05);
+.newsletter-form .btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--secondary-color);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: -1;
 }
 
-.review-questions-tabs .nav-tabs .nav-link.active {
-    color: var(--bs-primary);
-    border-bottom: 2px solid var(--bs-primary);
-    background-color: transparent;
+.newsletter-form .btn:hover {
+    border-color: var(--secondary-color);
 }
 
-@media (max-width: 576px) {
-    .review-questions-tabs .card-header-tabs .nav-link {
-        padding: 0.5rem;
-        font-size: 0.9rem;
+.newsletter-form .btn:hover::before {
+    transform: translateX(0);
+}
+
+/* Success animation for newsletter form */
+@keyframes subscribeSuccess {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.newsletter-form.success .input-group {
+    animation: subscribeSuccess 0.5s ease forwards;
+    box-shadow: 0 5px 15px rgba(var(--success-color-rgb, 56, 142, 60), 0.3);
+}
+
+/* Footer contact link */
+.footer-contact {
+    color: white;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.footer-contact:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+/* Payment methods */
+.payment-methods {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.payment-methods i {
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.3s ease;
+}
+
+.payment-methods i:hover {
+    color: white;
+    transform: translateY(-3px);
+}
+
+/* Copyright text */
+.copyright {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Footer bottom links */
+.footer-bottom-links {
+    display: flex;
+    justify-content: flex-end;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 1.5rem;
+}
+
+.footer-bottom-links li {
+    position: relative;
+}
+
+.footer-bottom-links li:not(:last-child)::after {
+    content: '•';
+    position: absolute;
+    right: -0.9rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.footer-bottom-links a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.footer-bottom-links a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Responsive adjustments for footer */
+@media (max-width: 991.98px) {
+    .footer-top {
+        padding: 3rem 0 2rem;
     }
-
-    .review-form-container,
-    .question-form-container {
-        padding: 1rem !important;
+    
+    .footer-heading {
+        margin-bottom: 1.25rem;
     }
+}
 
-    .answers-list {
-        padding-left: 0.5rem !important;
+@media (max-width: 767.98px) {
+    .footer-bottom-links {
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .copyright {
+        text-align: center;
+    }
+    
+    .footer-middle .col-md-4 {
+        text-align: center !important;
+    }
+    
+    .footer-middle .d-flex {
+        justify-content: center !important;
     }
 }

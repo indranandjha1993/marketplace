@@ -1,63 +1,103 @@
-<footer class="bg-dark text-white pt-5 pb-4">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-3 mb-4">
-                <h5 class="mb-3">About Us</h5>
-                <p>Multi-Vendor Marketplace is your one-stop destination for all shopping needs with thousands of
-                    products from verified sellers.</p>
-            </div>
-
-            <div class="col-md-3 mb-4">
-                <h5 class="mb-3">Quick Links</h5>
-                <ul class="list-unstyled">
-                    <li><a href="/" class="text-white">Home</a></li>
-                    <li><a href="{% url 'products:browse_products' %}" class="text-white">All Products</a></li>
-                    <li><a href="{% url 'vendors:vendor_list' %}" class="text-white">Our Vendors</a></li>
-                    <li><a href="{% url 'vendors:become_vendor' %}" class="text-white">Sell on Marketplace</a></li>
-                </ul>
-            </div>
-
-            <div class="col-md-3 mb-4">
-                <h5 class="mb-3">Customer Service</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#" class="text-white">Contact Us</a></li>
-                    <li><a href="#" class="text-white">FAQs</a></li>
-                    <li><a href="#" class="text-white">Shipping Policy</a></li>
-                    <li><a href="#" class="text-white">Return Policy</a></li>
-                    <li><a href="#" class="text-white">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <div class="col-md-3 mb-4">
-                <h5 class="mb-3">Connect With Us</h5>
-                <div class="social-links">
-                    <a href="#" class="text-white me-2"><i class="fab fa-facebook-f fa-lg"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fab fa-twitter fa-lg"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fab fa-instagram fa-lg"></i></a>
-                    <a href="#" class="text-white me-2"><i class="fab fa-linkedin-in fa-lg"></i></a>
+<footer class="marketplace-footer">
+    <div class="footer-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0 footer-about">
+                    <h5 class="footer-heading">About Us</h5>
+                    <p class="footer-text">Multi-Vendor Marketplace is your one-stop destination for all shopping needs with thousands of
+                        products from verified sellers.</p>
                 </div>
-                <div class="mt-3">
-                    <h6>Subscribe to our newsletter</h6>
-                    <form action="#" class="d-flex">
-                        <input type="email" class="form-control" placeholder="Your email">
-                        <button type="submit" class="btn btn-primary ms-2">Subscribe</button>
+
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0 footer-links">
+                    <h5 class="footer-heading">Quick Links</h5>
+                    <ul class="footer-link-list">
+                        <li><a href="/" class="footer-link"><i class="fas fa-chevron-right"></i> Home</a></li>
+                        <li><a href="{% url 'products:browse_products' %}" class="footer-link"><i class="fas fa-chevron-right"></i> All Products</a></li>
+                        <li><a href="{% url 'vendors:vendor_list' %}" class="footer-link"><i class="fas fa-chevron-right"></i> Our Vendors</a></li>
+                        <li><a href="{% url 'vendors:become_vendor' %}" class="footer-link"><i class="fas fa-chevron-right"></i> Sell on Marketplace</a></li>
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> Deals & Offers</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0 footer-links">
+                    <h5 class="footer-heading">Customer Service</h5>
+                    <ul class="footer-link-list">
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> FAQs</a></li>
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> Shipping Policy</a></li>
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> Return Policy</a></li>
+                        <li><a href="#" class="footer-link"><i class="fas fa-chevron-right"></i> Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6 mb-4 mb-md-0 footer-newsletter">
+                    <h5 class="footer-heading">Connect With Us</h5>
+                    <div class="social-links mb-3">
+                        <a href="#" class="social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                    <h6 class="footer-subheading">Subscribe to our newsletter</h6>
+                    <p class="footer-text small">Get the latest updates, deals and exclusive offers directly to your inbox.</p>
+                    <form action="#" class="newsletter-form">
+                        <div class="input-group">
+                            <input type="email" class="form-control" placeholder="Your email address" required>
+                            <button type="submit" class="btn btn-primary">Subscribe</button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
 
-        <hr class="my-4 bg-light">
-
-        <div class="row">
-            <div class="col-md-6">
-                <p>&copy; 2025 Multi-Vendor Marketplace. All Rights Reserved.</p>
+    <div class="footer-middle">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <h6 class="footer-subheading mb-2">Customer Support</h6>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-headset fa-2x me-2"></i>
+                        <div>
+                            <p class="mb-0 footer-text">24/7 Customer Service</p>
+                            <a href="tel:+18001234567" class="footer-contact">+1 800 123 4567</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0 text-md-center">
+                    <h6 class="footer-subheading mb-2">Secure Payments</h6>
+                    <div class="payment-methods">
+                        <i class="fab fa-cc-visa fa-2x me-2" aria-label="Visa"></i>
+                        <i class="fab fa-cc-mastercard fa-2x me-2" aria-label="Mastercard"></i>
+                        <i class="fab fa-cc-paypal fa-2x me-2" aria-label="PayPal"></i>
+                        <i class="fab fa-cc-apple-pay fa-2x me-2" aria-label="Apple Pay"></i>
+                        <i class="fab fa-cc-amazon-pay fa-2x" aria-label="Amazon Pay"></i>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <h6 class="footer-subheading mb-2">Fast Delivery</h6>
+                    <div class="d-flex align-items-center justify-content-md-end">
+                        <i class="fas fa-shipping-fast fa-2x me-2"></i>
+                        <p class="mb-0 footer-text">Free shipping on orders over $50</p>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-6 text-md-end">
-                <div class="payment-methods">
-                    <i class="fab fa-cc-visa fa-2x me-2"></i>
-                    <i class="fab fa-cc-mastercard fa-2x me-2"></i>
-                    <i class="fab fa-cc-paypal fa-2x me-2"></i>
-                    <i class="fab fa-cc-apple-pay fa-2x"></i>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <p class="mb-0 copyright">&copy; 2025 Multi-Vendor Marketplace. All Rights Reserved.</p>
+                </div>
+                <div class="col-md-6">
+                    <ul class="footer-bottom-links">
+                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Sitemap</a></li>
+                    </ul>
                 </div>
             </div>
         </div>
