@@ -6,41 +6,50 @@
 {% block content %}
 <!-- Hero Banner -->
 <section class="hero-banner">
-    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+    <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
         <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
-            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="New Arrivals"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Special Offers"></button>
+            <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Become a Vendor"></button>
         </div>
         <div class="carousel-inner">
             <div class="carousel-item active">
                 <div class="banner-img-container">
-                    <img src="/static/img/banner1.jpg" class="d-block w-100" alt="New Arrivals Every Day">
+                    <img src="/static/img/banner1.jpg" class="d-block w-100" alt="New Arrivals Every Day" loading="eager">
                 </div>
                 <div class="carousel-caption">
                     <h2 class="banner-title">New Arrivals Every Day</h2>
                     <p class="banner-subtitle">Be the first to discover the latest products</p>
-                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg banner-btn">Shop Now</a>
+                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg banner-btn">
+                        <span>Shop Now</span>
+                        <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
                 </div>
             </div>
             <div class="carousel-item">
                 <div class="banner-img-container">
-                    <img src="/static/img/banner2.jpg" class="d-block w-100" alt="Special Offers">
+                    <img src="/static/img/banner2.jpg" class="d-block w-100" alt="Special Offers" loading="lazy">
                 </div>
                 <div class="carousel-caption">
                     <h2 class="banner-title">Special Offers</h2>
                     <p class="banner-subtitle">Save big on our featured products</p>
-                    <a href="{% url 'products:browse_products' %}" class="btn btn-light btn-lg banner-btn">Shop Now</a>
+                    <a href="{% url 'products:browse_products' %}?sort=discount" class="btn btn-light btn-lg banner-btn">
+                        <span>View Deals</span>
+                        <i class="fas fa-tag ms-2"></i>
+                    </a>
                 </div>
             </div>
             <div class="carousel-item">
                 <div class="banner-img-container">
-                    <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor">
+                    <img src="/static/img/banner3.jpg" class="d-block w-100" alt="Become a Vendor" loading="lazy">
                 </div>
                 <div class="carousel-caption">
                     <h2 class="banner-title">Start Selling Today</h2>
                     <p class="banner-subtitle">Join thousands of successful vendors on our platform</p>
-                    <a href="{% url 'vendors:become_vendor' %}" class="btn btn-success btn-lg banner-btn">Become a Vendor</a>
+                    <a href="{% url 'vendors:become_vendor' %}" class="btn btn-success btn-lg banner-btn">
+                        <span>Become a Vendor</span>
+                        <i class="fas fa-store ms-2"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -58,24 +67,29 @@
 {% if featured_categories %}
 <!-- Featured Categories -->
 <section class="featured-categories container py-5">
-    <h2 class="text-center mb-4">Shop by Category</h2>
+    <div class="section-header text-center mb-5">
+        <h2 class="section-title">Shop by Category</h2>
+        <p class="section-subtitle text-muted">Explore our wide range of product categories</p>
+    </div>
     <div class="row g-4">
         {% for category in featured_categories %}
         <div class="col-6 col-md-4 col-lg-2">
-            <a href="{% url 'products:product_list_by_category' category.slug %}" class="text-decoration-none">
+            <a href="{% url 'products:product_list_by_category' category.slug %}" class="text-decoration-none category-link">
                 <div class="card category-card text-center h-100 border-0 shadow-sm">
                     <div class="category-img-container p-3">
                         {% if category.image %}
-                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid" style="height: 100px; object-fit: contain;">
+                        <img src="{{ category.image.url }}" alt="{{ category.name }}" class="img-fluid" loading="lazy">
                         {% else %}
-                        <div class="category-icon-placeholder d-flex align-items-center justify-content-center" style="height: 100px;">
+                        <div class="category-icon-placeholder d-flex align-items-center justify-content-center">
                             <i class="fas fa-box fa-3x text-primary"></i>
                         </div>
                         {% endif %}
                     </div>
                     <div class="card-body p-2">
                         <h6 class="card-title mb-0">{{ category.name }}</h6>
-                        <small class="text-muted d-block mt-1">{{ category.products.count }} Products</small>
+                        <div class="product-count mt-1">
+                            <span class="badge bg-light text-dark">{% total_category_products category %} Products</span>
+                        </div>
                     </div>
                 </div>
             </a>
@@ -88,9 +102,15 @@
 {% if featured_products %}
 <!-- Featured Products -->
 <section class="featured-products container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Featured Products</h2>
-        <a href="{% url 'products:browse_products' %}?featured=true" class="btn btn-outline-primary">View All</a>
+    <div class="section-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title">Featured Products</h2>
+            <p class="section-subtitle text-muted">Handpicked selections you'll love</p>
+        </div>
+        <a href="{% url 'products:browse_products' %}?featured=true" class="btn btn-outline-primary">
+            View All
+            <i class="fas fa-arrow-right ms-2"></i>
+        </a>
     </div>
 
     <div class="row g-4">
@@ -106,9 +126,15 @@
 {% if new_products %}
 <!-- New Arrivals -->
 <section class="new-products container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>New Arrivals</h2>
-        <a href="{% url 'products:browse_products' %}?sort=newest" class="btn btn-outline-primary">View All</a>
+    <div class="section-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title">New Arrivals</h2>
+            <p class="section-subtitle text-muted">The latest additions to our marketplace</p>
+        </div>
+        <a href="{% url 'products:browse_products' %}?sort=newest" class="btn btn-outline-primary">
+            View All
+            <i class="fas fa-arrow-right ms-2"></i>
+        </a>
     </div>
 
     <div class="row g-4">
@@ -124,7 +150,10 @@
 <!-- Services & Benefits with animation on hover -->
 <section class="services-benefits py-5 bg-light">
     <div class="container">
-        <h2 class="text-center mb-5">Why Shop With Us</h2>
+        <div class="section-header text-center mb-5">
+            <h2 class="section-title">Why Shop With Us</h2>
+            <p class="section-subtitle text-muted">We're committed to providing the best shopping experience</p>
+        </div>
         <div class="row g-4">
             <div class="col-md-3 col-sm-6">
                 <div class="card border-0 bg-white text-center h-100 shadow-sm benefit-card">
@@ -134,6 +163,9 @@
                         </div>
                         <h5>Free Shipping</h5>
                         <p class="text-muted">On orders over ₹500</p>
+                        <div class="benefit-details mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -145,6 +177,9 @@
                         </div>
                         <h5>Easy Returns</h5>
                         <p class="text-muted">30-day return policy</p>
+                        <div class="benefit-details mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -156,6 +191,9 @@
                         </div>
                         <h5>Secure Payment</h5>
                         <p class="text-muted">Multiple payment options</p>
+                        <div class="benefit-details mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -167,6 +205,9 @@
                         </div>
                         <h5>24/7 Support</h5>
                         <p class="text-muted">Dedicated customer service</p>
+                        <div class="benefit-details mt-3">
+                            <a href="#" class="btn btn-sm btn-outline-primary">Learn More</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,9 +218,15 @@
 {% if top_vendors %}
 <!-- Top Vendors -->
 <section class="top-vendors container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Top Sellers</h2>
-        <a href="{% url 'vendors:vendor_list' %}" class="btn btn-outline-primary">View All Sellers</a>
+    <div class="section-header d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="section-title">Top Sellers</h2>
+            <p class="section-subtitle text-muted">Trusted vendors with excellent ratings</p>
+        </div>
+        <a href="{% url 'vendors:vendor_list' %}" class="btn btn-outline-primary">
+            View All Sellers
+            <i class="fas fa-arrow-right ms-2"></i>
+        </a>
     </div>
 
     <div class="row g-4">
@@ -187,7 +234,12 @@
         <div class="col-md-3 col-sm-6">
             <div class="card vendor-card h-100">
                 <div class="vendor-banner" style="background-image: url('{% if vendor.banner %}{{ vendor.banner.url }}{% else %}/static/img/vendor-banner-default.jpg{% endif %}');">
-                    <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}" class="vendor-logo" alt="{{ vendor.business_name }}">
+                    <img src="{% if vendor.logo %}{{ vendor.logo.url }}{% else %}/static/img/vendor-logo-default.png{% endif %}" class="vendor-logo" alt="{{ vendor.business_name }}" loading="lazy">
+                    {% if vendor.avg_rating and vendor.avg_rating >= 4.5 %}
+                    <div class="vendor-badge">
+                        <span class="badge bg-success"><i class="fas fa-award me-1"></i> Top Rated</span>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="card-body text-center mt-5">
                     <h5 class="card-title">{{ vendor.business_name }}</h5>
@@ -196,7 +248,11 @@
                         <span class="text-muted ms-1">({{ vendor.reviews.count|default:0 }})</span>
                     </div>
                     <p class="card-text text-muted small">{{ vendor.description|truncatewords:15 }}</p>
-                    <a href="{% url 'vendors:vendor_detail' vendor.slug %}" class="btn btn-outline-primary">Visit Store</a>
+                    <div class="d-grid">
+                        <a href="{% url 'vendors:vendor_detail' vendor.slug %}" class="btn btn-outline-primary">
+                            <i class="fas fa-store me-2"></i>Visit Store
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -208,23 +264,28 @@
 {% if brands %}
 <!-- Popular Brands -->
 <section class="brands container py-5">
-    <h2 class="text-center mb-4">Popular Brands</h2>
-    <div class="row g-4">
-        {% for brand in brands %}
-        <div class="col-4 col-md-3 col-lg-2">
-            <a href="{% url 'products:product_list_by_brand' brand.slug %}" class="text-decoration-none">
-                <div class="card brand-card text-center h-100 border-0">
-                    <div class="p-3 d-flex align-items-center justify-content-center" style="height: 100px;">
-                        {% if brand.logo %}
-                        <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="img-fluid" style="max-height: 70px; max-width: 100%;">
-                        {% else %}
-                        <span class="fw-bold text-primary">{{ brand.name }}</span>
-                        {% endif %}
+    <div class="section-header text-center mb-5">
+        <h2 class="section-title">Popular Brands</h2>
+        <p class="section-subtitle text-muted">Shop from your favorite brands</p>
+    </div>
+    <div class="brands-carousel">
+        <div class="row g-4">
+            {% for brand in brands %}
+            <div class="col-4 col-md-3 col-lg-2">
+                <a href="{% url 'products:product_list_by_brand' brand.slug %}" class="text-decoration-none brand-link">
+                    <div class="card brand-card text-center h-100 border-0 shadow-sm">
+                        <div class="p-3 d-flex align-items-center justify-content-center" style="height: 100px;">
+                            {% if brand.logo %}
+                            <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" class="img-fluid" style="max-height: 70px; max-width: 100%;" loading="lazy">
+                            {% else %}
+                            <span class="fw-bold text-primary">{{ brand.name }}</span>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </section>
 {% endif %}
@@ -234,15 +295,24 @@
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8 text-center">
-                <div class="card border-0 shadow-sm">
+                <div class="card border-0 shadow-sm newsletter-card">
                     <div class="card-body p-5">
-                        <h3>Subscribe to Our Newsletter</h3>
+                        <div class="newsletter-icon mb-4">
+                            <i class="fas fa-envelope-open-text fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="section-title">Subscribe to Our Newsletter</h3>
                         <p class="text-muted mb-4">Stay updated with latest products, exclusive offers and promotions</p>
                         <form class="newsletter-form" action="#" method="post">
                             {% csrf_token %}
                             <div class="input-group">
-                                <input type="email" class="form-control" placeholder="Your email address" required>
-                                <button class="btn btn-primary" type="submit">Subscribe</button>
+                                <input type="email" class="form-control" placeholder="Your email address" aria-label="Email address" required>
+                                <button class="btn btn-primary" type="submit">
+                                    <span>Subscribe</span>
+                                    <i class="fas fa-paper-plane ms-2"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-muted mt-2">
+                                <small><i class="fas fa-lock me-1"></i> We respect your privacy and will never share your email</small>
                             </div>
                         </form>
                     </div>
@@ -255,6 +325,23 @@
 
 {% block extra_css %}
 <style>
+    /* Section styling */
+    .section-header {
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .section-subtitle {
+        font-size: 1rem;
+        opacity: 0.8;
+    }
+    
     /* Carousel enhancements */
     .hero-banner {
         margin-bottom: 2rem;
@@ -280,6 +367,11 @@
         height: 100%;
         object-fit: cover;
         object-position: center;
+        transition: transform 0.5s ease;
+    }
+    
+    .carousel-item:hover .banner-img-container img {
+        transform: scale(1.05);
     }
     
     .carousel-item::after {
@@ -289,7 +381,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.4);
+        background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
     }
     
     .carousel-caption {
@@ -307,6 +399,7 @@
         font-size: 2.5rem;
         margin-bottom: 1rem;
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        font-weight: 700;
     }
     
     .banner-subtitle {
@@ -318,6 +411,12 @@
     .banner-btn {
         padding: 0.5rem 1.5rem;
         font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .banner-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     }
     
     .carousel-indicators {
@@ -325,91 +424,108 @@
         margin-bottom: 1rem;
     }
     
+    .carousel-indicators button {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin: 0 5px;
+    }
+    
     .carousel-control-prev, .carousel-control-next {
         z-index: 2;
         width: 10%;
+        opacity: 0.7;
+        transition: opacity 0.3s ease;
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 991.98px) {
-        .banner-title {
-            font-size: 2rem;
-        }
-        
-        .banner-subtitle {
-            font-size: 1rem;
-        }
+    .carousel-control-prev:hover, .carousel-control-next:hover {
+        opacity: 1;
     }
     
-    @media (max-width: 767.98px) {
-        .banner-title {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .banner-subtitle {
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-        
-        .banner-btn {
-            padding: 0.4rem 1.2rem;
-            font-size: 0.9rem;
-        }
-    }
-    
-    @media (max-width: 575.98px) {
-        .banner-title {
-            font-size: 1.2rem;
-        }
-        
-        .banner-subtitle {
-            font-size: 0.8rem;
-            margin-bottom: 0.8rem;
-        }
-        
-        .banner-btn {
-            padding: 0.3rem 1rem;
-            font-size: 0.8rem;
-        }
-    }
-
     /* Category cards styling */
     .category-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: all 0.3s ease;
         overflow: hidden;
+        border-radius: 10px;
     }
 
     .category-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
     }
+    
+    .category-link:hover {
+        text-decoration: none;
+    }
 
     .category-img-container {
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         overflow: hidden;
+    }
+    
+    .category-img-container img {
+        max-height: 100px;
+        transition: transform 0.3s ease;
+    }
+    
+    .category-card:hover .category-img-container img {
+        transform: scale(1.1);
+    }
+    
+    .category-icon-placeholder {
+        height: 100px;
+        width: 100px;
+        border-radius: 50%;
+        background-color: rgba(52, 152, 219, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover .category-icon-placeholder {
+        background-color: rgba(52, 152, 219, 0.2);
+    }
+    
+    .product-count {
+        transition: all 0.3s ease;
+    }
+    
+    .category-card:hover .product-count .badge {
+        background-color: var(--bs-primary) !important;
+        color: white !important;
     }
 
     /* Brand cards styling */
     .brand-card {
-        transition: transform 0.3s ease;
+        transition: all 0.3s ease;
         background-color: #fff;
-        border-radius: 8px;
+        border-radius: 10px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .brand-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
+    
+    .brand-link:hover {
+        text-decoration: none;
+    }
 
     /* Benefits cards styling */
     .benefit-card {
-        transition: transform 0.3s ease;
-        border-radius: 8px;
+        transition: all 0.3s ease;
+        border-radius: 10px;
     }
 
     .benefit-card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
     }
 
     .benefit-icon-wrapper {
@@ -428,11 +544,22 @@
         background-color: rgba(52, 152, 219, 0.2);
         transform: scale(1.1);
     }
+    
+    .benefit-details {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .benefit-card:hover .benefit-details {
+        opacity: 1;
+        transform: translateY(0);
+    }
 
     /* Vendor card styling */
     .vendor-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 8px;
+        transition: all 0.3s ease;
+        border-radius: 10px;
         overflow: hidden;
         box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     }
@@ -461,12 +588,59 @@
         transform: translateX(-50%);
         object-fit: contain;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .vendor-card:hover .vendor-logo {
+        transform: translateX(-50%) scale(1.05);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .vendor-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
     }
 
-    /* Newsletter form */
+    /* Newsletter styling */
+    .newsletter-card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .newsletter-icon {
+        height: 80px;
+        width: 80px;
+        border-radius: 50%;
+        background-color: rgba(52, 152, 219, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-card:hover .newsletter-icon {
+        background-color: rgba(52, 152, 219, 0.2);
+        transform: scale(1.1);
+    }
+
     .newsletter-form .form-control {
         height: 50px;
         border-radius: 4px 0 0 4px;
+        border: 1px solid #ced4da;
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-form .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+        border-color: #86b7fe;
     }
 
     .newsletter-form .btn {
@@ -474,6 +648,71 @@
         height: 50px;
         padding-left: 20px;
         padding-right: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .newsletter-form .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 991.98px) {
+        .banner-title {
+            font-size: 2rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 1rem;
+        }
+        
+        .section-header {
+            margin-bottom: 1.5rem;
+        }
+    }
+    
+    @media (max-width: 767.98px) {
+        .banner-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .banner-btn {
+            padding: 0.4rem 1.2rem;
+            font-size: 0.9rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+        }
+        
+        .section-subtitle {
+            font-size: 0.9rem;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .banner-title {
+            font-size: 1.2rem;
+        }
+        
+        .banner-subtitle {
+            font-size: 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+        
+        .banner-btn {
+            padding: 0.3rem 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+        }
     }
 </style>
 {% endblock %}

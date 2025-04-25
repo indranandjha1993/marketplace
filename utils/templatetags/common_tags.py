@@ -1,6 +1,7 @@
 from django import template
-from django.db.models import Avg
+from django.db.models import Avg, Count, Q
 from django.utils.safestring import mark_safe
+from products.models import Product
 
 register = template.Library()
 
@@ -74,3 +75,26 @@ def get_item(dictionary, key):
     if dictionary and key in dictionary:
         return dictionary[key]
     return None
+
+
+@register.simple_tag
+def total_category_products(category):
+    """
+    Count all products in a category including its subcategories.
+    Usage: {% total_category_products category %}
+    """
+    # Get all subcategory IDs
+    subcategory_ids = [category.id]
+    
+    # Add all children recursively
+    children = category.get_all_children
+    for child in children:
+        subcategory_ids.append(child.id)
+    
+    # Count products in all these categories
+    product_count = Product.objects.filter(
+        category_id__in=subcategory_ids,
+        status='active'
+    ).count()
+    
+    return product_count
