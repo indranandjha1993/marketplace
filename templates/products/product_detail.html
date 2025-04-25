@@ -13,45 +13,100 @@
         </ol>
     </nav>
 
-    <div class="row">
-        <!-- Product Images -->
+    <div class="row g-4">
+        <!-- Product Images - Enhanced Gallery -->
         <div class="col-lg-5 mb-4 product-gallery">
             <!-- Main Image Container with Zoom functionality -->
-            <div class="card">
-                <div class="card-body p-2 m-auto position-relative product-image-container" id="img-container">
-                    <div class="zoom-icon">
-                        <i class="fas fa-search-plus"></i>
+            <div class="position-relative main-image-wrapper">
+                <!-- Sale badge if product is on sale -->
+                {% if product.is_on_sale %}
+                <div class="position-absolute top-0 start-0 m-3 z-index-1">
+                    <div class="badge bg-danger px-3 py-2 rounded-pill fs-6 fw-bold sale-badge">
+                        <i class="fas fa-bolt me-1"></i>{{ product.discount_percentage }}% OFF
                     </div>
-                    {% if product.primary_image %}
-                    <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
-                         class="product-detail-image img-fluid" id="main-product-image">
-                    {% else %}
-                    <img src="/static/img/no-image.png" alt="{{ product.title }}" class="product-detail-image img-fluid"
-                         id="main-product-image">
-                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- Gallery action buttons -->
+                <div class="position-absolute top-0 end-0 m-3 z-index-1">
+                    <div class="d-flex flex-column gap-2">
+                        <!-- Wishlist button with tooltip -->
+                        <div class="gallery-action-button-wrapper">
+                            <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.path }}">
+                                <button type="submit" 
+                                        class="btn btn-light rounded-circle p-2 shadow gallery-wishlist-btn"
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-placement="left" 
+                                        title="{% if user.is_authenticated and product in user.profile.wishlist_products.all %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}">
+                                    <i class="{% if user.is_authenticated and product in user.profile.wishlist_products.all %}fas text-danger{% else %}far{% endif %} fa-heart"></i>
+                                </button>
+                            </form>
+                            <!-- Visual label for wishlist -->
+                            <div class="gallery-button-label">
+                                {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
+                                    <span class="badge bg-danger px-2 py-1 rounded-pill">Saved</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Zoom button with tooltip -->
+                        <button class="btn btn-light rounded-circle p-2 shadow gallery-zoom-btn" 
+                                id="zoom-button"
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="left" 
+                                title="Zoom Image">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Main image with glass morphism effect -->
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden gallery-card">
+                    <div class="card-body p-0 position-relative product-image-container" id="img-container">
+                        <div class="bg-white d-flex align-items-center justify-content-center p-0">
+                            {% if product.primary_image %}
+                            <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}"
+                                 class="product-detail-image img-fluid" id="main-product-image">
+                            {% else %}
+                            <img src="/static/img/no-image.png" alt="{{ product.title }}" class="product-detail-image img-fluid"
+                                 id="main-product-image">
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Image popup modal (lighter, more modern design) -->
+            <!-- Image popup modal with enhanced design -->
             <div class="product-zoom-modal" id="zoom-modal">
-                <div class="product-zoom-modal-content">
+                <div class="product-zoom-modal-content rounded-4">
                     <div class="product-zoom-header">
                         <h5 class="product-zoom-title">{{ product.title }}</h5>
-                        <button class="product-zoom-close" id="zoom-close">
-                            <i class="fas fa-times"></i>
-                        </button>
+                        <button class="product-zoom-close btn-close" id="zoom-close" aria-label="Close"></button>
                     </div>
                     <div class="product-zoom-body">
                         <img id="zoomed-image" class="product-zoomed-image">
                     </div>
+                    <div class="product-zoom-controls bg-light p-3 d-flex justify-content-center">
+                        <button class="btn btn-sm btn-outline-secondary mx-1 rounded-circle" id="zoom-out">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary mx-1 rounded-circle" id="zoom-reset">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary mx-1 rounded-circle" id="zoom-in">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Thumbnails with horizontal scroll (will hide when not needed) -->
+            <!-- Enhanced Thumbnails with horizontal scroll -->
             {% if product.images.count > 1 %}
             <div class="mt-3">
                 <div class="product-thumbnails-container" id="thumbnails-container">
-                    <button class="product-scroll-button product-scroll-left" id="scroll-left">
+                    <button class="product-scroll-button product-scroll-left btn btn-light rounded-circle shadow-sm" id="scroll-left">
                         <i class="fas fa-chevron-left"></i>
                     </button>
 
@@ -59,54 +114,79 @@
                         {% for image in product.images.all %}
                         <div class="product-thumbnail-wrapper">
                             <img src="{{ image.image.url }}" alt="{{ product.title }}"
-                                 class="product-thumbnail-image {% if image.is_primary %}active{% endif %}"
+                                 class="product-thumbnail-image rounded-3 {% if image.is_primary %}active{% endif %}"
                                  data-full-img="{{ image.image.url }}">
                         </div>
                         {% endfor %}
                     </div>
 
-                    <button class="product-scroll-button product-scroll-right" id="scroll-right">
+                    <button class="product-scroll-button product-scroll-right btn btn-light rounded-circle shadow-sm" id="scroll-right">
                         <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
+            </div>
+            {% endif %}
+            
+            <!-- Image counter indicator -->
+            {% if product.images.count > 1 %}
+            <div class="image-counter text-center mt-2">
+                <span class="badge bg-light text-dark px-3 py-2 rounded-pill">
+                    <span id="current-image-index">1</span> / {{ product.images.count }}
+                </span>
             </div>
             {% endif %}
         </div>
 
         <!-- Product Info -->
         <div class="col-lg-7">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h1 class="h3 mb-2">{{ product.title }}</h1>
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h1 class="h2 fw-bold mb-2">{{ product.title }}</h1>
 
-                    <div class="d-flex align-items-center mb-3">
-                        {% if product.reviews.count > 0 %}
-                        {% with avg_rating=product.reviews.all|avg_rating %}
-                        {% rating_display avg_rating product.reviews.count %}
-                        {% endwith %}
-                        {% else %}
-                        {% rating_display 0 0 %}
-                        {% endif %}
-                        <span class="text-muted">|</span>
-                        <span class="ms-3 text-muted">
-                            Sold by: <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}">{{ product.vendor.business_name }}</a>
+                    <div class="d-flex flex-wrap align-items-center mb-3">
+                        <div class="me-3">
+                            {% if product.reviews.count > 0 %}
+                            {% with avg_rating=product.reviews.all|avg_rating %}
+                            {% rating_display avg_rating product.reviews.count %}
+                            {% endwith %}
+                            {% else %}
+                            {% rating_display 0 0 %}
+                            {% endif %}
+                        </div>
+                        <span class="text-muted d-none d-sm-inline">|</span>
+                        <span class="ms-0 ms-sm-3 text-muted">
+                            <i class="fas fa-store me-1"></i> Sold by: <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-decoration-none fw-medium">{{ product.vendor.business_name }}</a>
                         </span>
                     </div>
 
-                    <div class="product-price mb-3" id="product-price">
+                    <div class="product-price mb-4" id="product-price">
                         {% if product.is_on_sale %}
-                        <span class="original-price fs-5 text-decoration-line-through">₹{{ product.price }}</span>
-                        <span class="fs-3 fw-bold text-primary">₹{{ product.current_price }}</span>
-                        <span class="badge bg-danger ms-2">{{ product.discount_percentage }}% OFF</span>
+                        <div class="d-flex align-items-center flex-wrap">
+                            <span class="original-price fs-5 text-decoration-line-through text-muted me-2">₹{{ product.price }}</span>
+                            <span class="fs-2 fw-bold text-primary me-2">₹{{ product.current_price }}</span>
+                            <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">{{ product.discount_percentage }}% OFF</span>
+                        </div>
                         {% else %}
-                        <span class="fs-3 fw-bold text-primary">₹{{ product.current_price }}</span>
+                        <span class="fs-2 fw-bold text-primary">₹{{ product.current_price }}</span>
                         {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <span id="availability-text" class="badge {% if product.quantity > 10 %}bg-success{% elif product.quantity > 0 %}bg-warning{% else %}bg-danger{% endif %} rounded-pill px-3 py-2 fs-6">
+                            {% if product.quantity > 10 %}
+                                <i class="fas fa-check-circle me-1"></i> In Stock
+                            {% elif product.quantity > 0 %}
+                                <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
+                            {% else %}
+                                <i class="fas fa-times-circle me-1"></i> Out of Stock
+                            {% endif %}
+                        </span>
                     </div>
 
                     <!-- Product variants section -->
                     {% if product.variants.exists %}
                     <div class="mb-4 product-variants">
-                        <h5>Options</h5>
+                        <h5 class="fw-bold mb-3">Options</h5>
                         <div class="variant-selection">
                             {% for attribute in product.variants.all|get_variant_attributes %}
                             <div class="mb-3">
@@ -124,7 +204,9 @@
                                                {% if all_variants_out_of_stock %}disabled{% endif %}>
                                         {% if attribute.name|lower == "color" %}
                                         <label class="color-label" for="{{ attribute.name }}-{{ value.id }}"
-                                               style="background-color: {{ value.value|lower }};"></label>
+                                               style="background-color: {{ value.value|lower }};">
+                                            <span class="visually-hidden">{{ value.value }}</span>
+                                        </label>
                                         {% else %}
                                         <label class="variant-label" for="{{ attribute.name }}-{{ value.id }}">
                                             {{ value.value }}
@@ -140,8 +222,10 @@
                     </div>
                     {% endif %}
 
+                    <hr class="my-4">
+
                     <!-- Add to cart form -->
-                    <div class="mb-4 d-flex align-items-center">
+                    <div class="mb-4">
                         <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" id="add-to-cart-form">
                             {% csrf_token %}
 
@@ -150,103 +234,142 @@
                             {% endif %}
 
                             <!-- Quantity selector -->
-                            <div class="d-flex align-items-center mb-3">
-                                <label class="me-3 fw-medium">Quantity:</label>
-                                <div class="quantity-control">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-minus">−</button>
+                            <div class="row g-3 align-items-center mb-4">
+                                <div class="col-12 col-md-6">
+                                    <label class="form-label fw-medium mb-2">Quantity:</label>
+                                    <div class="quantity-selector">
+                                        <button type="button" class="quantity-btn quantity-minus" id="quantity-minus" aria-label="Decrease quantity">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
 
-                                    {% if product.variants.exists %}
-                                    <input type="number" name="quantity" value="1" min="1" class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
-                                    {% else %}
-                                    <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" class="form-control form-control-sm text-center quantity-input" style="width: 60px;">
-                                    {% endif %}
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" id="quantity-plus">+</button>
+                                        {% if product.variants.exists %}
+                                        <input type="number" name="quantity" value="1" min="1" 
+                                               class="quantity-input" aria-label="Product quantity">
+                                        {% else %}
+                                        <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" 
+                                               class="quantity-input" aria-label="Product quantity">
+                                        {% endif %}
+                                        
+                                        <button type="button" class="quantity-btn quantity-plus" id="quantity-plus" aria-label="Increase quantity">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
-
-                                <span id="availability-text" class="ms-3
-                                    {% if product.quantity > 10 %}text-success{% elif product.quantity > 0 %}text-warning{% else %}text-danger{% endif %}">
-                                    {% if product.quantity > 10 %}
-                                        <i class="fas fa-check-circle me-1"></i> In Stock
-                                    {% elif product.quantity > 0 %}
-                                        <i class="fas fa-exclamation-circle me-1"></i> Only {{ product.quantity }} left!
-                                    {% else %}
-                                        <i class="fas fa-times-circle me-1"></i> Out of Stock
-                                    {% endif %}
-                                </span>
                             </div>
 
                             <!-- Action buttons -->
-                            <div class="d-flex">
-                                <button type="submit" class="btn btn-primary" {% if not product.is_in_stock %}disabled{% endif %}>
+                            <div class="action-buttons-container">
+                                <button type="submit" class="btn btn-primary btn-lg add-to-cart-btn" {% if not product.is_in_stock %}disabled{% endif %}>
                                     <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+                                
+                                <button type="button" 
+                                        class="btn {% if user.is_authenticated and product in user.profile.wishlist_products.all %}btn-danger{% else %}btn-outline-danger{% endif %} btn-lg wishlist-action-btn"
+                                        id="detail-wishlist-btn"
+                                        data-product-id="{{ product.id }}"
+                                        data-csrf-token="{{ csrf_token }}"
+                                        data-return-url="{{ request.path }}">
+                                    {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
+                                    <i class="fas fa-heart me-md-2"></i><span class="wishlist-btn-text">Saved</span>
+                                    {% else %}
+                                    <i class="far fa-heart me-md-2"></i><span class="wishlist-btn-text">Save</span>
+                                    {% endif %}
                                 </button>
                             </div>
                         </form>
-                        <form action="{% url 'accounts:toggle_wishlist' product.id %}" method="POST" class="ms-3 mt-auto">
-                            {% csrf_token %}
-                            <input type="hidden" name="next" value="{{ request.path }}">
-                            <button type="submit" class="btn btn-sm btn-icon wishlist-btn{% if user.is_authenticated and product in user.profile.wishlist_products.all %} active{% endif %}">
-                                {% if user.is_authenticated and product in user.profile.wishlist_products.all %}
-                                <i class="fas fa-heart"></i>
-                                {% else %}
-                                <i class="far fa-heart"></i>
-                                {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Description and Specifications -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                    <ul class="nav nav-tabs card-header-tabs border-0" id="productInfoTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active px-4 py-3 fw-medium" id="description-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#description" type="button" role="tab" aria-controls="description" aria-selected="true">
+                                <i class="fas fa-file-alt me-2"></i>Description
                             </button>
-                        </form>
+                        </li>
+                        {% if product.brand %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link px-4 py-3 fw-medium" id="specifications-tab" data-bs-toggle="tab" 
+                                    data-bs-target="#specifications" type="button" role="tab" aria-controls="specifications" aria-selected="false">
+                                <i class="fas fa-clipboard-list me-2"></i>Specifications
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="card-body p-4">
+                    <div class="tab-content" id="productInfoTabsContent">
+                        <!-- Description Tab -->
+                        <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                            <div class="product-description">
+                                {{ product.description|linebreaks }}
+                            </div>
+                        </div>
+                        
+                        <!-- Specifications Tab -->
+                        {% if product.brand %}
+                        <div class="tab-pane fade" id="specifications" role="tabpanel" aria-labelledby="specifications-tab">
+                            <div class="row g-4">
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="icon-wrapper bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-tag text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted small">Brand</div>
+                                            <div class="fw-medium">{{ product.brand.name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="icon-wrapper bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-folder text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted small">Category</div>
+                                            <div class="fw-medium">{{ product.category.name }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 bg-light rounded-3">
+                                        <div class="icon-wrapper bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                            <i class="fas fa-barcode text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-muted small">SKU</div>
+                                            <div class="fw-medium">{{ product.sku }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
-
-            <!-- Product Description -->
-            <div class="card mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Product Description</h5>
-                </div>
-                <div class="card-body">
-                    <div class="product-description">
-                        {{ product.description|linebreaks }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Specifications -->
-            {% if product.brand %}
-            <div class="card mb-4">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Specifications</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Brand:</strong> {{ product.brand.name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Category:</strong> {{ product.category.name }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>SKU:</strong> {{ product.sku }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
 
     <!-- Reviews and Questions Tabs -->
-    <div class="card mb-4 border-0 shadow-sm review-questions-tabs">
-        <div class="card-header bg-white p-0">
-            <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+    <div class="card mb-4 border-0 shadow-sm rounded-4 review-questions-tabs">
+        <div class="card-header bg-white p-0 border-0">
+            <ul class="nav nav-tabs card-header-tabs border-0" id="productTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active px-4 py-3" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
+                    <button class="nav-link active px-4 py-3 fw-medium" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews"
                             type="button" role="tab" aria-controls="reviews" aria-selected="true">
-                        <i class="fas fa-star me-2 text-warning"></i>Reviews <span class="badge rounded-pill bg-secondary ms-1">{{ reviews.count }}</span>
+                        <i class="fas fa-star me-2 text-warning"></i>Reviews <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary ms-1">{{ reviews.count }}</span>
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link px-4 py-3" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions"
+                    <button class="nav-link px-4 py-3 fw-medium" id="questions-tab" data-bs-toggle="tab" data-bs-target="#questions"
                             type="button" role="tab" aria-controls="questions" aria-selected="false">
-                        <i class="fas fa-question-circle me-2 text-primary"></i>Questions <span class="badge rounded-pill bg-secondary ms-1">{{ questions.count }}</span>
+                        <i class="fas fa-question-circle me-2 text-primary"></i>Questions <span class="badge rounded-pill bg-primary bg-opacity-10 text-primary ms-1">{{ questions.count }}</span>
                     </button>
                 </li>
             </ul>
@@ -256,46 +379,50 @@
                 <!-- Reviews Tab -->
                 <div class="tab-pane fade show active" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
                     {% if user.is_authenticated %}
-                    <div class="review-form-container mb-4 p-3 bg-light rounded">
-                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-pencil-alt me-2"></i>Write a Review</h5>
+                    <div class="review-form-container mb-4 p-4 bg-light rounded-4 shadow-sm">
+                        <h5 class="border-bottom pb-3 mb-4 fw-bold"><i class="fas fa-pencil-alt me-2"></i>Write a Review</h5>
                         <form action="{% url 'products:add_review' product.slug %}" method="POST">
                             {% csrf_token %}
-                            <div class="mb-3">
-                                <label class="form-label fw-medium">Rating</label>
-                                <div class="rating-input d-flex flex-wrap">
+                            <div class="mb-4">
+                                <label class="form-label fw-medium mb-2">Your Rating</label>
+                                <div class="rating-input d-flex flex-wrap gap-2">
                                     {% for i in '12345' %}
                                     <div class="form-check form-check-inline me-3">
-                                        <input class="form-check-input" type="radio" name="rating" id="rating{{ i }}"
+                                        <input class="form-check-input visually-hidden" type="radio" name="rating" id="rating{{ i }}"
                                                value="{{ i }}" required>
-                                        <label class="form-check-label" for="rating{{ i }}">
-                                            <span class="rating-star">{% if forloop.counter <= i|add:"0" %}<i class="fas fa-star text-warning"></i>{% else %}<i class="far fa-star"></i>{% endif %}</span>
+                                        <label class="form-check-label rating-star-label p-2" for="rating{{ i }}">
+                                            <span class="rating-star fs-4">
+                                                <i class="{% if forloop.counter <= i|add:'0' %}fas{% else %}far{% endif %} fa-star text-warning"></i>
+                                            </span>
                                         </label>
                                     </div>
                                     {% endfor %}
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="reviewTitle" class="form-label fw-medium">Title</label>
-                                <input type="text" class="form-control" id="reviewTitle" name="title"
+                            <div class="mb-4">
+                                <label for="reviewTitle" class="form-label fw-medium">Review Title</label>
+                                <input type="text" class="form-control form-control-lg" id="reviewTitle" name="title"
                                        placeholder="Summarize your experience with this product">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <label for="reviewComment" class="form-label fw-medium">Your Review</label>
-                                <textarea class="form-control" id="reviewComment" name="comment" rows="3"
+                                <textarea class="form-control" id="reviewComment" name="comment" rows="4"
                                           placeholder="What did you like or dislike? How is the quality? Would you recommend it?"
                                           required></textarea>
                                 <div class="form-text text-muted">Minimum 10 characters required</div>
                             </div>
                             <div class="d-grid d-md-flex justify-content-md-end">
-                                <button type="submit" class="btn btn-primary px-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-4 py-2">
                                     <i class="fas fa-paper-plane me-2"></i>Submit Review
                                 </button>
                             </div>
                         </form>
                     </div>
                     {% else %}
-                    <div class="alert alert-info d-flex align-items-center mb-4">
-                        <i class="fas fa-info-circle me-3 fs-4"></i>
+                    <div class="alert alert-info d-flex align-items-center mb-4 rounded-4 shadow-sm">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="fas fa-info-circle text-info fs-4"></i>
+                        </div>
                         <div>
                             <strong>Want to write a review?</strong> <a href="{% url 'account_login' %}?next={{ request.path }}" class="alert-link">Log in</a> or <a href="{% url 'account_signup' %}" class="alert-link">sign up</a> to share your experience.
                         </div>
@@ -303,16 +430,16 @@
                     {% endif %}
 
                     <div class="reviews-section">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0"><i class="fas fa-comments me-2"></i>Customer Reviews</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-comments me-2"></i>Customer Reviews</h5>
                             <div class="dropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="reviewSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Sort by
+                                <button class="btn btn-outline-primary dropdown-toggle" type="button" id="reviewSortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-sort me-2"></i>Sort by
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="reviewSortDropdown">
-                                    <li><a class="dropdown-item" href="?sort=newest">Newest first</a></li>
-                                    <li><a class="dropdown-item" href="?sort=highest">Highest rated</a></li>
-                                    <li><a class="dropdown-item" href="?sort=lowest">Lowest rated</a></li>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="reviewSortDropdown">
+                                    <li><a class="dropdown-item" href="?sort=newest"><i class="fas fa-clock me-2"></i>Newest first</a></li>
+                                    <li><a class="dropdown-item" href="?sort=highest"><i class="fas fa-sort-amount-up me-2"></i>Highest rated</a></li>
+                                    <li><a class="dropdown-item" href="?sort=lowest"><i class="fas fa-sort-amount-down me-2"></i>Lowest rated</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -320,63 +447,68 @@
                         {% if reviews %}
                         <div class="reviews-list">
                             {% for review in reviews %}
-                            <div class="review-item mb-4 p-3 border rounded hover-shadow transition-all">
+                            <div class="review-item mb-4 p-4 border-0 rounded-4 shadow-sm hover-shadow transition-all">
                                 <div class="d-md-flex justify-content-between">
                                     <div class="review-main">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="reviews-stars me-2">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="reviews-stars me-3">
                                                 {% display_stars review.rating %}
                                             </div>
                                             {% if review.is_verified_purchase %}
-                                            <span class="badge bg-success rounded-pill">
-                                            <i class="fas fa-check-circle me-1"></i>Verified Purchase
-                                        </span>
+                                            <span class="badge bg-success rounded-pill px-3 py-2">
+                                                <i class="fas fa-check-circle me-1"></i>Verified Purchase
+                                            </span>
                                             {% endif %}
                                         </div>
 
                                         {% if review.title %}
-                                        <h6 class="review-title fw-bold mb-2">{{ review.title }}</h6>
+                                        <h6 class="review-title fw-bold mb-2 fs-5">{{ review.title }}</h6>
                                         {% endif %}
 
-                                        <div class="review-author text-muted small mb-2">
-                                            <i class="fas fa-user me-1"></i>{{ review.user.first_name|default:review.user.email }}
+                                        <div class="review-author text-muted mb-3 d-flex align-items-center">
+                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                <i class="fas fa-user text-primary"></i>
+                                            </div>
+                                            {{ review.user.first_name|default:review.user.email }}
+                                            <span class="ms-2 text-muted small">{{ review.created_at|date:"M d, Y" }}</span>
                                         </div>
 
-                                        <div class="review-content mb-2">
+                                        <div class="review-content mb-3">
                                             {{ review.comment|linebreaks }}
                                         </div>
 
-                                        <div class="review-actions mt-2 d-flex">
-                                            <button class="btn btn-sm btn-link text-muted p-0" data-bs-toggle="tooltip" title="Mark as helpful">
+                                        <div class="review-actions mt-3 d-flex">
+                                            <button class="btn btn-sm btn-outline-secondary rounded-pill" data-bs-toggle="tooltip" title="Mark as helpful">
                                                 <i class="far fa-thumbs-up me-1"></i>Helpful
                                             </button>
 
                                             {% if user.is_authenticated and user == product.vendor.user %}
-                                            <button class="btn btn-sm btn-link text-muted p-0 ms-3" onclick="document.getElementById('vendor-reply-{{ review.id }}').classList.toggle('d-none')">
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill ms-2" onclick="document.getElementById('vendor-reply-{{ review.id }}').classList.toggle('d-none')">
                                                 <i class="fas fa-reply me-1"></i>Reply
                                             </button>
-                                            <div id="vendor-reply-{{ review.id }}" class="vendor-reply-form mt-2 d-none">
-                                                <form action="#" method="POST" class="d-flex">
+                                            <div id="vendor-reply-{{ review.id }}" class="vendor-reply-form mt-3 d-none">
+                                                <form action="#" method="POST" class="d-flex gap-2">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="review_id" value="{{ review.id }}">
-                                                    <textarea class="form-control form-control-sm me-2" name="reply" rows="1" placeholder="Reply to this review"></textarea>
-                                                    <button type="submit" class="btn btn-sm btn-primary">Submit</button>
+                                                    <textarea class="form-control" name="reply" rows="2" placeholder="Reply to this review"></textarea>
+                                                    <button type="submit" class="btn btn-primary">Submit</button>
                                                 </form>
                                             </div>
                                             {% endif %}
                                         </div>
 
                                         {% if review.vendor_reply %}
-                                        <div class="vendor-reply mt-3 ms-3 p-2 border-start border-primary bg-light">
-                                            <div class="fw-medium"><i class="fas fa-store me-1"></i>Seller response:</div>
+                                        <div class="vendor-reply mt-3 ms-3 p-3 border-start border-primary bg-light rounded-end-3">
+                                            <div class="fw-medium d-flex align-items-center mb-2">
+                                                <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-2">
+                                                    <i class="fas fa-store text-primary"></i>
+                                                </div>
+                                                Seller response:
+                                            </div>
                                             <div class="vendor-reply-content">{{ review.vendor_reply }}</div>
-                                            <div class="text-muted small mt-1">{{ review.vendor_reply_date|date:"M d, Y" }}</div>
+                                            <div class="text-muted small mt-2">{{ review.vendor_reply_date|date:"M d, Y" }}</div>
                                         </div>
                                         {% endif %}
-                                    </div>
-
-                                    <div class="review-meta text-end text-muted small mt-2 mt-md-0">
-                                        {{ review.created_at|date:"M d, Y" }}
                                     </div>
                                 </div>
                             </div>
@@ -388,7 +520,7 @@
                                 <ul class="pagination justify-content-center">
                                     {% if reviews.has_previous %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ reviews.previous_page_number }}" aria-label="Previous">
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?page={{ reviews.previous_page_number }}" aria-label="Previous">
                                             <span aria-hidden="true">&laquo;</span>
                                         </a>
                                     </li>
@@ -396,13 +528,13 @@
 
                                     {% for i in reviews.paginator.page_range %}
                                     <li class="page-item {% if reviews.number == i %}active{% endif %}">
-                                        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?page={{ i }}">{{ i }}</a>
                                     </li>
                                     {% endfor %}
 
                                     {% if reviews.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?page={{ reviews.next_page_number }}" aria-label="Next">
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?page={{ reviews.next_page_number }}" aria-label="Next">
                                             <span aria-hidden="true">&raquo;</span>
                                         </a>
                                     </li>
@@ -412,8 +544,10 @@
                             {% endif %}
                         </div>
                         {% else %}
-                        <div class="text-center py-5">
-                            <i class="far fa-comment-dots text-muted mb-3" style="font-size: 3rem;"></i>
+                        <div class="text-center py-5 bg-light rounded-4">
+                            <div class="mb-3 bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block">
+                                <i class="far fa-comment-dots text-primary" style="font-size: 3rem;"></i>
+                            </div>
                             <p class="text-muted">No reviews yet. Be the first to review this product!</p>
                         </div>
                         {% endif %}
@@ -423,27 +557,29 @@
                 <!-- Questions Tab -->
                 <div class="tab-pane fade" id="questions" role="tabpanel" aria-labelledby="questions-tab">
                     {% if user.is_authenticated %}
-                    <div class="question-form-container mb-4 p-3 bg-light rounded">
-                        <h5 class="border-bottom pb-2 mb-3"><i class="fas fa-question me-2"></i>Ask a Question</h5>
+                    <div class="question-form-container mb-4 p-4 bg-light rounded-4 shadow-sm">
+                        <h5 class="border-bottom pb-3 mb-4 fw-bold"><i class="fas fa-question me-2"></i>Ask a Question</h5>
                         <form action="{% url 'products:ask_question' product.slug %}" method="POST">
                             {% csrf_token %}
-                            <div class="mb-3">
+                            <div class="mb-4">
                                 <label for="questionText" class="form-label fw-medium">Your Question</label>
-                                <textarea class="form-control" id="questionText" name="question" rows="2"
+                                <textarea class="form-control form-control-lg" id="questionText" name="question" rows="3"
                                           placeholder="What would you like to know about this product?"
                                           required></textarea>
                                 <div class="form-text text-muted">Be specific to get better answers</div>
                             </div>
                             <div class="d-grid d-md-flex justify-content-md-end">
-                                <button type="submit" class="btn btn-primary px-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-4 py-2">
                                     <i class="fas fa-paper-plane me-2"></i>Submit Question
                                 </button>
                             </div>
                         </form>
                     </div>
                     {% else %}
-                    <div class="alert alert-info d-flex align-items-center mb-4">
-                        <i class="fas fa-info-circle me-3 fs-4"></i>
+                    <div class="alert alert-info d-flex align-items-center mb-4 rounded-4 shadow-sm">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-circle me-3">
+                            <i class="fas fa-info-circle text-info fs-4"></i>
+                        </div>
                         <div>
                             <strong>Have a question?</strong> <a href="{% url 'account_login' %}?next={{ request.path }}" class="alert-link">Log in</a> or <a href="{% url 'account_signup' %}" class="alert-link">sign up</a> to ask about this product.
                         </div>
@@ -451,18 +587,25 @@
                     {% endif %}
 
                     <div class="questions-section">
-                        <h5 class="mb-3"><i class="fas fa-comment-dots me-2"></i>Questions & Answers</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0 fw-bold"><i class="fas fa-comment-dots me-2"></i>Questions & Answers</h5>
+                        </div>
 
                         {% if questions %}
                         <div class="questions-list">
                             {% for question in questions %}
-                            <div class="question-item mb-4 p-3 border rounded hover-shadow transition-all">
-                                <div class="question-header d-flex justify-content-between align-items-start mb-2">
-                                    <div class="question-content">
-                                        <div class="fw-bold mb-1">
-                                            <i class="fas fa-question-circle text-primary me-2"></i>{{ question.question }}
+                            <div class="question-item mb-4 p-4 border-0 rounded-4 shadow-sm hover-shadow transition-all">
+                                <div class="question-header d-flex justify-content-between align-items-start mb-3">
+                                    <div class="question-content w-100">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                                                <i class="fas fa-question-circle text-primary"></i>
+                                            </div>
+                                            <div class="fw-bold fs-5">
+                                                {{ question.question }}
+                                            </div>
                                         </div>
-                                        <div class="question-meta d-flex flex-wrap gap-2 text-muted small mb-3">
+                                        <div class="question-meta d-flex flex-wrap gap-2 text-muted small mb-3 ps-5">
                                             <span><i class="fas fa-user me-1"></i>{{ question.user.first_name|default:question.user.email }}</span>
                                             <span><i class="far fa-calendar me-1"></i>{{ question.created_at|date:"M d, Y" }}</span>
                                         </div>
@@ -470,20 +613,27 @@
                                 </div>
 
                                 {% if question.answers.exists %}
-                                <div class="answers-list ps-md-4 mb-3 border-start border-light">
+                                <div class="answers-list ps-md-5 mb-3 border-start border-light">
                                     {% for answer in question.answers.all %}
-                                    <div class="answer-item mb-3 p-2 {% if answer.is_vendor %}bg-light rounded{% endif %}">
+                                    <div class="answer-item mb-3 p-3 {% if answer.is_vendor %}bg-light rounded-3{% endif %}">
                                         <div class="answer-content">
-                                            <div class="fw-medium mb-1">
-                                                <i class="fas fa-reply text-success me-2"></i>{{ answer.answer }}
+                                            <div class="d-flex align-items-center mb-2">
+                                                <div class="{% if answer.is_vendor %}bg-primary{% else %}bg-success{% endif %} bg-opacity-10 p-2 rounded-circle me-3">
+                                                    <i class="fas fa-reply {% if answer.is_vendor %}text-primary{% else %}text-success{% endif %}"></i>
+                                                </div>
+                                                <div class="fw-medium">
+                                                    {{ answer.answer }}
+                                                </div>
                                             </div>
-                                            <div class="answer-meta d-flex flex-wrap gap-2 text-muted small">
-                                            <span>
-                                                {% if answer.is_vendor %}
-                                                <span class="badge bg-primary rounded-pill me-1"><i class="fas fa-store me-1"></i>Seller</span>
-                                                {% endif %}
-                                                {{ answer.user.first_name|default:answer.user.email }}
-                                            </span>
+                                            <div class="answer-meta d-flex flex-wrap gap-2 text-muted small ps-5">
+                                                <span>
+                                                    {% if answer.is_vendor %}
+                                                    <span class="badge bg-primary rounded-pill px-3 py-2 me-1">
+                                                        <i class="fas fa-store me-1"></i>Seller
+                                                    </span>
+                                                    {% endif %}
+                                                    {{ answer.user.first_name|default:answer.user.email }}
+                                                </span>
                                                 <span><i class="far fa-calendar me-1"></i>{{ answer.created_at|date:"M d, Y" }}</span>
                                             </div>
                                         </div>
@@ -493,18 +643,18 @@
                                 {% endif %}
 
                                 {% if user.is_authenticated %}
-                                <div class="answer-action mt-2">
-                                    <button class="btn btn-sm btn-outline-secondary"
+                                <div class="answer-action mt-3 ps-md-5">
+                                    <button class="btn btn-outline-primary rounded-pill"
                                             onclick="document.getElementById('answer-form-{{ question.id }}').classList.toggle('d-none')">
-                                        <i class="fas fa-reply me-1"></i>Answer this question
+                                        <i class="fas fa-reply me-2"></i>Answer this question
                                     </button>
                                     <form action="{% url 'products:answer_question' question.id %}" method="POST"
-                                          class="answer-form mt-2 d-none" id="answer-form-{{ question.id }}">
+                                          class="answer-form mt-3 d-none" id="answer-form-{{ question.id }}">
                                         {% csrf_token %}
                                         <div class="input-group">
-                                        <textarea class="form-control" name="answer" rows="2"
-                                                  placeholder="Your answer" required></textarea>
-                                            <button type="submit" class="btn btn-primary">Submit</button>
+                                            <textarea class="form-control" name="answer" rows="3"
+                                                      placeholder="Your answer" required></textarea>
+                                            <button type="submit" class="btn btn-primary px-4">Submit</button>
                                         </div>
                                     </form>
                                 </div>
@@ -518,7 +668,7 @@
                                 <ul class="pagination justify-content-center">
                                     {% if questions.has_previous %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?tab=questions&page={{ questions.previous_page_number }}" aria-label="Previous">
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?tab=questions&page={{ questions.previous_page_number }}" aria-label="Previous">
                                             <span aria-hidden="true">&laquo;</span>
                                         </a>
                                     </li>
@@ -526,13 +676,13 @@
 
                                     {% for i in questions.paginator.page_range %}
                                     <li class="page-item {% if questions.number == i %}active{% endif %}">
-                                        <a class="page-link" href="?tab=questions&page={{ i }}">{{ i }}</a>
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?tab=questions&page={{ i }}">{{ i }}</a>
                                     </li>
                                     {% endfor %}
 
                                     {% if questions.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="?tab=questions&page={{ questions.next_page_number }}" aria-label="Next">
+                                        <a class="page-link rounded-circle mx-1 shadow-sm" href="?tab=questions&page={{ questions.next_page_number }}" aria-label="Next">
                                             <span aria-hidden="true">&raquo;</span>
                                         </a>
                                     </li>
@@ -542,8 +692,10 @@
                             {% endif %}
                         </div>
                         {% else %}
-                        <div class="text-center py-5">
-                            <i class="far fa-question-circle text-muted mb-3" style="font-size: 3rem;"></i>
+                        <div class="text-center py-5 bg-light rounded-4">
+                            <div class="mb-3 bg-primary bg-opacity-10 rounded-circle p-3 d-inline-block">
+                                <i class="far fa-question-circle text-primary" style="font-size: 3rem;"></i>
+                            </div>
                             <p class="text-muted">No questions yet. Ask the first question about this product!</p>
                         </div>
                         {% endif %}
@@ -555,11 +707,16 @@
 
     <!-- Related Products -->
     {% if related_products %}
-    <div class="related-products">
-        <h3 class="mb-3">Related Products</h3>
+    <div class="related-products mb-5">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="mb-0 fw-bold"><i class="fas fa-tag me-2 text-primary"></i>Related Products</h3>
+            <a href="{% url 'products:product_list_by_category' product.category.slug %}" class="btn btn-outline-primary rounded-pill">
+                <i class="fas fa-th-large me-2"></i>View All
+            </a>
+        </div>
         <div class="row g-4">
             {% for product in related_products %}
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-4 col-6">
                 {% include 'products/includes/product_card.html' %}
             </div>
             {% endfor %}
@@ -569,11 +726,13 @@
 
     <!-- Personalized Recommendations -->
     {% if personalized_recommendations %}
-    <div class="personalized-recommendations mt-5">
-        <h3 class="mb-3">You Might Also Like</h3>
+    <div class="personalized-recommendations">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <h3 class="mb-0 fw-bold"><i class="fas fa-heart me-2 text-danger"></i>You Might Also Like</h3>
+        </div>
         <div class="row g-4">
             {% for product in personalized_recommendations %}
-            <div class="col-md-3 col-6">
+            <div class="col-lg-3 col-md-4 col-6">
                 {% include 'products/includes/product_card.html' %}
             </div>
             {% endfor %}
@@ -581,6 +740,556 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Enhanced Product Gallery Styles */
+.product-gallery {
+    position: relative;
+}
+
+/* Enhanced Quantity Selector */
+.quantity-selector {
+    display: flex;
+    align-items: center;
+    max-width: 140px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-300);
+    overflow: hidden;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.quantity-selector:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.15);
+}
+
+.quantity-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--gray-100);
+    border: none;
+    color: var(--gray-700);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+    background-color: var(--gray-200);
+    color: var(--gray-900);
+}
+
+.quantity-btn:active {
+    background-color: var(--gray-300);
+    transform: scale(0.95);
+}
+
+.quantity-minus {
+    border-right: 1px solid var(--gray-300);
+}
+
+.quantity-plus {
+    border-left: 1px solid var(--gray-300);
+}
+
+.quantity-input {
+    width: 60px;
+    height: 40px;
+    border: none;
+    text-align: center;
+    font-weight: 500;
+    color: var(--gray-800);
+    -moz-appearance: textfield; /* Firefox */
+}
+
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-input:focus {
+    outline: none;
+}
+
+/* Action Buttons Container */
+.action-buttons-container {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    width: 100%;
+}
+
+.add-to-cart-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.add-to-cart-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.wishlist-action-btn {
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.wishlist-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--danger-color-rgb), 0.2);
+}
+
+.wishlist-action-btn i {
+    font-size: 1.1rem;
+}
+
+.wishlist-btn-text {
+    margin-left: 8px;
+}
+
+/* Main image wrapper */
+.main-image-wrapper {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+/* Gallery card with glass morphism effect */
+.gallery-card {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.8);
+    transition: all 0.4s ease;
+}
+
+.gallery-card:hover {
+    transform: scale(1.02);
+}
+
+/* Main product image */
+.product-detail-image {
+    max-height: 450px;
+    object-fit: contain;
+    transition: all 0.5s ease;
+}
+
+/* Sale badge animation */
+.sale-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Gallery action buttons */
+.gallery-action-button-wrapper {
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+.gallery-wishlist-btn,
+.gallery-zoom-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.gallery-wishlist-btn:hover,
+.gallery-zoom-btn:hover {
+    background-color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.gallery-wishlist-btn:hover {
+    color: var(--danger-color);
+}
+
+.gallery-zoom-btn:hover {
+    color: var(--primary-color);
+}
+
+.gallery-wishlist-btn .fas.fa-heart {
+    animation: heartBeat 1.5s ease-in-out;
+    color: var(--danger-color);
+}
+
+/* Wishlist label */
+.gallery-button-label {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.gallery-action-button-wrapper:hover .gallery-button-label {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-5px);
+}
+
+@keyframes heartBeat {
+    0% {
+        transform: scale(1);
+    }
+    14% {
+        transform: scale(1.3);
+    }
+    28% {
+        transform: scale(1);
+    }
+    42% {
+        transform: scale(1.3);
+    }
+    70% {
+        transform: scale(1);
+    }
+}
+
+/* Z-index utility */
+.z-index-1 {
+    z-index: 1;
+}
+
+/* Enhanced thumbnails */
+.product-thumbnails-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.product-thumbnails-scroll {
+    display: flex;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    margin: 0 2.5rem;
+}
+
+.product-thumbnails-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.product-thumbnail-wrapper {
+    flex: 0 0 auto;
+    position: relative;
+}
+
+.product-thumbnail-image {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.product-thumbnail-image:hover {
+    transform: translateY(-3px);
+}
+
+.product-thumbnail-image.active {
+    border-color: var(--primary-color);
+    transform: scale(1.05);
+}
+
+.product-scroll-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+.product-scroll-button:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.product-scroll-left {
+    left: 0;
+}
+
+.product-scroll-right {
+    right: 0;
+}
+
+/* Enhanced zoom modal */
+.product-zoom-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    z-index: 1050;
+    overflow: hidden;
+    backdrop-filter: blur(0px);
+    transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+}
+
+.product-zoom-modal.active {
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.product-zoom-modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1200px;
+    margin: 2% auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    height: 90%;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.product-zoom-modal.active .product-zoom-modal-content {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.product-zoom-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.product-zoom-title {
+    margin: 0;
+    font-weight: 600;
+}
+
+.product-zoom-body {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+}
+
+.product-zoomed-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    cursor: grab;
+    transition: transform 0.3s ease;
+}
+
+.product-zoomed-image:active {
+    cursor: grabbing;
+}
+
+/* Rating star hover effects */
+.rating-star-label {
+    cursor: pointer;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.rating-star-label:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    transform: scale(1.1);
+}
+
+.form-check-input[type="radio"]:checked + .rating-star-label {
+    background-color: rgba(var(--warning-color-rgb), 0.1);
+    transform: scale(1.1);
+}
+
+/* Enhanced hover effects for product cards */
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* Enhanced variant selection */
+.variant-label {
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+}
+
+.variant-label:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.color-label {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+}
+
+.color-label:hover {
+    transform: scale(1.1);
+}
+
+.variant-option:checked + .color-label {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .product-detail-image {
+        max-height: 350px;
+    }
+    
+    .product-thumbnail-image {
+        width: 60px;
+        height: 60px;
+    }
+    
+    /* Larger touch targets on tablets */
+    .gallery-wishlist-btn,
+    .gallery-zoom-btn {
+        width: 44px;
+        height: 44px;
+    }
+    
+    /* Always show the saved label on tablets */
+    .gallery-button-label {
+        opacity: 1;
+        transform: translateY(-50%) translateX(-5px);
+    }
+}
+
+@media (max-width: 768px) {
+    .product-detail-image {
+        max-height: 300px;
+    }
+    
+    .product-thumbnail-image {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .product-zoom-modal-content {
+        width: 95%;
+        height: 95%;
+        margin: 2.5% auto;
+    }
+    
+    /* Even larger touch targets on mobile */
+    .gallery-wishlist-btn,
+    .gallery-zoom-btn {
+        width: 48px;
+        height: 48px;
+        background-color: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    /* Add a subtle background to the label for better visibility on mobile */
+    .gallery-button-label span {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Floating action button style for mobile */
+    .gallery-action-button-wrapper {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Mobile optimizations for action buttons */
+    .action-buttons-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .add-to-cart-btn,
+    .wishlist-action-btn {
+        width: 100%;
+        padding: 14px 20px;
+    }
+    
+    .wishlist-action-btn {
+        min-width: 100%;
+    }
+    
+    /* Enhanced quantity selector for mobile */
+    .quantity-selector {
+        max-width: 160px;
+    }
+    
+    .quantity-btn {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .quantity-input {
+        width: 70px;
+        height: 45px;
+        font-size: 16px;
+    }
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -762,157 +1471,232 @@ document.getElementById('add-to-cart-form').addEventListener('submit', function(
     }
 });
 
- // Image zoom functionality
+ // Enhanced Image Gallery Functionality
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('img-container');
     const mainImg = document.getElementById('main-product-image');
     const zoomModal = document.getElementById('zoom-modal');
     const zoomedImg = document.getElementById('zoomed-image');
     const closeBtn = document.getElementById('zoom-close');
+    const zoomBtn = document.getElementById('zoom-button');
+    const thumbnails = document.querySelectorAll('.product-thumbnail-image');
+    const scrollContainer = document.getElementById('thumbnails-scroll');
+    const leftBtn = document.getElementById('scroll-left');
+    const rightBtn = document.getElementById('scroll-right');
+    const currentImageIndex = document.getElementById('current-image-index');
+    
+    // Zoom control buttons
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+    const zoomResetBtn = document.getElementById('zoom-reset');
 
+    // Variables for zoom functionality
+    let scale = 1;
+    let currentTranslate = { x: 0, y: 0 };
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    let lastTap = 0; // For double-tap detection on mobile
+    let touchStartDistance = 0;
+
+    // Enhanced zoom modal functionality
     if (container && mainImg && zoomModal && zoomedImg) {
-        // Open zoom modal when clicking on the main image
-        container.addEventListener('click', function() {
-            zoomModal.style.display = 'block';
-            zoomedImg.src = mainImg.src;
-            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-
-            // Reset zoom level and position when opening modal
-            scale = 1;
-            currentTranslate = { x: 0, y: 0 };
-            zoomedImg.style.transform = '';
-        });
-
-        // Close modal when clicking the close button
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                zoomModal.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Restore scrolling
+        // Open zoom modal function
+        const openZoomModal = function() {
+            if (mainImg) {
+                zoomedImg.src = mainImg.src;
+                zoomModal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+                
+                // Reset zoom when opening modal
+                resetZoom();
+                
+                // Add active class to modal for animation
+                setTimeout(() => {
+                    zoomModal.classList.add('active');
+                }, 10);
+            }
+        };
+        
+        // Use the dedicated zoom button if available
+        if (zoomBtn) {
+            zoomBtn.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent event bubbling
+                openZoomModal();
             });
         }
+        
+        // Also allow clicking on the image container
+        container.addEventListener('click', function(e) {
+            // Only open if clicking on the image itself, not on other buttons
+            if (e.target === mainImg || e.target === container || e.target.closest('.product-image-container')) {
+                openZoomModal();
+            }
+        });
 
-        // Close modal when clicking outside the image in the modal
+        // Close modal function
+        const closeZoomModal = function() {
+            zoomModal.classList.remove('active');
+            setTimeout(() => {
+                zoomModal.style.display = 'none';
+                document.body.style.overflow = ''; // Restore scrolling
+            }, 300); // Match transition duration
+        };
+        
+        // Close button click
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeZoomModal);
+        }
+
+        // Close on background click
         zoomModal.addEventListener('click', function(e) {
             if (e.target === zoomModal) {
-                zoomModal.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Restore scrolling
+                closeZoomModal();
             }
         });
-
-        // Close modal when pressing ESC key (for accessibility)
+        
+        // Close on Escape key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && zoomModal.style.display === 'block') {
-                zoomModal.style.display = 'none';
-                document.body.style.overflow = 'auto'; // Restore scrolling
+                closeZoomModal();
             }
         });
 
-        // Variables for pan/zoom functionality
-        let scale = 1;
-        let currentTranslate = { x: 0, y: 0 };
-        let isDragging = false;
-        let dragStart = { x: 0, y: 0 };
-        let lastTap = 0; // For double-tap detection on mobile
+        // Enhanced zoom and pan functionality
+        function resetZoom() {
+            scale = 1;
+            currentTranslate = { x: 0, y: 0 };
+            updateZoomedImage();
+        }
+        
+        function zoomIn(amount = 0.2) {
+            scale = Math.min(5, scale + amount);
+            updateZoomedImage();
+        }
+        
+        function zoomOut(amount = 0.2) {
+            scale = Math.max(0.5, scale - amount);
+            updateZoomedImage();
+        }
+        
+        // Zoom control buttons
+        if (zoomInBtn) {
+            zoomInBtn.addEventListener('click', function() {
+                zoomIn();
+            });
+        }
+        
+        if (zoomOutBtn) {
+            zoomOutBtn.addEventListener('click', function() {
+                zoomOut();
+            });
+        }
+        
+        if (zoomResetBtn) {
+            zoomResetBtn.addEventListener('click', resetZoom);
+        }
 
-        // Mouse wheel zoom
+        // Mouse wheel zoom with improved focal point
         zoomedImg.addEventListener('wheel', function(e) {
             e.preventDefault();
 
-            // Get mouse position
+            // Get mouse position relative to image
             const rect = zoomedImg.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
             // Determine zoom direction
             const delta = e.deltaY > 0 ? -0.1 : 0.1;
-
-            // Calculate new scale
-            const newScale = Math.min(Math.max(0.5, scale + delta), 3);
-
-            // Get scale factor
-            const factor = newScale / scale;
-
-            // Calculate new translate values to zoom toward mouse pointer
-            currentTranslate.x = mouseX - (mouseX - currentTranslate.x * scale) / (scale * factor);
-            currentTranslate.y = mouseY - (mouseY - currentTranslate.y * scale) / (scale * factor);
-
-            // Update scale
-            scale = newScale;
-
-            // Apply transformation
-            zoomedImg.style.transform = `scale(${scale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
+            
+            // Calculate new scale with limits
+            const newScale = Math.min(Math.max(0.5, scale + delta), 5);
+            
+            // Only proceed if scale actually changed
+            if (newScale !== scale) {
+                // Get scale factor
+                const factor = newScale / scale;
+                
+                // Calculate new translate values to zoom toward mouse pointer
+                currentTranslate.x = mouseX - (mouseX - currentTranslate.x * scale) / (scale * factor);
+                currentTranslate.y = mouseY - (mouseY - currentTranslate.y * scale) / (scale * factor);
+                
+                // Update scale
+                scale = newScale;
+                
+                // Apply transformation
+                updateZoomedImage();
+            }
         });
 
-        // Mouse drag functionality for panning
+        // Mouse drag functionality for panning with improved feel
         zoomedImg.addEventListener('mousedown', function(e) {
-            if (scale > 1) {
-                isDragging = true;
-                dragStart.x = e.clientX;
-                dragStart.y = e.clientY;
-                zoomedImg.style.cursor = 'grabbing';
-            }
+            isDragging = true;
+            dragStart.x = e.clientX;
+            dragStart.y = e.clientY;
+            zoomedImg.style.cursor = 'grabbing';
+            zoomedImg.style.transition = 'none'; // Disable transitions during drag
         });
 
         document.addEventListener('mousemove', function(e) {
-            if (isDragging && scale > 1) {
+            if (isDragging) {
                 e.preventDefault();
-
+                
                 const dx = e.clientX - dragStart.x;
                 const dy = e.clientY - dragStart.y;
-
+                
+                // Apply movement with scale factor
                 currentTranslate.x += dx / scale;
                 currentTranslate.y += dy / scale;
-
-                zoomedImg.style.transform = `scale(${scale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
-
+                
+                // Update position
+                updateZoomedImage();
+                
+                // Update drag start position
                 dragStart.x = e.clientX;
                 dragStart.y = e.clientY;
             }
         });
 
-        document.addEventListener('mouseup', function() {
-            isDragging = false;
-            if (zoomedImg) zoomedImg.style.cursor = 'grab';
-        });
+        // End drag
+        const endDrag = function() {
+            if (isDragging) {
+                isDragging = false;
+                zoomedImg.style.cursor = 'grab';
+                zoomedImg.style.transition = 'transform 0.2s ease'; // Re-enable transitions
+            }
+        };
+        
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('mouseleave', endDrag);
 
         // Double-click to reset zoom
         zoomedImg.addEventListener('dblclick', function() {
-            scale = 1;
-            currentTranslate = { x: 0, y: 0 };
-            zoomedImg.style.transform = '';
+            resetZoom();
         });
 
-        // Touch events for mobile
+        // Enhanced touch events for mobile
         zoomedImg.addEventListener('touchstart', function(e) {
             // Double tap detection
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
-
+            
             if (tapLength < 300 && tapLength > 0) {
                 // Double tap detected - reset zoom
-                scale = 1;
-                currentTranslate = { x: 0, y: 0 };
-                zoomedImg.style.transform = '';
+                resetZoom();
                 e.preventDefault();
             } else if (e.touches.length === 2) {
                 // Pinch-to-zoom start
                 e.preventDefault();
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-
-                // Store initial distance
-                const initialDistance = getDistance(touch1, touch2);
-
-                // Store initial touches and scale
-                this._initialDistance = initialDistance;
-                this._initialScale = scale;
-            } else if (e.touches.length === 1 && scale > 1) {
-                // Pan start with one finger when zoomed in
+                touchStartDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            } else if (e.touches.length === 1) {
+                // Single touch - prepare for potential drag
                 isDragging = true;
                 dragStart.x = e.touches[0].clientX;
                 dragStart.y = e.touches[0].clientY;
             }
-
+            
             lastTap = currentTime;
         });
 
@@ -920,102 +1704,104 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.touches.length === 2) {
                 // Pinch-to-zoom move
                 e.preventDefault();
-
-                const touch1 = e.touches[0];
-                const touch2 = e.touches[1];
-
-                const currentDistance = getDistance(touch1, touch2);
-
-                // Calculate new scale based on distance change
-                const newScale = Math.min(Math.max(0.5, this._initialScale * (currentDistance / this._initialDistance)), 3);
-
-                // Update scale
-                scale = newScale;
-
-                // Apply transformation
-                zoomedImg.style.transform = `scale(${scale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
+                
+                const currentDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                
+                if (touchStartDistance > 0) {
+                    // Calculate scale change
+                    const pinchScale = currentDistance / touchStartDistance;
+                    
+                    if (pinchScale > 1.05) {
+                        zoomIn(0.05);
+                        touchStartDistance = currentDistance;
+                    } else if (pinchScale < 0.95) {
+                        zoomOut(0.05);
+                        touchStartDistance = currentDistance;
+                    }
+                }
             } else if (e.touches.length === 1 && isDragging && scale > 1) {
                 // Pan move with one finger when zoomed in
                 e.preventDefault();
-
+                
                 const dx = e.touches[0].clientX - dragStart.x;
                 const dy = e.touches[0].clientY - dragStart.y;
-
+                
                 currentTranslate.x += dx / scale;
                 currentTranslate.y += dy / scale;
-
-                zoomedImg.style.transform = `scale(${scale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
-
+                
+                updateZoomedImage();
+                
                 dragStart.x = e.touches[0].clientX;
                 dragStart.y = e.touches[0].clientY;
             }
         });
 
+        // Touch end
         zoomedImg.addEventListener('touchend', function() {
             isDragging = false;
+            touchStartDistance = 0;
+        });
+        
+        zoomedImg.addEventListener('touchcancel', function() {
+            isDragging = false;
+            touchStartDistance = 0;
         });
 
-        // Helper function to calculate distance between two touch points
-        function getDistance(touch1, touch2) {
-            const dx = touch1.clientX - touch2.clientX;
-            const dy = touch1.clientY - touch2.clientY;
-            return Math.sqrt(dx * dx + dy * dy);
+        // Apply transformation
+        function updateZoomedImage() {
+            zoomedImg.style.transform = `scale(${scale}) translate(${currentTranslate.x}px, ${currentTranslate.y}px)`;
         }
     }
 
-    // Horizontal Scroll Functionality for Thumbnails
-    const thumbnailsContainer = document.getElementById('thumbnails-container');
-    const scrollContainer = document.getElementById('thumbnails-scroll');
-    const leftBtn = document.getElementById('scroll-left');
-    const rightBtn = document.getElementById('scroll-right');
-    const thumbnails = document.querySelectorAll('.product-thumbnail-image');
-
-    if (scrollContainer && leftBtn && rightBtn && thumbnailsContainer) {
-        // Check if scrolling is needed
-        function checkScrollNeeded() {
-            const isScrollNeeded = scrollContainer.scrollWidth > scrollContainer.clientWidth;
-
-            // Add/remove class that hides scroll buttons when not needed
-            thumbnailsContainer.classList.toggle('no-scroll-needed', !isScrollNeeded);
-
-            if (isScrollNeeded) {
-                // Update scroll buttons state
-                updateScrollButtons();
+    // Enhanced Thumbnail Navigation
+    if (scrollContainer && leftBtn && rightBtn) {
+        // Show/hide scroll buttons based on scroll position
+        function updateScrollButtonsVisibility() {
+            if (scrollContainer.scrollLeft <= 10) {
+                leftBtn.classList.add('opacity-50');
             } else {
-                // Center thumbnails when they fit without scrolling
-                scrollContainer.style.justifyContent = 'center';
+                leftBtn.classList.remove('opacity-50');
+            }
+            
+            const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
+            if (scrollContainer.scrollLeft >= maxScrollLeft - 10) {
+                rightBtn.classList.add('opacity-50');
+            } else {
+                rightBtn.classList.remove('opacity-50');
             }
         }
-
-        // Update scroll buttons state
-        function updateScrollButtons() {
-            // Left button is disabled if scrolled all the way to the left
-            leftBtn.classList.toggle('hidden', scrollContainer.scrollLeft <= 0);
-
-            // Right button is disabled if scrolled all the way to the right
-            const maxScrollLeft = scrollContainer.scrollWidth - scrollContainer.clientWidth;
-            rightBtn.classList.toggle('hidden', scrollContainer.scrollLeft >= maxScrollLeft - 5);
-        }
-
-        // Scroll left/right when buttons are clicked
-        leftBtn.addEventListener('click', () => {
-            const thumbnailWidth = thumbnails[0].offsetWidth + 10; // 10px is the gap
-            scrollContainer.scrollBy({ left: -thumbnailWidth * 2, behavior: 'smooth' });
+        
+        // Initial check
+        updateScrollButtonsVisibility();
+        
+        // Listen for scroll events
+        scrollContainer.addEventListener('scroll', updateScrollButtonsVisibility);
+        
+        // Scroll buttons functionality
+        leftBtn.addEventListener('click', function() {
+            scrollContainer.scrollBy({ left: -200, behavior: 'smooth' });
         });
 
-        rightBtn.addEventListener('click', () => {
-            const thumbnailWidth = thumbnails[0].offsetWidth + 10; // 10px is the gap
-            scrollContainer.scrollBy({ left: thumbnailWidth * 2, behavior: 'smooth' });
+        rightBtn.addEventListener('click', function() {
+            scrollContainer.scrollBy({ left: 200, behavior: 'smooth' });
         });
-
-        // Update button states when scrolling
-        scrollContainer.addEventListener('scroll', updateScrollButtons);
-
-        // Check if scrolling is needed when page loads and when window resizes
-        checkScrollNeeded();
-        window.addEventListener('resize', checkScrollNeeded);
-
-        // Enable touch scrolling with mouse drag (for desktop)
+        
+        // Keyboard navigation for thumbnails container
+        scrollContainer.setAttribute('tabindex', '0');
+        scrollContainer.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                scrollContainer.scrollBy({ left: -100, behavior: 'smooth' });
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                scrollContainer.scrollBy({ left: 100, behavior: 'smooth' });
+            }
+        });
+        
+        // Enable touch scrolling with mouse drag
         let isDown = false;
         let startX;
         let scrollLeft;
@@ -1029,12 +1815,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
         scrollContainer.addEventListener('mouseleave', () => {
             isDown = false;
-            scrollContainer.style.cursor = 'grab';
+            scrollContainer.style.cursor = '';
         });
 
         scrollContainer.addEventListener('mouseup', () => {
             isDown = false;
-            scrollContainer.style.cursor = 'grab';
+            scrollContainer.style.cursor = '';
         });
 
         scrollContainer.addEventListener('mousemove', (e) => {
@@ -1043,30 +1829,54 @@ document.addEventListener('DOMContentLoaded', function() {
             const x = e.pageX - scrollContainer.offsetLeft;
             const walk = (x - startX) * 1.5; // Scroll speed multiplier
             scrollContainer.scrollLeft = scrollLeft - walk;
-            updateScrollButtons();
+            updateScrollButtonsVisibility();
         });
     }
 
-    // Thumbnail click functionality
+    // Enhanced thumbnail click functionality with image counter
     if (thumbnails.length > 0 && mainImg) {
-        thumbnails.forEach(thumbnail => {
+        // Function to update the current image index display
+        function updateImageCounter(index) {
+            if (currentImageIndex) {
+                currentImageIndex.textContent = index + 1;
+            }
+        }
+        
+        // Set initial index
+        let activeIndex = 0;
+        thumbnails.forEach((thumbnail, index) => {
+            if (thumbnail.classList.contains('active')) {
+                activeIndex = index;
+            }
+        });
+        updateImageCounter(activeIndex);
+        
+        // Add click event to each thumbnail
+        thumbnails.forEach((thumbnail, index) => {
             thumbnail.addEventListener('click', function() {
-                // Update main image
+                // Update main image with smooth transition
                 const fullImg = this.getAttribute('data-full-img');
-                mainImg.src = fullImg;
+                
+                // Fade transition effect
+                mainImg.style.opacity = '0.5';
+                setTimeout(() => {
+                    mainImg.src = fullImg;
+                    mainImg.style.opacity = '1';
+                }, 150);
 
                 // Update active thumbnail
                 thumbnails.forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
+                
+                // Update image counter
+                updateImageCounter(index);
+                activeIndex = index;
 
                 // If zoomed image is visible, update it too
                 if (zoomedImg && zoomModal.style.display === 'block') {
                     zoomedImg.src = fullImg;
-
                     // Reset zoom when changing image
-                    scale = 1;
-                    currentTranslate = { x: 0, y: 0 };
-                    zoomedImg.style.transform = '';
+                    resetZoom();
                 }
             });
 
@@ -1078,6 +1888,166 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.click();
                 }
             });
+        });
+        
+        // Keyboard navigation for main image
+        document.addEventListener('keydown', function(e) {
+            if (zoomModal.style.display !== 'block') { // Only when zoom modal is closed
+                let newIndex = activeIndex;
+                
+                if (e.key === 'ArrowLeft') {
+                    newIndex = Math.max(0, activeIndex - 1);
+                } else if (e.key === 'ArrowRight') {
+                    newIndex = Math.min(thumbnails.length - 1, activeIndex + 1);
+                } else {
+                    return; // Not an arrow key, exit
+                }
+                
+                if (newIndex !== activeIndex) {
+                    thumbnails[newIndex].click();
+                    activeIndex = newIndex;
+                    
+                    // Ensure the thumbnail is visible in the scroll container
+                    if (scrollContainer) {
+                        thumbnails[newIndex].scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'nearest',
+                            inline: 'center'
+                        });
+                    }
+                }
+            }
+        });
+    }
+    
+    // Add hover effect to main image
+    if (mainImg) {
+        mainImg.addEventListener('mousemove', function(e) {
+            // Calculate mouse position relative to the image
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Calculate percentage position
+            const xPercent = (x / rect.width) * 100;
+            const yPercent = (y / rect.height) * 100;
+            
+            // Apply subtle tilt effect based on mouse position
+            this.style.transform = `perspective(1000px) rotateX(${(yPercent - 50) / 20}deg) rotateY(${(50 - xPercent) / 20}deg) scale(1.02)`;
+        });
+        
+        mainImg.addEventListener('mouseleave', function() {
+            // Reset transform on mouse leave
+            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
+    }
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl, {
+            trigger: 'hover',
+            delay: { show: 500, hide: 100 }
+        });
+    });
+    
+    // Enhanced wishlist button functionality
+    const wishlistBtn = document.getElementById('detail-wishlist-btn');
+    if (wishlistBtn) {
+        wishlistBtn.addEventListener('click', function() {
+            const productId = this.getAttribute('data-product-id');
+            const csrfToken = this.getAttribute('data-csrf-token');
+            const returnUrl = this.getAttribute('data-return-url');
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            formData.append('next', returnUrl);
+            
+            // Show loading state
+            const originalContent = this.innerHTML;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+            this.disabled = true;
+            
+            // Send AJAX request
+            fetch(`/accounts/toggle-wishlist/${productId}/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update button state based on response
+                if (data.status === 'added') {
+                    this.innerHTML = '<i class="fas fa-heart me-md-2"></i><span class="wishlist-btn-text">Saved</span>';
+                    this.classList.remove('btn-outline-danger');
+                    this.classList.add('btn-danger');
+                    
+                    // Show success toast
+                    showToast('Added to Wishlist', 'Product has been added to your wishlist.', 'success');
+                } else {
+                    this.innerHTML = '<i class="far fa-heart me-md-2"></i><span class="wishlist-btn-text">Save</span>';
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-outline-danger');
+                    
+                    // Show info toast
+                    showToast('Removed from Wishlist', 'Product has been removed from your wishlist.', 'info');
+                }
+                this.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.innerHTML = originalContent;
+                this.disabled = false;
+                
+                // Show error toast
+                showToast('Error', 'Something went wrong. Please try again.', 'error');
+            });
+        });
+    }
+    
+    // Toast notification function
+    function showToast(title, message, type = 'info') {
+        // Check if toast container exists, if not create it
+        let toastContainer = document.querySelector('.toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            document.body.appendChild(toastContainer);
+        }
+        
+        // Create toast element
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+        
+        // Create toast content
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${title}</strong>: ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        // Add toast to container
+        toastContainer.appendChild(toastEl);
+        
+        // Initialize and show toast
+        const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 3000
+        });
+        toast.show();
+        
+        // Remove toast after it's hidden
+        toastEl.addEventListener('hidden.bs.toast', function() {
+            toastEl.remove();
         });
     }
 });

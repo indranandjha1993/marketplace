@@ -3130,7 +3130,7 @@ select:focus {
 
 /* Modal close button */
 .product-gallery .product-zoom-close {
-    background: transparent;
+    background-color: rgba(0, 0, 0, 0.04);
     border: none;
     font-size: 1.2rem;
     cursor: pointer;
