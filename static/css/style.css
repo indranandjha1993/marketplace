@@ -472,10 +472,6 @@ header {
   color: var(--danger-color);
 }
 
-.wishlist-btn.active i {
-  color: var(--danger-color);
-}
-
 /* Product rating stars */
 .stars {
   color: #ffc107;
