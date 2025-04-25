@@ -1302,52 +1302,342 @@ header {
  * Styles for filtering components, category lists, and form controls.
  */
 
+/* Filter Sidebar Styling */
+.filter-sidebar {
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.filter-sidebar .card-header {
+    border-bottom: 1px solid var(--gray-200);
+}
+
+.filter-sidebar .card-title {
+    display: flex;
+    align-items: center;
+    color: var(--gray-800);
+}
+
+/* Mobile filter toggle button */
+#mobile-filter-toggle {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+#mobile-filter-toggle:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Filter close button */
+.filter-close-btn {
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+
+.filter-close-btn:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: rotate(90deg);
+}
+
 /* Filter container with smooth transitions */
 .filter-container {
-    transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-/* Category and brand lists with custom scrollbars */
-.category-list, .brand-list {
-    scrollbar-width: thin;
+/* Filter sections */
+.filter-section {
+    border-bottom: 1px solid var(--gray-200);
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.filter-section:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.filter-section-header {
+    padding: 0.5rem 0;
+    cursor: pointer;
     border-radius: 6px;
-    padding: 4px;
+    transition: all 0.2s ease;
 }
 
-/* Webkit scrollbar styling */
-.category-list::-webkit-scrollbar, .brand-list::-webkit-scrollbar {
+.filter-section-header:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+.filter-section-header h6 {
+    display: flex;
+    align-items: center;
+    color: var(--gray-800);
+}
+
+.filter-toggle-icon {
+    color: var(--gray-500);
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.filter-section-header.collapsed .filter-toggle-icon {
+    transform: rotate(180deg);
+}
+
+.filter-section-body {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+/* Search input styling */
+.search-input-wrapper {
+    position: relative;
+}
+
+.search-input-wrapper .form-control {
+    padding-right: 40px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    border: 1px solid var(--gray-300);
+    height: 42px;
+}
+
+.search-input-wrapper .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb), 0.15);
+}
+
+.search-input-wrapper .search-btn {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-color);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.search-input-wrapper .search-btn:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.9);
+}
+
+/* Price range display */
+.price-range-display {
+    font-weight: 500;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+}
+
+.price-display {
+    background-color: var(--gray-100);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    border: 1px solid var(--gray-200);
+}
+
+/* Price slider styling */
+.price-slider-container {
+    padding: 10px 5px;
+    margin: 0.5rem 0;
+}
+
+#price-slider {
+    height: 8px;
+    background: var(--gray-300);
+    border-radius: 4px;
+    position: relative;
+    margin: 0 8px;
+}
+
+#price-slider .noUi-connect {
+    background: var(--primary-color);
+}
+
+#price-slider .noUi-handle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+    border: 2px solid var(--primary-color);
+    cursor: pointer;
+    top: -8px;
+    right: -11px;
+    transition: all 0.2s ease;
+}
+
+#price-slider .noUi-handle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+#price-slider .noUi-handle:before,
+#price-slider .noUi-handle:after {
+    display: none;
+}
+
+#price-slider .noUi-tooltip {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    bottom: 120%;
+    transform: translateX(-50%);
+}
+
+/* Price input styling */
+.input-group-sm > .form-control {
+    height: 36px;
+    font-size: 0.875rem;
+}
+
+.input-group-sm > .input-group-text {
+    font-weight: 500;
+}
+
+/* Custom scrollbar for filter lists */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    border-radius: 8px;
+    padding: 4px;
+    overflow-y: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
     width: 6px;
 }
 
-.category-list::-webkit-scrollbar-track, .brand-list::-webkit-scrollbar-track {
+.custom-scrollbar::-webkit-scrollbar-track {
     background: var(--gray-200);
     border-radius: 3px;
 }
 
-.category-list::-webkit-scrollbar-thumb, .brand-list::-webkit-scrollbar-thumb {
+.custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: var(--gray-400);
     border-radius: 3px;
 }
 
-.category-list::-webkit-scrollbar-thumb:hover, .brand-list::-webkit-scrollbar-thumb:hover {
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background-color: var(--gray-500);
 }
 
-/* Form check label styling */
+/* Category and brand styling */
+.category-item, .brand-item {
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.category-item:hover, .brand-item:hover {
+    transform: translateX(3px);
+}
+
+.subcategory-list {
+    margin-top: 0.5rem;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--gray-200);
+}
+
+/* Form check styling */
+.form-check {
+    margin-bottom: 0.5rem;
+    position: relative;
+}
+
+.form-check-input {
+    cursor: pointer;
+}
+
 .form-check-label {
     display: flex;
     justify-content: space-between;
     width: 100%;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.15s ease;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    font-size: 0.9rem;
 }
 
-/* Checked state for form check labels */
 .form-check-input:checked + .form-check-label {
     background-color: rgba(var(--primary-color-rgb), 0.08);
     color: var(--primary-color);
     font-weight: 500;
+}
+
+.form-check-label:hover {
+    background-color: var(--gray-100);
+}
+
+.form-check-input:checked + .form-check-label:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.12);
+}
+
+/* Badge styling in filters */
+.form-check-label .badge {
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+    padding: 0.25em 0.6em;
+}
+
+.form-check-input:checked + .form-check-label .badge {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Rating options styling */
+.rating-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rating-item {
+    margin-bottom: 0;
+}
+
+.rating-item .form-check-label {
+    padding: 6px 10px;
+}
+
+/* Filter action buttons */
+.filter-actions {
+    margin-top: 1.5rem;
+}
+
+.apply-filters-btn, .clear-filters-btn {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.apply-filters-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.clear-filters-btn:hover {
+    background-color: var(--gray-200);
+    transform: translateY(-2px);
 }
 
 /**
@@ -2569,9 +2859,59 @@ body.loading::before {
         width: 100%;
     }
 
-    /* Hide collapsed filter container */
-    .filter-container.collapsed {
-        display: none;
+    /* Mobile filter sidebar styling */
+    #filter-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1050;
+        background-color: white;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        border-radius: 0;
+    }
+    
+    #filter-sidebar.show {
+        transform: translateX(0);
+    }
+    
+    .filter-sidebar .card-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background-color: white;
+    }
+    
+    .filter-actions {
+        position: sticky;
+        bottom: 0;
+        background-color: white;
+        padding: 1rem;
+        margin: 0 -1rem -1rem -1rem;
+        border-top: 1px solid var(--gray-200);
+        z-index: 10;
+    }
+    
+    /* Overlay for mobile filter */
+    .filter-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .filter-overlay.show {
+        opacity: 1;
+        visibility: visible;
     }
 
     /* Adjust vendor banner and logo sizes */

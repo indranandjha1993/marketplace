@@ -123,128 +123,193 @@
     {% endif %}
 
     <div class="row">
+        <!-- Mobile Filter Toggle (Visible only on small screens) -->
+        <div class="d-lg-none mb-3">
+            <button class="btn btn-primary w-100 d-flex justify-content-between align-items-center py-2" id="mobile-filter-toggle">
+                <span><i class="fas fa-filter me-2"></i> Filter Products</span>
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        
         <!-- Filter Sidebar -->
         <div class="col-lg-3 mb-4">
-            <div class="card shadow-sm mb-4">
+            <div class="filter-sidebar card shadow-sm mb-4" id="filter-sidebar">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0 fw-bold">Filters</h5>
-                    <button class="btn btn-sm btn-outline-primary d-lg-none" id="filter-toggle">
-                        <i class="fas fa-filter me-1"></i> <span>Filter</span>
+                    <h5 class="card-title mb-0 fw-bold">
+                        <i class="fas fa-sliders-h me-2 text-primary"></i>Filters
+                    </h5>
+                    <button class="btn btn-sm btn-outline-primary d-lg-none filter-close-btn" id="filter-close">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="card-body filter-container" id="filter-container">
+                <div class="card-body filter-container p-3 p-lg-4" id="filter-container">
                     <form method="GET" action="{{ request.path }}" id="filter-form">
                         <!-- Search Box (Visible inside filter area for mobile) -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold">Search</h6>
-                            <div class="input-group">
-                                <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
-                                <button class="btn btn-outline-secondary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
+                        <div class="filter-section mb-4">
+                            <div class="filter-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-search text-primary me-2"></i>Search
+                                </h6>
+                                <i class="fas fa-chevron-up filter-toggle-icon"></i>
+                            </div>
+                            <div class="filter-section-body mt-3">
+                                <div class="search-input-wrapper">
+                                    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ query }}">
+                                    <button class="btn btn-primary search-btn" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Price Range -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold">Price Range</h6>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text">₹</span>
-                                        <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ current_min_price|default_if_none:'' }}" min="0">
-                                    </div>
+                        <div class="filter-section mb-4">
+                            <div class="filter-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-rupee-sign text-primary me-2"></i>Price Range
+                                </h6>
+                                <i class="fas fa-chevron-up filter-toggle-icon"></i>
+                            </div>
+                            <div class="filter-section-body mt-3">
+                                <!-- Price range display -->
+                                <div class="price-range-display mb-2 d-flex justify-content-between">
+                                    <span class="price-display" id="price-display-min">₹{{ current_min_price|default:"0" }}</span>
+                                    <span class="price-display" id="price-display-max">₹{{ current_max_price|default:"100000" }}</span>
                                 </div>
-                                <div class="col-6">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text">₹</span>
-                                        <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ current_max_price|default_if_none:'' }}" min="0">
+                                
+                                <!-- Price slider -->
+                                <div class="price-slider-container mb-3">
+                                    <div id="price-slider" class="mt-2"></div>
+                                </div>
+                                
+                                <!-- Price inputs -->
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" name="min_price" id="min-price-input" class="form-control" 
+                                                   placeholder="Min" value="{{ current_min_price|default_if_none:'' }}" min="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" name="max_price" id="max-price-input" class="form-control" 
+                                                   placeholder="Max" value="{{ current_max_price|default_if_none:'' }}" min="0">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Categories -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold">Categories</h6>
-                            <div class="category-list overflow-auto" style="max-height: 300px;">
-                                {% for category in categories %}
-                                <div class="mb-1">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="category" id="category-{{ category.slug }}"
-                                               value="{{ category.slug }}" {% if current_category == category.slug %}checked{% endif %}>
-                                        <label class="form-check-label d-flex justify-content-between align-items-center" for="category-{{ category.slug }}">
-                                            <span>{{ category.name }}</span>
-                                            {% if category.products.count > 0 %}
-                                            <span class="badge bg-light text-dark small">{{ category.products.count }}</span>
-                                            {% endif %}
-                                        </label>
-                                    </div>
-
-                                    {% if category.children.exists %}
-                                    <div class="ms-3">
-                                        {% for child in category.children.all %}
-                                        <div class="form-check mb-1">
-                                            <input class="form-check-input" type="radio" name="category" id="category-{{ child.slug }}"
-                                                   value="{{ child.slug }}" {% if current_category == child.slug %}checked{% endif %}>
-                                            <label class="form-check-label d-flex justify-content-between align-items-center" for="category-{{ child.slug }}">
-                                                <span>{{ child.name }}</span>
-                                                {% if child.products.count > 0 %}
-                                                <span class="badge bg-light text-dark small">{{ child.products.count }}</span>
+                        <div class="filter-section mb-4">
+                            <div class="filter-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-tags text-primary me-2"></i>Categories
+                                </h6>
+                                <i class="fas fa-chevron-up filter-toggle-icon"></i>
+                            </div>
+                            <div class="filter-section-body mt-3">
+                                <div class="category-list custom-scrollbar" style="max-height: 300px;">
+                                    {% for category in categories %}
+                                    <div class="category-item mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="category" id="category-{{ category.slug }}"
+                                                   value="{{ category.slug }}" {% if current_category == category.slug %}checked{% endif %}>
+                                            <label class="form-check-label d-flex justify-content-between align-items-center" for="category-{{ category.slug }}">
+                                                <span>{{ category.name }}</span>
+                                                {% if category.products.count > 0 %}
+                                                <span class="badge bg-light text-dark small">{% total_category_products category %}</span>
                                                 {% endif %}
                                             </label>
                                         </div>
-                                        {% endfor %}
+
+                                        {% if category.children.exists %}
+                                        <div class="subcategory-list ms-3 mt-1">
+                                            {% for child in category.children.all %}
+                                            <div class="form-check mb-1">
+                                                <input class="form-check-input" type="radio" name="category" id="category-{{ child.slug }}"
+                                                       value="{{ child.slug }}" {% if current_category == child.slug %}checked{% endif %}>
+                                                <label class="form-check-label d-flex justify-content-between align-items-center" for="category-{{ child.slug }}">
+                                                    <span>{{ child.name }}</span>
+                                                    {% if child.products.count > 0 %}
+                                                    <span class="badge bg-light text-dark small">{% total_category_products child %}</span>
+                                                    {% endif %}
+                                                </label>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
                                     </div>
-                                    {% endif %}
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
 
                         <!-- Brands -->
                         {% if brands %}
-                        <div class="mb-4">
-                            <h6 class="fw-bold">Brands</h6>
-                            <div class="brand-list overflow-auto" style="max-height: 200px;">
-                                {% for brand in brands %}
-                                <div class="form-check mb-1">
-                                    <input class="form-check-input" type="radio" name="brand" id="brand-{{ brand.slug }}"
-                                           value="{{ brand.slug }}" {% if current_brand == brand.slug %}checked{% endif %}>
-                                    <label class="form-check-label d-flex justify-content-between align-items-center" for="brand-{{ brand.slug }}">
-                                        <span>{{ brand.name }}</span>
-                                        {% if brand.products.count > 0 %}
-                                        <span class="badge bg-light text-dark small">{{ brand.products.count }}</span>
-                                        {% endif %}
-                                    </label>
+                        <div class="filter-section mb-4">
+                            <div class="filter-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-copyright text-primary me-2"></i>Brands
+                                </h6>
+                                <i class="fas fa-chevron-up filter-toggle-icon"></i>
+                            </div>
+                            <div class="filter-section-body mt-3">
+                                <div class="brand-list custom-scrollbar" style="max-height: 200px;">
+                                    {% for brand in brands %}
+                                    <div class="brand-item form-check mb-1">
+                                        <input class="form-check-input" type="radio" name="brand" id="brand-{{ brand.slug }}"
+                                               value="{{ brand.slug }}" {% if current_brand == brand.slug %}checked{% endif %}>
+                                        <label class="form-check-label d-flex justify-content-between align-items-center" for="brand-{{ brand.slug }}">
+                                            <span>{{ brand.name }}</span>
+                                            {% if brand.products.count > 0 %}
+                                            <span class="badge bg-light text-dark small">{{ brand.products.count }}</span>
+                                            {% endif %}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
                                 </div>
-                                {% endfor %}
                             </div>
                         </div>
                         {% endif %}
 
                         <!-- Rating -->
-                        <div class="mb-4">
-                            <h6 class="fw-bold">Rating</h6>
-                            {% for rating_value in "54321"|make_list %}
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="radio" name="rating" id="rating-{{ rating_value }}"
-                                       value="{{ rating_value }}" {% if current_rating == rating_value %}checked{% endif %}>
-                                <label class="form-check-label" for="rating-{{ rating_value }}">
-                                    {% display_stars rating_value %}
-                                    & Up
-                                </label>
+                        <div class="filter-section mb-4">
+                            <div class="filter-section-header d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-star text-primary me-2"></i>Rating
+                                </h6>
+                                <i class="fas fa-chevron-up filter-toggle-icon"></i>
                             </div>
-                            {% endfor %}
+                            <div class="filter-section-body mt-3">
+                                <div class="rating-options">
+                                    {% for rating_value in "54321"|make_list %}
+                                    <div class="rating-item form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating-{{ rating_value }}"
+                                               value="{{ rating_value }}" {% if current_rating == rating_value %}checked{% endif %}>
+                                        <label class="form-check-label" for="rating-{{ rating_value }}">
+                                            {% display_stars rating_value %}
+                                            <span class="ms-1">& Up</span>
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Sort Order (Hidden) -->
                         <input type="hidden" name="sort" id="sort-input" value="{{ current_sort }}">
 
                         <!-- Action Buttons -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Apply Filters</button>
-                            <button type="button" id="clear-filters" class="btn btn-outline-secondary">Clear All</button>
+                        <div class="filter-actions d-grid gap-2">
+                            <button type="submit" class="btn btn-primary apply-filters-btn">
+                                <i class="fas fa-check me-2"></i>Apply Filters
+                            </button>
+                            <button type="button" id="clear-filters" class="btn btn-outline-secondary clear-filters-btn">
+                                <i class="fas fa-times me-2"></i>Clear All
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -320,42 +385,156 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.css">
+
 <script>
-    // Show loading spinner when navigating
     document.addEventListener('DOMContentLoaded', function() {
+        // DOM elements
+        const mobileFilterToggle = document.getElementById('mobile-filter-toggle');
+        const filterSidebar = document.getElementById('filter-sidebar');
+        const filterCloseBtn = document.getElementById('filter-close');
         const form = document.getElementById('filter-form');
-        const filterToggle = document.getElementById('filter-toggle');
-        const filterContainer = document.getElementById('filter-container');
         const clearFiltersBtn = document.getElementById('clear-filters');
         const sortSelect = document.getElementById('sort-select');
         const sortInput = document.getElementById('sort-input');
         const loadingSpinner = document.getElementById('loading-spinner');
-
+        const filterSectionHeaders = document.querySelectorAll('.filter-section-header');
+        const minPriceInput = document.getElementById('min-price-input');
+        const maxPriceInput = document.getElementById('max-price-input');
+        const priceSliderElement = document.getElementById('price-slider');
+        const priceDisplayMin = document.getElementById('price-display-min');
+        const priceDisplayMax = document.getElementById('price-display-max');
+        
+        // Create overlay for mobile filter
+        const filterOverlay = document.createElement('div');
+        filterOverlay.className = 'filter-overlay';
+        document.body.appendChild(filterOverlay);
+        
         // Mobile filter toggle
-        if (filterToggle && filterContainer) {
-            // Initialize container state
-            if (window.innerWidth < 992) {
-                filterContainer.classList.add('collapsed');
+        if (mobileFilterToggle && filterSidebar) {
+            // Show filter sidebar on mobile
+            mobileFilterToggle.addEventListener('click', function() {
+                filterSidebar.classList.add('show');
+                filterOverlay.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+            
+            // Close filter sidebar on mobile
+            if (filterCloseBtn) {
+                filterCloseBtn.addEventListener('click', function() {
+                    filterSidebar.classList.remove('show');
+                    filterOverlay.classList.remove('show');
+                    document.body.style.overflow = ''; // Restore scrolling
+                });
             }
+            
+            // Close filter sidebar when clicking on overlay
+            filterOverlay.addEventListener('click', function() {
+                filterSidebar.classList.remove('show');
+                filterOverlay.classList.remove('show');
+                document.body.style.overflow = ''; // Restore scrolling
+            });
+        }
 
-            filterToggle.addEventListener('click', function() {
-                filterContainer.classList.toggle('collapsed');
+        // Initialize price slider if it exists
+        if (priceSliderElement) {
+            // Get min and max price values
+            const minPrice = minPriceInput.value ? parseInt(minPriceInput.value) : 0;
+            const maxPrice = maxPriceInput.value ? parseInt(maxPriceInput.value) : 100000;
+            
+            // Create the price slider
+            noUiSlider.create(priceSliderElement, {
+                start: [minPrice, maxPrice],
+                connect: true,
+                step: 100,
+                range: {
+                    'min': 0,
+                    'max': 100000
+                },
+                format: {
+                    to: function (value) {
+                        return Math.round(value);
+                    },
+                    from: function (value) {
+                        return Number(value);
+                    }
+                }
+            });
 
-                // Update button text
-                const buttonText = filterContainer.classList.contains('collapsed') ? 'Show Filters' : 'Hide Filters';
-                filterToggle.querySelector('span').textContent = buttonText;
-
-                // Update icon
-                const icon = filterToggle.querySelector('i');
-                if (filterContainer.classList.contains('collapsed')) {
-                    icon.classList.remove('fa-times');
-                    icon.classList.add('fa-filter');
+            // Update input fields and display when slider changes
+            priceSliderElement.noUiSlider.on('update', function(values, handle) {
+                if (handle === 0) {
+                    minPriceInput.value = values[0];
+                    if (priceDisplayMin) {
+                        priceDisplayMin.textContent = '₹' + values[0];
+                    }
                 } else {
-                    icon.classList.remove('fa-filter');
-                    icon.classList.add('fa-times');
+                    maxPriceInput.value = values[1];
+                    if (priceDisplayMax) {
+                        priceDisplayMax.textContent = '₹' + values[1];
+                    }
+                }
+            });
+
+            // Update slider when input fields change
+            minPriceInput.addEventListener('change', function() {
+                priceSliderElement.noUiSlider.set([this.value, null]);
+                if (priceDisplayMin) {
+                    priceDisplayMin.textContent = '₹' + this.value;
+                }
+            });
+
+            maxPriceInput.addEventListener('change', function() {
+                priceSliderElement.noUiSlider.set([null, this.value]);
+                if (priceDisplayMax) {
+                    priceDisplayMax.textContent = '₹' + this.value;
                 }
             });
         }
+
+        // Collapsible filter sections
+        filterSectionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const section = this.closest('.filter-section');
+                const body = section.querySelector('.filter-section-body');
+                const icon = this.querySelector('.filter-toggle-icon');
+                
+                // Toggle collapsed class
+                this.classList.toggle('collapsed');
+                
+                if (this.classList.contains('collapsed')) {
+                    // Collapse the section with animation
+                    body.style.maxHeight = body.scrollHeight + 'px';
+                    setTimeout(() => {
+                        body.style.maxHeight = '0';
+                        body.style.opacity = '0';
+                        body.style.marginTop = '0';
+                    }, 10);
+                    
+                    // Rotate icon
+                    if (icon) {
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                } else {
+                    // Expand the section with animation
+                    body.style.maxHeight = '0';
+                    body.style.opacity = '0';
+                    body.style.marginTop = '0';
+                    
+                    setTimeout(() => {
+                        body.style.maxHeight = body.scrollHeight + 'px';
+                        body.style.opacity = '1';
+                        body.style.marginTop = '0.75rem';
+                    }, 10);
+                    
+                    // Reset icon rotation
+                    if (icon) {
+                        icon.style.transform = 'rotate(0)';
+                    }
+                }
+            });
+        });
 
         // Show spinner when form is submitted
         if (form) {
@@ -364,12 +543,21 @@
             });
         }
 
-        // Clear filters button
+        // Clear filters button with animation
         if (clearFiltersBtn && form) {
             clearFiltersBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                
+                // Add a subtle animation
+                this.classList.add('active');
+                
+                // Show loading spinner
                 loadingSpinner.classList.add('active');
-                window.location.href = window.location.pathname;
+                
+                // Redirect after a short delay for better UX
+                setTimeout(() => {
+                    window.location.href = window.location.pathname;
+                }, 300);
             });
         }
 
@@ -383,6 +571,62 @@
                 this.classList.remove('active');
             });
         });
+        
+        // Add animation to form check inputs
+        const formCheckInputs = document.querySelectorAll('.form-check-input');
+        formCheckInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                
+                // Add a pulse animation
+                label.classList.add('pulse');
+                
+                // Remove the animation class after it completes
+                setTimeout(() => {
+                    label.classList.remove('pulse');
+                }, 500);
+            });
+        });
+        
+        // Initialize filter sections (open by default on desktop, closed on mobile)
+        function initializeFilterSections() {
+            const isMobile = window.innerWidth < 992;
+            
+            filterSectionHeaders.forEach(header => {
+                const body = header.nextElementSibling;
+                const icon = header.querySelector('.filter-toggle-icon');
+                
+                if (isMobile) {
+                    // On mobile, collapse all sections except the first one
+                    if (header !== filterSectionHeaders[0]) {
+                        header.classList.add('collapsed');
+                        body.style.maxHeight = '0';
+                        body.style.opacity = '0';
+                        body.style.marginTop = '0';
+                        if (icon) {
+                            icon.style.transform = 'rotate(180deg)';
+                        }
+                    }
+                } else {
+                    // On desktop, expand all sections
+                    header.classList.remove('collapsed');
+                    body.style.maxHeight = '';
+                    body.style.opacity = '1';
+                    body.style.marginTop = '0.75rem';
+                    if (icon) {
+                        icon.style.transform = 'rotate(0)';
+                    }
+                }
+            });
+        }
+        
+        // Initialize filter sections on page load
+        initializeFilterSections();
+        
+        // Reinitialize filter sections on window resize
+        window.addEventListener('resize', function() {
+            initializeFilterSections();
+        });
     });
 
     // Function to update sort and submit the form
@@ -390,8 +634,47 @@
         const sortInput = document.getElementById('sort-input');
         if (sortInput) {
             sortInput.value = sortValue;
+            
+            // Add loading spinner
+            document.getElementById('loading-spinner').classList.add('active');
+            
+            // Submit the form
             document.getElementById('filter-form').submit();
         }
     }
 </script>
+
+<style>
+    /* Pulse animation for form check labels */
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .form-check-label.pulse {
+        animation: pulse 0.5s ease;
+    }
+    
+    /* Loading spinner animation */
+    #loading-spinner.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Clear filters button active state */
+    .clear-filters-btn.active {
+        background-color: var(--gray-300);
+        transform: translateY(2px);
+    }
+    
+    /* Filter section body transition */
+    .filter-section-body {
+        max-height: 1000px;
+        opacity: 1;
+        margin-top: 0.75rem;
+        transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+        overflow: hidden;
+    }
+</style>
 {% endblock %}
