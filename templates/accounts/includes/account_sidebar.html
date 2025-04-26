@@ -6,20 +6,16 @@
 
 <div class="profile-sidebar card">
     <div class="card-body text-center profile-header">
-        {% if user_profile.profile_picture %}
-        <img src="{{ user_profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="profile-picture">
-        {% else %}
-        <div class="profile-picture-placeholder">
-            <i class="fas fa-user fa-3x text-secondary"></i>
+        <div class="user-icon-wrapper">
+            <i class="fas fa-user-shield fa-3x"></i>
         </div>
-        {% endif %}
         <h5 class="profile-name">{{ user.get_full_name|default:user.email }}</h5>
         <p class="text-muted small">Member since {{ user.date_joined|date:"M Y" }}</p>
     </div>
     
     <div class="list-group list-group-flush profile-nav">
         <a href="{% url 'accounts:user_profile' %}" class="list-group-item list-group-item-action {% if active_tab == 'profile' %}active{% endif %}">
-            <i class="fas fa-user-circle me-2"></i> My Profile
+            <i class="fas fa-user-edit me-2"></i> My Profile
         </a>
         <a href="{% url 'accounts:user_addresses' %}" class="list-group-item list-group-item-action {% if active_tab == 'addresses' %}active{% endif %}">
             <i class="fas fa-map-marker-alt me-2"></i> My Addresses
@@ -34,4 +30,185 @@
             <i class="fas fa-credit-card me-2"></i> Payment Methods
         </a>
     </div>
+    
+    <div class="card-footer text-center py-3">
+        <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </a>
+    </div>
 </div>
+
+<style>
+    /* Enhanced sidebar styling */
+    .profile-sidebar {
+        border-radius: 1.5rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        border: none;
+        transition: all 0.3s ease;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .profile-sidebar:hover {
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        transform: translateY(-5px);
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.1) 0%, rgba(106, 17, 203, 0.1) 100%);
+        padding: 2.5rem 1rem;
+        border-bottom: 1px solid rgba(var(--primary-color-rgb), 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-header:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23000000' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+        opacity: 0.5;
+    }
+    
+    .user-icon-wrapper {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
+        transition: all 0.3s ease;
+        color: white;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .user-icon-wrapper:before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        border-radius: 50%;
+        z-index: -1;
+        opacity: 0.5;
+        filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .user-icon-wrapper:hover {
+        transform: scale(1.05) rotate(5deg);
+        box-shadow: 0 12px 25px rgba(var(--primary-color-rgb), 0.4);
+    }
+    
+    .user-icon-wrapper:hover:before {
+        opacity: 0.7;
+        filter: blur(15px);
+    }
+    
+    .profile-name {
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--gray-800);
+        font-size: 1.25rem;
+    }
+    
+    /* Enhanced navigation styling */
+    .profile-nav .list-group-item {
+        border-left: 0;
+        border-right: 0;
+        padding: 1rem 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+    
+    .profile-nav .list-group-item:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, var(--profile-gradient-start), var(--profile-gradient-end));
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .profile-nav .list-group-item:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+    }
+    
+    .profile-nav .list-group-item:hover:before,
+    .profile-nav .list-group-item.active:before {
+        transform: scaleY(1);
+    }
+    
+    .profile-nav .list-group-item:hover:after,
+    .profile-nav .list-group-item.active:after {
+        opacity: 1;
+    }
+    
+    .profile-nav .list-group-item:hover {
+        padding-left: 1.75rem;
+        transform: translateX(3px);
+    }
+    
+    .profile-nav .list-group-item.active {
+        background-color: transparent;
+        color: var(--primary-color);
+        border-color: rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+    }
+    
+    .profile-nav .list-group-item i {
+        width: 24px;
+        text-align: center;
+        transition: all 0.3s ease;
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .profile-nav .list-group-item:hover i,
+    .profile-nav .list-group-item.active i {
+        color: var(--profile-gradient-end);
+        transform: scale(1.2);
+    }
+    
+    .card-footer {
+        background-color: white;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .btn-outline-danger {
+        border-radius: 50rem;
+        transition: all 0.3s ease;
+        border-width: 2px;
+        font-weight: 600;
+    }
+    
+    .btn-outline-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(220, 53, 69, 0.2);
+    }
+</style>

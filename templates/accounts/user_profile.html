@@ -2,80 +2,390 @@
 
 {% block title %}My Profile{% endblock %}
 
+{% block account_extra_css %}
+{% include 'accounts/includes/profile_form_styles.html' %}
+<style>
+    /* Additional custom styles for this page */
+    .profile-content {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .profile-content::before {
+        content: '';
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    
+    .profile-content::after {
+        content: '';
+        position: absolute;
+        bottom: -50px;
+        left: -50px;
+        width: 150px;
+        height: 150px;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        border-radius: 50%;
+        z-index: 0;
+    }
+    
+    .input-icon-wrapper {
+        position: relative;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .input-icon-wrapper:hover {
+        transform: translateX(5px);
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        left: 1rem;
+        color: var(--profile-gradient-end);
+        opacity: 0.7;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .input-with-icon {
+        padding-left: 2.8rem !important;
+    }
+    
+    .input-with-icon:focus + .input-icon,
+    .input-with-icon:not(:placeholder-shown) + .input-icon {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    /* Floating animation for the card */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    .profile-content {
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    /* Form validation styles */
+    .is-valid {
+        border-color: #28a745 !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+    
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+    
+    .is-invalid ~ .invalid-feedback {
+        display: block;
+    }
+    
+    /* Toast notification styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+    
+    .toast {
+        max-width: 350px;
+        overflow: hidden;
+        font-size: 0.875rem;
+        background-color: rgba(255, 255, 255, 0.95);
+        background-clip: padding-box;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 0.5rem;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+    }
+    
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .toast-header {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        color: #6c757d;
+        background-color: rgba(255, 255, 255, 0.85);
+        background-clip: padding-box;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .toast-body {
+        padding: 0.75rem;
+    }
+    
+    /* Password strength meter */
+    .password-strength-meter {
+        height: 5px;
+        background-color: #e9ecef;
+        border-radius: 3px;
+        margin-top: 5px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .password-strength-meter-bar {
+        height: 100%;
+        border-radius: 3px;
+        transition: all 0.3s ease;
+    }
+    
+    .strength-weak {
+        width: 25%;
+        background-color: #dc3545;
+    }
+    
+    .strength-medium {
+        width: 50%;
+        background-color: #ffc107;
+    }
+    
+    .strength-good {
+        width: 75%;
+        background-color: #17a2b8;
+    }
+    
+    .strength-strong {
+        width: 100%;
+        background-color: #28a745;
+    }
+    
+    .password-strength-text {
+        font-size: 0.75rem;
+        margin-top: 5px;
+        color: #6c757d;
+    }
+    
+    /* Loading spinner */
+    .spinner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        border-radius: 0.5rem;
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .spinner-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.25rem;
+        color: var(--profile-gradient-end);
+    }
+</style>
+{% endblock %}
+
 {% block account_content %}
+{% include 'accounts/includes/profile_header_card.html' %}
+
+<div class="toast-container"></div>
+
 <div class="card profile-content">
-    <div class="card-header">
-        <h5 class="card-title">Edit Profile</h5>
+    <div class="spinner-overlay">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
     </div>
+    
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="fas fa-user-edit me-2"></i> Edit Profile</h5>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="realTimeValidation" checked>
+            <label class="form-check-label" for="realTimeValidation">Real-time validation</label>
+        </div>
+    </div>
+    
     <div class="card-body">
-        <form method="POST" enctype="multipart/form-data" class="profile-form">
+        <form id="profileForm" class="profile-form">
             {% csrf_token %}
+            
+            <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button" role="tab" aria-controls="personal" aria-selected="true">
+                        <i class="fas fa-user me-2"></i> Personal Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button" role="tab" aria-controls="address" aria-selected="false">
+                        <i class="fas fa-map-marker-alt me-2"></i> Address
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab" aria-controls="security" aria-selected="false">
+                        <i class="fas fa-shield-alt me-2"></i> Security
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="profileTabsContent">
+                <!-- Personal Information Tab -->
+                <div class="tab-pane fade show active" id="personal" role="tabpanel" aria-labelledby="personal-tab">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="firstName" name="first_name" value="{{ user.first_name }}" placeholder="First Name">
+                                <i class="fas fa-user input-icon"></i>
+                                <label for="firstName" class="form-label visually-hidden">First Name</label>
+                                <div class="invalid-feedback">Please enter a valid first name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="lastName" name="last_name" value="{{ user.last_name }}" placeholder="Last Name">
+                                <i class="fas fa-user input-icon"></i>
+                                <label for="lastName" class="form-label visually-hidden">Last Name</label>
+                                <div class="invalid-feedback">Please enter a valid last name</div>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="firstName" class="form-label">First Name</label>
-                    <input type="text" class="form-control" id="firstName" name="first_name" value="{{ user.first_name }}">
+                    <div class="input-icon-wrapper">
+                        <input type="email" class="form-control input-with-icon" id="email" value="{{ user.email }}" disabled placeholder="Email">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <div class="form-text mt-1"><i class="fas fa-info-circle me-1"></i> Email cannot be changed</div>
+                    </div>
+
+                    <div class="input-icon-wrapper">
+                        <input type="tel" class="form-control input-with-icon" id="phoneNumber" name="phone_number" value="{{ user.phone_number }}" placeholder="Phone Number">
+                        <i class="fas fa-phone-alt input-icon"></i>
+                        <label for="phoneNumber" class="form-label visually-hidden">Phone Number</label>
+                        <div class="invalid-feedback">Please enter a valid phone number</div>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="lastName" class="form-label">Last Name</label>
-                    <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}">
+                
+                <!-- Address Tab -->
+                <div class="tab-pane fade" id="address" role="tabpanel" aria-labelledby="address-tab">
+                    <div class="input-icon-wrapper">
+                        <input type="text" class="form-control input-with-icon" id="addressLine1" name="address_line1" value="{{ user_profile.address_line1|default:'' }}" placeholder="Address Line 1">
+                        <i class="fas fa-home input-icon"></i>
+                        <label for="addressLine1" class="form-label visually-hidden">Address Line 1</label>
+                        <div class="invalid-feedback">Please enter your address</div>
+                    </div>
+
+                    <div class="input-icon-wrapper">
+                        <input type="text" class="form-control input-with-icon" id="addressLine2" name="address_line2" value="{{ user_profile.address_line2|default:'' }}" placeholder="Address Line 2">
+                        <i class="fas fa-building input-icon"></i>
+                        <label for="addressLine2" class="form-label visually-hidden">Address Line 2</label>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="city" name="city" value="{{ user_profile.city|default:'' }}" placeholder="City">
+                                <i class="fas fa-city input-icon"></i>
+                                <label for="city" class="form-label visually-hidden">City</label>
+                                <div class="invalid-feedback">Please enter your city</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="state" name="state" value="{{ user_profile.state|default:'' }}" placeholder="State">
+                                <i class="fas fa-map input-icon"></i>
+                                <label for="state" class="form-label visually-hidden">State</label>
+                                <div class="invalid-feedback">Please enter your state</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="postalCode" name="postal_code" value="{{ user_profile.postal_code|default:'' }}" placeholder="Postal Code">
+                                <i class="fas fa-mail-bulk input-icon"></i>
+                                <label for="postalCode" class="form-label visually-hidden">Postal Code</label>
+                                <div class="invalid-feedback">Please enter a valid postal code</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-icon-wrapper">
+                        <input type="text" class="form-control input-with-icon" id="country" name="country" value="{{ user_profile.country|default:'' }}" placeholder="Country">
+                        <i class="fas fa-globe-americas input-icon"></i>
+                        <label for="country" class="form-label visually-hidden">Country</label>
+                        <div class="invalid-feedback">Please enter your country</div>
+                    </div>
+                </div>
+                
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="security" role="tabpanel" aria-labelledby="security-tab">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> To change your password, please enter your current password first.
+                    </div>
+                    
+                    <div class="input-icon-wrapper">
+                        <input type="password" class="form-control input-with-icon" id="currentPassword" name="current_password" placeholder="Current Password">
+                        <i class="fas fa-lock input-icon"></i>
+                        <label for="currentPassword" class="form-label visually-hidden">Current Password</label>
+                        <div class="invalid-feedback">Please enter your current password</div>
+                    </div>
+                    
+                    <div class="input-icon-wrapper">
+                        <input type="password" class="form-control input-with-icon" id="newPassword" name="new_password" placeholder="New Password">
+                        <i class="fas fa-key input-icon"></i>
+                        <label for="newPassword" class="form-label visually-hidden">New Password</label>
+                        <div class="invalid-feedback">Password must be at least 8 characters</div>
+                        <div class="password-strength-meter">
+                            <div class="password-strength-meter-bar"></div>
+                        </div>
+                        <div class="password-strength-text"></div>
+                    </div>
+                    
+                    <div class="input-icon-wrapper">
+                        <input type="password" class="form-control input-with-icon" id="confirmPassword" name="confirm_password" placeholder="Confirm New Password">
+                        <i class="fas fa-check-double input-icon"></i>
+                        <label for="confirmPassword" class="form-label visually-hidden">Confirm New Password</label>
+                        <div class="invalid-feedback">Passwords do not match</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
-                <div class="form-text">Email cannot be changed</div>
-            </div>
-
-            <div class="mb-3">
-                <label for="phoneNumber" class="form-label">Phone Number</label>
-                <input type="tel" class="form-control" id="phoneNumber" name="phone_number" value="{{ user.phone_number }}">
-            </div>
-
-            <div class="mb-3">
-                <label for="profilePicture" class="form-label">Profile Picture</label>
-                <input type="file" class="form-control" id="profilePicture" name="profile_picture" accept="image/*">
-                {% if user_profile.profile_picture %}
-                <div class="form-text">Current: {{ user_profile.profile_picture.name }}</div>
-                {% endif %}
-            </div>
-
-            <div class="profile-section-divider"></div>
-            <h5 class="profile-section-title">Address Information</h5>
-
-            <div class="mb-3">
-                <label for="addressLine1" class="form-label">Address Line 1</label>
-                <input type="text" class="form-control" id="addressLine1" name="address_line1" value="{{ user_profile.address_line1|default:'' }}">
-            </div>
-
-            <div class="mb-3">
-                <label for="addressLine2" class="form-label">Address Line 2</label>
-                <input type="text" class="form-control" id="addressLine2" name="address_line2" value="{{ user_profile.address_line2|default:'' }}">
-            </div>
-
-            <div class="row">
-                <div class="col-md-4 mb-3">
-                    <label for="city" class="form-label">City</label>
-                    <input type="text" class="form-control" id="city" name="city" value="{{ user_profile.city|default:'' }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="state" class="form-label">State</label>
-                    <input type="text" class="form-control" id="state" name="state" value="{{ user_profile.state|default:'' }}">
-                </div>
-                <div class="col-md-4 mb-3">
-                    <label for="postalCode" class="form-label">Postal Code</label>
-                    <input type="text" class="form-control" id="postalCode" name="postal_code" value="{{ user_profile.postal_code|default:'' }}">
-                </div>
-            </div>
-
-            <div class="mb-4">
-                <label for="country" class="form-label">Country</label>
-                <input type="text" class="form-control" id="country" name="country" value="{{ user_profile.country|default:'' }}">
-            </div>
-
-            <div class="d-grid">
-                <button type="submit" class="btn btn-primary profile-save-btn">
+            <div class="d-grid mt-4">
+                <button type="submit" id="saveProfileBtn" class="btn btn-primary profile-save-btn">
                     <i class="fas fa-save me-2"></i> Save Profile
                 </button>
             </div>
@@ -85,25 +395,522 @@
 {% endblock %}
 
 {% block account_extra_js %}
+<!-- Include Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
-    // Preview profile picture before upload
-    document.getElementById('profilePicture').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const profilePictures = document.querySelectorAll('.profile-picture');
-                profilePictures.forEach(pic => {
-                    pic.src = event.target.result;
+    // CSRF token setup for Axios
+    axios.defaults.xsrfCookieName = 'csrftoken';
+    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+    
+    // Global variables
+    let profileData = {
+        user: {
+            first_name: "{{ user.first_name }}",
+            last_name: "{{ user.last_name }}",
+            email: "{{ user.email }}",
+            phone_number: "{{ user.phone_number }}"
+        },
+        profile: {
+            address_line1: "{{ user_profile.address_line1|default:'' }}",
+            address_line2: "{{ user_profile.address_line2|default:'' }}",
+            city: "{{ user_profile.city|default:'' }}",
+            state: "{{ user_profile.state|default:'' }}",
+            country: "{{ user_profile.country|default:'' }}",
+            postal_code: "{{ user_profile.postal_code|default:'' }}"
+        }
+    };
+    
+    // DOM elements
+    const profileForm = document.getElementById('profileForm');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const spinnerOverlay = document.querySelector('.spinner-overlay');
+    const realTimeValidationToggle = document.getElementById('realTimeValidation');
+    const toastContainer = document.querySelector('.toast-container');
+    const passwordStrengthMeter = document.querySelector('.password-strength-meter-bar');
+    const passwordStrengthText = document.querySelector('.password-strength-text');
+    
+    // Form validation patterns
+    const patterns = {
+        name: /^[a-zA-Z\s]{2,30}$/,
+        phone: /^[\d\+\-\(\)\s]{7,20}$/,
+        postalCode: /^[a-zA-Z0-9\s\-]{3,10}$/
+    };
+    
+    // Initialize the form
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeFormAnimations();
+        setupFormValidation();
+        setupPasswordStrengthMeter();
+        
+        // Fetch profile data from API
+        fetchProfileData();
+    });
+    
+    // Initialize form animations
+    function initializeFormAnimations() {
+        const formControls = document.querySelectorAll('.form-control');
+        formControls.forEach((control, index) => {
+            control.style.opacity = '0';
+            control.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                control.style.transition = 'all 0.5s ease';
+                control.style.opacity = '1';
+                control.style.transform = 'translateY(0)';
+            }, 100 + (index * 50));
+        });
+        
+        // Add hover effects to input fields
+        const inputWrappers = document.querySelectorAll('.input-icon-wrapper');
+        inputWrappers.forEach(wrapper => {
+            wrapper.addEventListener('mouseenter', function() {
+                const icon = this.querySelector('.input-icon');
+                if (icon) {
+                    icon.style.transform = 'translateY(-50%) scale(1.2)';
+                    icon.style.opacity = '1';
+                }
+            });
+            
+            wrapper.addEventListener('mouseleave', function() {
+                const icon = this.querySelector('.input-icon');
+                const input = this.querySelector('.form-control');
+                if (icon && input && !input.matches(':focus') && input.value === '') {
+                    icon.style.transform = 'translateY(-50%) scale(1)';
+                    icon.style.opacity = '0.7';
+                }
+            });
+        });
+    }
+    
+    // Setup form validation
+    function setupFormValidation() {
+        const formInputs = profileForm.querySelectorAll('input:not([disabled])');
+        
+        formInputs.forEach(input => {
+            // Skip password fields for initial validation
+            if (input.type === 'password') return;
+            
+            input.addEventListener('input', function() {
+                if (realTimeValidationToggle.checked) {
+                    validateInput(input);
+                }
+            });
+            
+            input.addEventListener('blur', function() {
+                validateInput(input);
+            });
+        });
+        
+        // Setup password validation
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        
+        if (newPasswordInput && confirmPasswordInput) {
+            newPasswordInput.addEventListener('input', function() {
+                if (realTimeValidationToggle.checked) {
+                    validatePassword();
+                }
+            });
+            
+            confirmPasswordInput.addEventListener('input', function() {
+                if (realTimeValidationToggle.checked) {
+                    validatePasswordMatch();
+                }
+            });
+            
+            newPasswordInput.addEventListener('blur', validatePassword);
+            confirmPasswordInput.addEventListener('blur', validatePasswordMatch);
+        }
+    }
+    
+    // Setup password strength meter
+    function setupPasswordStrengthMeter() {
+        const newPasswordInput = document.getElementById('newPassword');
+        
+        if (newPasswordInput) {
+            newPasswordInput.addEventListener('input', function() {
+                const password = this.value;
+                updatePasswordStrength(password);
+            });
+        }
+    }
+    
+    // Update password strength meter
+    function updatePasswordStrength(password) {
+        // Calculate password strength
+        let strength = 0;
+        let feedback = '';
+        
+        if (password.length === 0) {
+            passwordStrengthMeter.className = 'password-strength-meter-bar';
+            passwordStrengthMeter.style.width = '0';
+            passwordStrengthText.textContent = '';
+            return;
+        }
+        
+        // Length check
+        if (password.length >= 8) {
+            strength += 1;
+        }
+        
+        // Complexity checks
+        if (/[A-Z]/.test(password)) strength += 1;
+        if (/[0-9]/.test(password)) strength += 1;
+        if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+        
+        // Update UI based on strength
+        if (strength === 1) {
+            passwordStrengthMeter.className = 'password-strength-meter-bar strength-weak';
+            feedback = 'Weak: Try adding numbers or symbols';
+        } else if (strength === 2) {
+            passwordStrengthMeter.className = 'password-strength-meter-bar strength-medium';
+            feedback = 'Medium: Try adding uppercase letters';
+        } else if (strength === 3) {
+            passwordStrengthMeter.className = 'password-strength-meter-bar strength-good';
+            feedback = 'Good: Your password is secure';
+        } else if (strength >= 4) {
+            passwordStrengthMeter.className = 'password-strength-meter-bar strength-strong';
+            feedback = 'Strong: Excellent password!';
+        }
+        
+        passwordStrengthText.textContent = feedback;
+    }
+    
+    // Validate a single input field
+    function validateInput(input) {
+        let isValid = true;
+        
+        // Skip validation if field is empty and not required
+        if (input.value === '' && !input.hasAttribute('required')) {
+            input.classList.remove('is-invalid', 'is-valid');
+            return true;
+        }
+        
+        // Validate based on input type or name
+        switch(input.name) {
+            case 'first_name':
+            case 'last_name':
+                isValid = patterns.name.test(input.value);
+                break;
+            case 'phone_number':
+                isValid = patterns.phone.test(input.value);
+                break;
+            case 'postal_code':
+                isValid = patterns.postalCode.test(input.value);
+                break;
+            case 'current_password':
+                // Only validate if new password is entered
+                const newPassword = document.getElementById('newPassword');
+                if (newPassword && newPassword.value) {
+                    isValid = input.value.length > 0;
+                } else {
+                    input.classList.remove('is-invalid', 'is-valid');
+                    return true;
+                }
+                break;
+        }
+        
+        // Update UI based on validation result
+        if (isValid) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        } else {
+            input.classList.remove('is-valid');
+            input.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+    
+    // Validate password
+    function validatePassword() {
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        
+        if (!newPasswordInput) return true;
+        
+        // Skip validation if empty
+        if (newPasswordInput.value === '') {
+            newPasswordInput.classList.remove('is-invalid', 'is-valid');
+            if (confirmPasswordInput) {
+                confirmPasswordInput.classList.remove('is-invalid', 'is-valid');
+            }
+            return true;
+        }
+        
+        // Check password length
+        const isValid = newPasswordInput.value.length >= 8;
+        
+        if (isValid) {
+            newPasswordInput.classList.remove('is-invalid');
+            newPasswordInput.classList.add('is-valid');
+        } else {
+            newPasswordInput.classList.remove('is-valid');
+            newPasswordInput.classList.add('is-invalid');
+        }
+        
+        // Also validate password match if confirm password has a value
+        if (confirmPasswordInput && confirmPasswordInput.value) {
+            validatePasswordMatch();
+        }
+        
+        return isValid;
+    }
+    
+    // Validate password match
+    function validatePasswordMatch() {
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        
+        if (!newPasswordInput || !confirmPasswordInput) return true;
+        
+        // Skip validation if either field is empty
+        if (newPasswordInput.value === '' || confirmPasswordInput.value === '') {
+            confirmPasswordInput.classList.remove('is-invalid', 'is-valid');
+            return true;
+        }
+        
+        // Check if passwords match
+        const isValid = newPasswordInput.value === confirmPasswordInput.value;
+        
+        if (isValid) {
+            confirmPasswordInput.classList.remove('is-invalid');
+            confirmPasswordInput.classList.add('is-valid');
+        } else {
+            confirmPasswordInput.classList.remove('is-valid');
+            confirmPasswordInput.classList.add('is-invalid');
+        }
+        
+        return isValid;
+    }
+    
+    // Validate the entire form
+    function validateForm() {
+        let isValid = true;
+        
+        // Validate all visible inputs
+        const activeTab = document.querySelector('.tab-pane.active');
+        const inputs = activeTab.querySelectorAll('input:not([disabled])');
+        
+        inputs.forEach(input => {
+            // Skip empty password fields
+            if (input.type === 'password' && input.value === '') return;
+            
+            const inputValid = validateInput(input);
+            isValid = isValid && inputValid;
+        });
+        
+        // Validate password fields if they have values
+        const newPasswordInput = document.getElementById('newPassword');
+        if (newPasswordInput && newPasswordInput.value) {
+            const passwordValid = validatePassword();
+            const passwordMatchValid = validatePasswordMatch();
+            isValid = isValid && passwordValid && passwordMatchValid;
+        }
+        
+        return isValid;
+    }
+    
+    // Fetch profile data from API
+    function fetchProfileData() {
+        showSpinner();
+        
+        // Fetch profile data
+        axios.get('/api/accounts/profile/me/')
+            .then(response => {
+                // Update global profile data
+                profileData = response.data;
+                
+                // Update order stats
+                fetchOrderStats();
+            })
+            .catch(error => {
+                hideSpinner();
+                showToast('Error', 'Failed to load profile data. Please refresh the page.', 'error');
+                console.error('Error fetching profile data:', error);
+            });
+    }
+    
+    // Fetch order statistics
+    function fetchOrderStats() {
+        axios.get('/api/accounts/profile/order_stats/')
+            .then(response => {
+                // Update order stats in the UI
+                updateOrderStats(response.data);
+                hideSpinner();
+            })
+            .catch(error => {
+                hideSpinner();
+                console.error('Error fetching order stats:', error);
+            });
+    }
+    
+    // Update order statistics in the UI
+    function updateOrderStats(stats) {
+        // Find stat elements in the header card
+        const totalOrdersEl = document.querySelector('.profile-stat-value:nth-child(1)');
+        const completedOrdersEl = document.querySelector('.profile-stat-value:nth-child(3)');
+        const processingOrdersEl = document.querySelector('.profile-stat-value:nth-child(5)');
+        
+        // Update values if elements exist
+        if (totalOrdersEl) totalOrdersEl.textContent = stats.total;
+        if (completedOrdersEl) completedOrdersEl.textContent = stats.completed;
+        if (processingOrdersEl) processingOrdersEl.textContent = stats.processing;
+    }
+    
+    // Save profile data
+    profileForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!validateForm()) {
+            showToast('Validation Error', 'Please fix the errors in the form.', 'error');
+            return;
+        }
+        
+        // Show spinner
+        showSpinner();
+        
+        // Collect form data
+        const formData = new FormData(profileForm);
+        const data = {};
+        
+        for (let [key, value] of formData.entries()) {
+            // Skip empty password fields
+            if ((key.includes('password') && value === '') || key === 'csrfmiddlewaretoken') {
+                continue;
+            }
+            data[key] = value;
+        }
+        
+        // Send API request
+        axios.patch('/api/accounts/profile/update_profile/', data)
+            .then(response => {
+                hideSpinner();
+                showToast('Success', 'Profile updated successfully!', 'success');
+                
+                // Update global profile data
+                profileData = response.data;
+                
+                // Clear password fields
+                const passwordFields = document.querySelectorAll('input[type="password"]');
+                passwordFields.forEach(field => {
+                    field.value = '';
+                    field.classList.remove('is-valid', 'is-invalid');
                 });
                 
-                const placeholders = document.querySelectorAll('.profile-picture-placeholder');
-                placeholders.forEach(placeholder => {
-                    placeholder.style.display = 'none';
-                });
-            }
-            reader.readAsDataURL(file);
-        }
+                // Reset password strength meter
+                if (passwordStrengthMeter) {
+                    passwordStrengthMeter.className = 'password-strength-meter-bar';
+                    passwordStrengthMeter.style.width = '0';
+                }
+                if (passwordStrengthText) {
+                    passwordStrengthText.textContent = '';
+                }
+            })
+            .catch(error => {
+                hideSpinner();
+                
+                if (error.response && error.response.data) {
+                    // Handle validation errors
+                    const errors = error.response.data;
+                    let errorMessage = 'Please fix the following errors:';
+                    
+                    for (const field in errors) {
+                        const input = document.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            
+                            // Update error message
+                            const feedbackEl = input.nextElementSibling.nextElementSibling;
+                            if (feedbackEl && feedbackEl.classList.contains('invalid-feedback')) {
+                                feedbackEl.textContent = errors[field];
+                            }
+                        }
+                        
+                        errorMessage += `<br>• ${field}: ${errors[field]}`;
+                    }
+                    
+                    showToast('Error', errorMessage, 'error');
+                } else {
+                    showToast('Error', 'Failed to update profile. Please try again.', 'error');
+                }
+                
+                console.error('Error updating profile:', error);
+            });
     });
+    
+    // Show spinner overlay
+    function showSpinner() {
+        spinnerOverlay.classList.add('show');
+    }
+    
+    // Hide spinner overlay
+    function hideSpinner() {
+        spinnerOverlay.classList.remove('show');
+    }
+    
+    // Show toast notification
+    function showToast(title, message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        // Set icon based on type
+        let icon = 'info-circle';
+        let bgColor = 'primary';
+        
+        if (type === 'success') {
+            icon = 'check-circle';
+            bgColor = 'success';
+        } else if (type === 'error') {
+            icon = 'exclamation-circle';
+            bgColor = 'danger';
+        } else if (type === 'warning') {
+            icon = 'exclamation-triangle';
+            bgColor = 'warning';
+        }
+        
+        // Create toast content
+        toast.innerHTML = `
+            <div class="toast-header">
+                <i class="fas fa-${icon} me-2 text-${bgColor}"></i>
+                <strong class="me-auto">${title}</strong>
+                <small>Just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 5000);
+        
+        // Close button functionality
+        const closeBtn = toast.querySelector('.btn-close');
+        closeBtn.addEventListener('click', () => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        });
+    }
 </script>
 {% endblock %}

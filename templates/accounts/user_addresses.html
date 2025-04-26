@@ -2,100 +2,843 @@
 
 {% block title %}My Addresses{% endblock %}
 
+{% block account_extra_css %}
+<style>
+    /* Address card styles */
+    .address-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+    }
+    
+    .address-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .address-card .card-header {
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.25rem;
+    }
+    
+    .address-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .address-card .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+        border-radius: 50rem;
+    }
+    
+    .address-type-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin-right: 1rem;
+        box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.2);
+    }
+    
+    .address-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 2;
+    }
+    
+    .address-actions .dropdown-menu {
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        border: none;
+        padding: 0.5rem;
+    }
+    
+    .address-actions .dropdown-item {
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .address-actions .dropdown-item:hover {
+        background-color: rgba(var(--primary-color-rgb), 0.1);
+    }
+    
+    .address-actions .dropdown-item.text-danger:hover {
+        background-color: rgba(220, 53, 69, 0.1);
+    }
+    
+    /* Empty state styles */
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+        background-color: rgba(var(--primary-color-rgb), 0.02);
+        border-radius: 1rem;
+    }
+    
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin: 0 auto 1.5rem;
+        font-size: 2rem;
+        box-shadow: 0 10px 30px rgba(var(--primary-color-rgb), 0.2);
+    }
+    
+    /* Add address modal styles */
+    .modal-content {
+        border-radius: 1rem;
+        border: none;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        color: white;
+        border-bottom: none;
+        padding: 1.5rem;
+    }
+    
+    .modal-title {
+        font-weight: 700;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+    }
+    
+    .modal-footer {
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1rem 1.5rem;
+    }
+    
+    /* Loading spinner */
+    .spinner-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+        border-radius: 0.5rem;
+        backdrop-filter: blur(3px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .spinner-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Toast notification styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+    
+    .toast {
+        max-width: 350px;
+        overflow: hidden;
+        font-size: 0.875rem;
+        background-color: rgba(255, 255, 255, 0.95);
+        background-clip: padding-box;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 0.5rem;
+        opacity: 0;
+        transform: translateY(-20px);
+        transition: all 0.3s ease;
+    }
+    
+    .toast.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
 {% block account_content %}
+<div class="toast-container"></div>
+
 <div class="card profile-content">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title">Saved Addresses</h5>
-        <a href="{% url 'accounts:add_address' %}" class="btn btn-primary btn-sm">
-            <i class="fas fa-plus me-2"></i> Add New Address
-        </a>
+    <div class="spinner-overlay">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
     </div>
+    
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0"><i class="fas fa-map-marker-alt me-2"></i> Saved Addresses</h5>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+            <i class="fas fa-plus me-2"></i> Add New Address
+        </button>
+    </div>
+    
     <div class="card-body">
-        {% if addresses %}
-        <div class="row g-4">
-            {% for address in addresses %}
-            <div class="col-md-6">
-                <div class="card h-100 address-card">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            {{ address.get_address_type_display }}
-                            {% if address.is_default %}
-                            <span class="badge bg-primary ms-2">Default</span>
-                            {% endif %}
-                        </h5>
-                        <div class="dropdown">
-                            <button class="btn btn-sm btn-outline-secondary" type="button" id="addressOptions{{ address.id }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-ellipsis-v"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="addressOptions{{ address.id }}">
-                                <li>
-                                    <a class="dropdown-item" href="{% url 'accounts:edit_address' address.id %}">
-                                        <i class="fas fa-edit me-2"></i> Edit
-                                    </a>
-                                </li>
-                                {% if not address.is_default %}
-                                <li>
-                                    <form action="{% url 'accounts:set_default_address' address.id %}" method="POST">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-check-circle me-2"></i> Set as Default
-                                        </button>
-                                    </form>
-                                </li>
-                                {% endif %}
-                                <li>
-                                    <form action="{% url 'accounts:delete_address' address.id %}" method="POST" onsubmit="return confirm('Are you sure you want to delete this address?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-trash me-2"></i> Delete
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+        <div id="addressesContainer" class="row g-4">
+            <!-- Addresses will be loaded here via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Address Modal -->
+<div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addressModalLabel">
+                    <i class="fas fa-map-marker-alt me-2"></i> <span id="modalTitle">Add New Address</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addressForm">
+                    <input type="hidden" id="addressId" name="id" value="">
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="fullName" name="full_name" placeholder="Full Name" required>
+                                <i class="fas fa-user input-icon"></i>
+                                <div class="invalid-feedback">Please enter your full name</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-icon-wrapper">
+                                <input type="tel" class="form-control input-with-icon" id="phone" name="phone" placeholder="Phone Number" required>
+                                <i class="fas fa-phone-alt input-icon"></i>
+                                <div class="invalid-feedback">Please enter a valid phone number</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <p class="mb-1 fw-bold">{{ address.full_name }}</p>
-                        <p class="mb-1">{{ address.phone }}</p>
-                        <p class="mb-1">{{ address.address_line1 }}</p>
-                        {% if address.address_line2 %}
-                        <p class="mb-1">{{ address.address_line2 }}</p>
-                        {% endif %}
-                        <p class="mb-1">{{ address.city }}, {{ address.state }} {{ address.postal_code }}</p>
-                        <p class="mb-0">{{ address.country }}</p>
+                    
+                    <div class="mb-3">
+                        <div class="input-icon-wrapper">
+                            <input type="text" class="form-control input-with-icon" id="addressLine1" name="address_line1" placeholder="Address Line 1" required>
+                            <i class="fas fa-home input-icon"></i>
+                            <div class="invalid-feedback">Please enter your address</div>
+                        </div>
                     </div>
-                </div>
+                    
+                    <div class="mb-3">
+                        <div class="input-icon-wrapper">
+                            <input type="text" class="form-control input-with-icon" id="addressLine2" name="address_line2" placeholder="Address Line 2 (Optional)">
+                            <i class="fas fa-building input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="city" name="city" placeholder="City" required>
+                                <i class="fas fa-city input-icon"></i>
+                                <div class="invalid-feedback">Please enter your city</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="state" name="state" placeholder="State/Province" required>
+                                <i class="fas fa-map input-icon"></i>
+                                <div class="invalid-feedback">Please enter your state</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-icon-wrapper">
+                                <input type="text" class="form-control input-with-icon" id="postalCode" name="postal_code" placeholder="Postal Code" required>
+                                <i class="fas fa-mail-bulk input-icon"></i>
+                                <div class="invalid-feedback">Please enter a valid postal code</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="input-icon-wrapper">
+                            <input type="text" class="form-control input-with-icon" id="country" name="country" placeholder="Country" required>
+                            <i class="fas fa-globe-americas input-icon"></i>
+                            <div class="invalid-feedback">Please enter your country</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Address Type</label>
+                            <div class="d-flex">
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="address_type" id="typeShipping" value="shipping" checked>
+                                    <label class="form-check-label" for="typeShipping">Shipping</label>
+                                </div>
+                                <div class="form-check me-3">
+                                    <input class="form-check-input" type="radio" name="address_type" id="typeBilling" value="billing">
+                                    <label class="form-check-label" for="typeBilling">Billing</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="address_type" id="typeBoth" value="both">
+                                    <label class="form-check-label" for="typeBoth">Both</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="isDefault" name="is_default">
+                                <label class="form-check-label" for="isDefault">
+                                    Set as default address
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-            {% endfor %}
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="saveAddressBtn" class="btn btn-primary">Save Address</button>
+            </div>
         </div>
-        {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-map-marker-alt fa-4x text-muted mb-3"></i>
-            <h3>No addresses saved yet</h3>
-            <p class="text-muted">Add an address to make checkout faster.</p>
-            <a href="{% url 'accounts:add_address' %}" class="btn btn-primary mt-3">
-                <i class="fas fa-plus me-2"></i> Add Address
-            </a>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i> Confirm Deletion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this address? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete Address</button>
+            </div>
         </div>
-        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block account_extra_js %}
+<!-- Include Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
-    // Add hover effects to address cards
-    document.querySelectorAll('.address-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-            this.style.boxShadow = '0 10px 20px rgba(0,0,0,0.1)';
-            this.style.transition = 'all 0.3s ease';
+    // CSRF token setup for Axios
+    axios.defaults.xsrfCookieName = 'csrftoken';
+    axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+    
+    // DOM elements
+    const addressesContainer = document.getElementById('addressesContainer');
+    const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+    const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    const addressForm = document.getElementById('addressForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const saveAddressBtn = document.getElementById('saveAddressBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const spinnerOverlay = document.querySelector('.spinner-overlay');
+    const toastContainer = document.querySelector('.toast-container');
+    
+    // Current address being edited or deleted
+    let currentAddressId = null;
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load addresses
+        loadAddresses();
+        
+        // Setup event listeners
+        setupEventListeners();
+    });
+    
+    // Setup event listeners
+    function setupEventListeners() {
+        // Save address button
+        saveAddressBtn.addEventListener('click', saveAddress);
+        
+        // Confirm delete button
+        confirmDeleteBtn.addEventListener('click', deleteAddress);
+        
+        // Reset form when modal is closed
+        document.getElementById('addressModal').addEventListener('hidden.bs.modal', function() {
+            addressForm.reset();
+            document.getElementById('addressId').value = '';
+            currentAddressId = null;
+            
+            // Clear validation classes
+            const inputs = addressForm.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid', 'is-valid');
+            });
         });
         
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+        // Show add address modal
+        document.querySelector('[data-bs-target="#addAddressModal"]').addEventListener('click', function() {
+            modalTitle.textContent = 'Add New Address';
+            addressModal.show();
         });
-    });
+    }
+    
+    // Load addresses from API
+    function loadAddresses() {
+        showSpinner();
+        
+        axios.get('/api/accounts/addresses/')
+            .then(response => {
+                hideSpinner();
+                renderAddresses(response.data);
+            })
+            .catch(error => {
+                hideSpinner();
+                showToast('Error', 'Failed to load addresses. Please refresh the page.', 'error');
+                console.error('Error loading addresses:', error);
+            });
+    }
+    
+    // Render addresses
+    function renderAddresses(addresses) {
+        addressesContainer.innerHTML = '';
+        
+        if (addresses.length === 0) {
+            // Show empty state
+            addressesContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3>No addresses saved yet</h3>
+                        <p class="text-muted">Add an address to make checkout faster.</p>
+                        <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addressModal">
+                            <i class="fas fa-plus me-2"></i> Add Address
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Render each address
+        addresses.forEach(address => {
+            const addressTypeIcon = getAddressTypeIcon(address.address_type);
+            const addressTypeLabel = getAddressTypeLabel(address.address_type);
+            
+            const addressHtml = `
+                <div class="col-md-6 mb-4" data-address-id="${address.id}">
+                    <div class="card h-100 address-card">
+                        <div class="card-header d-flex align-items-center">
+                            <div class="address-type-icon">
+                                ${addressTypeIcon}
+                            </div>
+                            <h5 class="card-title mb-0">
+                                ${addressTypeLabel}
+                                ${address.is_default ? '<span class="badge bg-primary ms-2">Default</span>' : ''}
+                            </h5>
+                            <div class="address-actions">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <button class="dropdown-item edit-address" data-address-id="${address.id}">
+                                                <i class="fas fa-edit me-2"></i> Edit
+                                            </button>
+                                        </li>
+                                        ${!address.is_default ? `
+                                        <li>
+                                            <button class="dropdown-item set-default" data-address-id="${address.id}">
+                                                <i class="fas fa-check-circle me-2"></i> Set as Default
+                                            </button>
+                                        </li>
+                                        ` : ''}
+                                        <li>
+                                            <button class="dropdown-item text-danger delete-address" data-address-id="${address.id}">
+                                                <i class="fas fa-trash me-2"></i> Delete
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-1 fw-bold">${address.full_name}</p>
+                            <p class="mb-1">${address.phone}</p>
+                            <p class="mb-1">${address.address_line1}</p>
+                            ${address.address_line2 ? `<p class="mb-1">${address.address_line2}</p>` : ''}
+                            <p class="mb-1">${address.city}, ${address.state} ${address.postal_code}</p>
+                            <p class="mb-0">${address.country}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            addressesContainer.innerHTML += addressHtml;
+        });
+        
+        // Add event listeners to the new address cards
+        setupAddressCardListeners();
+    }
+    
+    // Setup address card event listeners
+    function setupAddressCardListeners() {
+        // Edit address buttons
+        document.querySelectorAll('.edit-address').forEach(button => {
+            button.addEventListener('click', function() {
+                const addressId = this.getAttribute('data-address-id');
+                editAddress(addressId);
+            });
+        });
+        
+        // Set default address buttons
+        document.querySelectorAll('.set-default').forEach(button => {
+            button.addEventListener('click', function() {
+                const addressId = this.getAttribute('data-address-id');
+                setDefaultAddress(addressId);
+            });
+        });
+        
+        // Delete address buttons
+        document.querySelectorAll('.delete-address').forEach(button => {
+            button.addEventListener('click', function() {
+                const addressId = this.getAttribute('data-address-id');
+                confirmDeleteAddress(addressId);
+            });
+        });
+        
+        // Add hover effects to address cards
+        document.querySelectorAll('.address-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.1)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.05)';
+            });
+        });
+    }
+    
+    // Edit address
+    function editAddress(addressId) {
+        showSpinner();
+        
+        axios.get(`/api/accounts/addresses/${addressId}/`)
+            .then(response => {
+                hideSpinner();
+                const address = response.data;
+                
+                // Set form values
+                document.getElementById('addressId').value = address.id;
+                document.getElementById('fullName').value = address.full_name;
+                document.getElementById('phone').value = address.phone;
+                document.getElementById('addressLine1').value = address.address_line1;
+                document.getElementById('addressLine2').value = address.address_line2 || '';
+                document.getElementById('city').value = address.city;
+                document.getElementById('state').value = address.state;
+                document.getElementById('postalCode').value = address.postal_code;
+                document.getElementById('country').value = address.country;
+                document.getElementById('isDefault').checked = address.is_default;
+                
+                // Set address type radio
+                document.querySelector(`input[name="address_type"][value="${address.address_type}"]`).checked = true;
+                
+                // Set current address ID
+                currentAddressId = address.id;
+                
+                // Update modal title
+                modalTitle.textContent = 'Edit Address';
+                
+                // Show modal
+                addressModal.show();
+            })
+            .catch(error => {
+                hideSpinner();
+                showToast('Error', 'Failed to load address details.', 'error');
+                console.error('Error loading address:', error);
+            });
+    }
+    
+    // Save address (create or update)
+    function saveAddress() {
+        // Validate form
+        if (!validateAddressForm()) {
+            showToast('Validation Error', 'Please fix the errors in the form.', 'error');
+            return;
+        }
+        
+        // Show spinner
+        showSpinner();
+        
+        // Collect form data
+        const formData = new FormData(addressForm);
+        const data = {};
+        
+        for (let [key, value] of formData.entries()) {
+            if (key === 'is_default') {
+                data[key] = true;
+            } else {
+                data[key] = value;
+            }
+        }
+        
+        // If is_default checkbox is not checked, set it to false
+        if (!formData.has('is_default')) {
+            data.is_default = false;
+        }
+        
+        const addressId = document.getElementById('addressId').value;
+        
+        if (addressId) {
+            // Update existing address
+            axios.put(`/api/accounts/addresses/${addressId}/`, data)
+                .then(response => {
+                    handleAddressSaveSuccess(response, 'Address updated successfully!');
+                })
+                .catch(error => {
+                    handleAddressSaveError(error);
+                });
+        } else {
+            // Create new address
+            axios.post('/api/accounts/addresses/', data)
+                .then(response => {
+                    handleAddressSaveSuccess(response, 'Address added successfully!');
+                })
+                .catch(error => {
+                    handleAddressSaveError(error);
+                });
+        }
+    }
+    
+    // Handle successful address save
+    function handleAddressSaveSuccess(response, message) {
+        hideSpinner();
+        addressModal.hide();
+        showToast('Success', message, 'success');
+        loadAddresses();
+    }
+    
+    // Handle address save error
+    function handleAddressSaveError(error) {
+        hideSpinner();
+        
+        if (error.response && error.response.data) {
+            // Handle validation errors
+            const errors = error.response.data;
+            let errorMessage = 'Please fix the following errors:';
+            
+            for (const field in errors) {
+                const input = document.querySelector(`[name="${field}"]`);
+                if (input) {
+                    input.classList.add('is-invalid');
+                    
+                    // Update error message
+                    const feedbackEl = input.nextElementSibling.nextElementSibling;
+                    if (feedbackEl && feedbackEl.classList.contains('invalid-feedback')) {
+                        feedbackEl.textContent = errors[field];
+                    }
+                }
+                
+                errorMessage += `<br>• ${field}: ${errors[field]}`;
+            }
+            
+            showToast('Error', errorMessage, 'error');
+        } else {
+            showToast('Error', 'Failed to save address. Please try again.', 'error');
+        }
+        
+        console.error('Error saving address:', error);
+    }
+    
+    // Set address as default
+    function setDefaultAddress(addressId) {
+        showSpinner();
+        
+        axios.post(`/api/accounts/addresses/${addressId}/set_default/`)
+            .then(response => {
+                hideSpinner();
+                showToast('Success', 'Default address updated successfully!', 'success');
+                loadAddresses();
+            })
+            .catch(error => {
+                hideSpinner();
+                showToast('Error', 'Failed to set default address.', 'error');
+                console.error('Error setting default address:', error);
+            });
+    }
+    
+    // Confirm delete address
+    function confirmDeleteAddress(addressId) {
+        currentAddressId = addressId;
+        deleteConfirmModal.show();
+    }
+    
+    // Delete address
+    function deleteAddress() {
+        if (!currentAddressId) return;
+        
+        showSpinner();
+        deleteConfirmModal.hide();
+        
+        axios.delete(`/api/accounts/addresses/${currentAddressId}/`)
+            .then(response => {
+                hideSpinner();
+                showToast('Success', 'Address deleted successfully!', 'success');
+                loadAddresses();
+            })
+            .catch(error => {
+                hideSpinner();
+                showToast('Error', 'Failed to delete address.', 'error');
+                console.error('Error deleting address:', error);
+            });
+    }
+    
+    // Validate address form
+    function validateAddressForm() {
+        let isValid = true;
+        
+        // Required fields
+        const requiredFields = [
+            'full_name', 'phone', 'address_line1', 'city', 
+            'state', 'postal_code', 'country'
+        ];
+        
+        requiredFields.forEach(field => {
+            const input = document.querySelector(`[name="${field}"]`);
+            if (!input || !input.value.trim()) {
+                input.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            }
+        });
+        
+        return isValid;
+    }
+    
+    // Get address type icon
+    function getAddressTypeIcon(type) {
+        switch (type) {
+            case 'shipping':
+                return '<i class="fas fa-shipping-fast"></i>';
+            case 'billing':
+                return '<i class="fas fa-file-invoice-dollar"></i>';
+            case 'both':
+                return '<i class="fas fa-home"></i>';
+            default:
+                return '<i class="fas fa-map-marker-alt"></i>';
+        }
+    }
+    
+    // Get address type label
+    function getAddressTypeLabel(type) {
+        switch (type) {
+            case 'shipping':
+                return 'Shipping Address';
+            case 'billing':
+                return 'Billing Address';
+            case 'both':
+                return 'Shipping & Billing';
+            default:
+                return 'Address';
+        }
+    }
+    
+    // Show spinner overlay
+    function showSpinner() {
+        spinnerOverlay.classList.add('show');
+    }
+    
+    // Hide spinner overlay
+    function hideSpinner() {
+        spinnerOverlay.classList.remove('show');
+    }
+    
+    // Show toast notification
+    function showToast(title, message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        // Set icon based on type
+        let icon = 'info-circle';
+        let bgColor = 'primary';
+        
+        if (type === 'success') {
+            icon = 'check-circle';
+            bgColor = 'success';
+        } else if (type === 'error') {
+            icon = 'exclamation-circle';
+            bgColor = 'danger';
+        } else if (type === 'warning') {
+            icon = 'exclamation-triangle';
+            bgColor = 'warning';
+        }
+        
+        // Create toast content
+        toast.innerHTML = `
+            <div class="toast-header">
+                <i class="fas fa-${icon} me-2 text-${bgColor}"></i>
+                <strong class="me-auto">${title}</strong>
+                <small>Just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+        
+        // Add to container
+        toastContainer.appendChild(toast);
+        
+        // Show toast
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 100);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 5000);
+        
+        // Close button functionality
+        const closeBtn = toast.querySelector('.btn-close');
+        closeBtn.addEventListener('click', () => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        });
+    }
 </script>
 {% endblock %}

@@ -5,16 +5,23 @@
 {% endcomment %}
 
 <div class="profile-page-header">
-    <h1 class="mb-4">{{ page_title }}</h1>
-    {% if subtitle %}
-    <p class="text-muted mb-4">{{ subtitle }}</p>
-    {% endif %}
+    <div class="profile-header-content">
+        <div class="profile-header-icon">
+            <i class="fas fa-user-shield"></i>
+        </div>
+        <div class="profile-header-text">
+            <h1>{{ page_title }}</h1>
+            {% if subtitle %}
+            <p class="text-muted">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+    </div>
     
     {% if show_breadcrumbs %}
-    <nav aria-label="breadcrumb" class="mb-4">
+    <nav aria-label="breadcrumb" class="profile-breadcrumb">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'products:home' %}">Home</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'accounts:user_profile' %}">My Account</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}"><i class="fas fa-home me-1"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'accounts:user_profile' %}"><i class="fas fa-user me-1"></i> My Account</a></li>
             {% if breadcrumb_active %}
             <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb_active }}</li>
             {% endif %}
@@ -22,3 +29,187 @@
     </nav>
     {% endif %}
 </div>
+
+<style>
+    .profile-page-header {
+        margin-bottom: 2.5rem;
+        position: relative;
+    }
+    
+    .profile-header-content {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .profile-header-content:before {
+        content: '';
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        border-radius: 50%;
+        z-index: -1;
+    }
+    
+    .profile-header-content:after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        right: 20%;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        border-radius: 50%;
+        z-index: -1;
+    }
+    
+    .profile-header-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+        box-shadow: 0 8px 20px rgba(var(--primary-color-rgb), 0.3);
+        color: white;
+        font-size: 1.5rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .profile-header-icon:before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        background: linear-gradient(135deg, var(--profile-gradient-start) 0%, var(--profile-gradient-end) 100%);
+        border-radius: 50%;
+        z-index: -1;
+        opacity: 0.5;
+        filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-header-icon:hover {
+        transform: scale(1.05) rotate(5deg);
+    }
+    
+    .profile-header-icon:hover:before {
+        opacity: 0.7;
+        filter: blur(15px);
+    }
+    
+    .profile-header-text h1 {
+        font-weight: 800;
+        color: var(--gray-800);
+        position: relative;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+        font-size: 2.25rem;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .profile-header-text h1:after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -10px;
+        width: 60px;
+        height: 5px;
+        background: linear-gradient(to right, var(--profile-gradient-start), var(--profile-gradient-end));
+        border-radius: 3px;
+        transition: all 0.3s ease;
+    }
+    
+    .profile-header-text:hover h1:after {
+        width: 100px;
+    }
+    
+    .profile-breadcrumb {
+        background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.05) 0%, rgba(106, 17, 203, 0.05) 100%);
+        padding: 0.75rem 1.25rem;
+        border-radius: 1rem;
+        margin-top: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .profile-breadcrumb:hover {
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+        transform: translateY(-2px);
+    }
+    
+    .profile-breadcrumb .breadcrumb {
+        margin-bottom: 0;
+    }
+    
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: "›";
+        font-size: 1.3rem;
+        line-height: 1;
+        vertical-align: middle;
+        color: var(--gray-500);
+    }
+    
+    .breadcrumb-item a {
+        color: var(--gray-600);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .breadcrumb-item a:hover {
+        color: var(--profile-gradient-end);
+        transform: translateX(2px);
+    }
+    
+    .breadcrumb-item.active {
+        color: var(--profile-gradient-end);
+        font-weight: 600;
+    }
+    
+    @media (max-width: 767.98px) {
+        .profile-header-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+        }
+        
+        .profile-header-text h1 {
+            font-size: 1.75rem;
+        }
+        
+        .profile-header-text h1:after {
+            width: 50px;
+            height: 4px;
+        }
+    }
+    
+    /* Animation for the header */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .profile-page-header {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+</style>

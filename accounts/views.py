@@ -72,15 +72,13 @@ def user_profile(request):
         profile.country = request.POST.get('country')
         profile.postal_code = request.POST.get('postal_code')
 
-        if 'profile_picture' in request.FILES:
-            profile.profile_picture = request.FILES['profile_picture']
-
         profile.save()
         messages.success(request, 'Profile updated successfully.')
         return redirect('accounts:user_profile')
 
     context = {
-        'profile': profile,
+        'user_profile': profile,  # Changed to match template variable name
+        'profile': profile,       # Keep for backward compatibility
         'order_stats': order_stats,
         'recent_orders': recent_orders,
         'page_title': 'My Profile',
