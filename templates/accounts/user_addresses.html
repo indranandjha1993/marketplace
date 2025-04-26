@@ -28,7 +28,6 @@
 {% endblock %}
 
 {% block account_content %}
-<div class="toast-container"></div>
 
 <div class="card profile-content">
     <div class="spinner-overlay">
@@ -206,8 +205,7 @@
     const saveAddressBtn = document.getElementById('saveAddressBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
     const spinnerOverlay = document.querySelector('.spinner-overlay');
-    const toastContainer = document.querySelector('.toast-container');
-    
+
     // Current address being edited or deleted
     let currentAddressId = null;
     
@@ -259,7 +257,7 @@
             })
             .catch(error => {
                 hideSpinner();
-                showToast('Error', 'Failed to load addresses. Please refresh the page.', 'error');
+                djangoToast.error('Failed to load addresses. Please refresh the page.');
                 console.error('Error loading addresses:', error);
             });
     }
@@ -424,7 +422,7 @@
             })
             .catch(error => {
                 hideSpinner();
-                showToast('Error', 'Failed to load address details.', 'error');
+                djangoToast.error('Failed to load address details.');
                 console.error('Error loading address:', error);
             });
     }
@@ -433,7 +431,7 @@
     function saveAddress() {
         // Validate form
         if (!validateAddressForm()) {
-            showToast('Validation Error', 'Please fix the errors in the form.', 'error');
+            djangoToast.error('Please fix the errors in the form.');
             return;
         }
         
@@ -484,7 +482,7 @@
     function handleAddressSaveSuccess(response, message) {
         hideSpinner();
         addressModal.hide();
-        showToast('Success', message, 'success');
+        djangoToast.success(message);
         loadAddresses();
     }
     
@@ -512,9 +510,9 @@
                 errorMessage += `<br>• ${field}: ${errors[field]}`;
             }
             
-            showToast('Error', errorMessage, 'error');
+            djangoToast.error(errorMessage);
         } else {
-            showToast('Error', 'Failed to save address. Please try again.', 'error');
+            djangoToast.error('Failed to save address. Please try again.');
         }
         
         console.error('Error saving address:', error);
@@ -527,12 +525,12 @@
         axios.post(`/api/accounts/addresses/${addressId}/set_default/`)
             .then(response => {
                 hideSpinner();
-                showToast('Success', 'Default address updated successfully!', 'success');
+                djangoToast.success('Default address updated successfully!');
                 loadAddresses();
             })
             .catch(error => {
                 hideSpinner();
-                showToast('Error', 'Failed to set default address.', 'error');
+                djangoToast.error('Failed to set default address.');
                 console.error('Error setting default address:', error);
             });
     }
@@ -553,12 +551,12 @@
         axios.delete(`/api/accounts/addresses/${currentAddressId}/`)
             .then(response => {
                 hideSpinner();
-                showToast('Success', 'Address deleted successfully!', 'success');
+                djangoToast.success('Address deleted successfully!');
                 loadAddresses();
             })
             .catch(error => {
                 hideSpinner();
-                showToast('Error', 'Failed to delete address.', 'error');
+                djangoToast.error('Failed to delete address.');
                 console.error('Error deleting address:', error);
             });
     }
@@ -623,69 +621,6 @@
     // Hide spinner overlay
     function hideSpinner() {
         spinnerOverlay.classList.remove('show');
-    }
-    
-    // Show toast notification
-    function showToast(title, message, type = 'info') {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-        
-        // Set icon based on type
-        let icon = 'info-circle';
-        let bgColor = 'primary';
-        
-        if (type === 'success') {
-            icon = 'check-circle';
-            bgColor = 'success';
-        } else if (type === 'error') {
-            icon = 'exclamation-circle';
-            bgColor = 'danger';
-        } else if (type === 'warning') {
-            icon = 'exclamation-triangle';
-            bgColor = 'warning';
-        }
-        
-        // Create toast content
-        toast.innerHTML = `
-            <div class="toast-header">
-                <i class="fas fa-${icon} me-2 text-${bgColor}"></i>
-                <strong class="me-auto">${title}</strong>
-                <small>Just now</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
-        
-        // Add to container
-        toastContainer.appendChild(toast);
-        
-        // Show toast
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
-        
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 5000);
-        
-        // Close button functionality
-        const closeBtn = toast.querySelector('.btn-close');
-        closeBtn.addEventListener('click', () => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        });
     }
 </script>
 {% endblock %}

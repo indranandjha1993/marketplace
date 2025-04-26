@@ -41,7 +41,6 @@
 {% endblock %}
 
 {% block account_content %}
-<div class="toast-container"></div>
 
 <div class="card profile-content">
     <div class="spinner-overlay">
@@ -241,7 +240,6 @@
     const saveProfileBtn = document.getElementById('saveProfileBtn');
     const spinnerOverlay = document.querySelector('.spinner-overlay');
     const realTimeValidationToggle = document.getElementById('realTimeValidation');
-    const toastContainer = document.querySelector('.toast-container');
     const passwordStrengthMeter = document.querySelector('.password-strength-meter-bar');
     const passwordStrengthText = document.querySelector('.password-strength-text');
     
@@ -541,7 +539,7 @@
             })
             .catch(error => {
                 hideSpinner();
-                showToast('Error', 'Failed to load profile data. Please refresh the page.', 'error');
+                djangoToast.error('Failed to load profile data. Please refresh the page.');
                 console.error('Error fetching profile data:', error);
             });
     }
@@ -579,7 +577,7 @@
         
         // Validate form
         if (!validateForm()) {
-            showToast('Validation Error', 'Please fix the errors in the form.', 'error');
+            djangoToast.error('Please fix the errors in the form.');
             return;
         }
         
@@ -602,7 +600,7 @@
         axios.patch('/api/accounts/profile/update_profile/', data)
             .then(response => {
                 hideSpinner();
-                showToast('Success', 'Profile updated successfully!', 'success');
+                djangoToast.success('Profile updated successfully!');
                 
                 // Update global profile data
                 profileData = response.data;
@@ -646,9 +644,9 @@
                         errorMessage += `<br>• ${field}: ${errors[field]}`;
                     }
                     
-                    showToast('Error', errorMessage, 'error');
+                    djangoToast.error(errorMessage);
                 } else {
-                    showToast('Error', 'Failed to update profile. Please try again.', 'error');
+                    djangoToast.error('Failed to update profile. Please try again.');
                 }
                 
                 console.error('Error updating profile:', error);
@@ -663,69 +661,6 @@
     // Hide spinner overlay
     function hideSpinner() {
         spinnerOverlay.classList.remove('show');
-    }
-
-    // Show toast notification
-    function showToast(title, message, type = 'info') {
-        // Create toast element
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.setAttribute('role', 'alert');
-        toast.setAttribute('aria-live', 'assertive');
-        toast.setAttribute('aria-atomic', 'true');
-
-        // Set icon based on type
-        let icon = 'info-circle';
-        let bgColor = 'primary';
-
-        if (type === 'success') {
-            icon = 'check-circle';
-            bgColor = 'success';
-        } else if (type === 'error') {
-            icon = 'exclamation-circle';
-            bgColor = 'danger';
-        } else if (type === 'warning') {
-            icon = 'exclamation-triangle';
-            bgColor = 'warning';
-        }
-
-        // Create toast content
-        toast.innerHTML = `
-            <div class="toast-header">
-                <i class="fas fa-${icon} me-2 text-${bgColor}"></i>
-                <strong class="me-auto">${title}</strong>
-                <small>Just now</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body">
-                ${message}
-            </div>
-        `;
-
-        // Add to container
-        toastContainer.appendChild(toast);
-
-        // Show toast
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
-
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        }, 5000);
-
-        // Close button functionality
-        const closeBtn = toast.querySelector('.btn-close');
-        closeBtn.addEventListener('click', () => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                toast.remove();
-            }, 300);
-        });
     }
 </script>
 {% endblock %}

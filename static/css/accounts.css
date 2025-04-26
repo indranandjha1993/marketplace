@@ -63,7 +63,6 @@
   --account-z-index-modal: 1050;
   --account-z-index-popover: 1060;
   --account-z-index-tooltip: 1070;
-  --account-z-index-toast: 1080;
 }
 
 /* ======= Layout Components ======= */
@@ -758,34 +757,6 @@
 }
 
 /* ======= Utility Components ======= */
-
-/* Toast Notifications */
-.toast-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: var(--account-z-index-toast);
-}
-
-.toast {
-  max-width: 350px;
-  overflow: hidden;
-  font-size: 0.875rem;
-  background-color: rgba(255, 255, 255, 0.95);
-  background-clip: padding-box;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: var(--account-border-radius);
-  opacity: 0;
-  transform: translateY(-20px);
-  transition: var(--account-transition);
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* Loading Spinner */
 .spinner-overlay {

@@ -67,6 +67,22 @@
 <!-- Custom JS -->
 <script src="/static/js/main.js"></script>
 <script src="/static/js/django-toast.js"></script>
+<script>
+    // Test that django-toast.js is loaded correctly
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof djangoToast !== 'undefined') {
+            console.log('django-toast.js loaded successfully');
+            // Configure toast options
+            djangoToast.configure({
+                position: 'top-right',
+                dismissDelay: 5000,
+                animation: 'slide'
+            });
+        } else {
+            console.error('django-toast.js failed to load properly');
+        }
+    });
+</script>
 {% block extra_js %}
 {% endblock %}
 </body>
