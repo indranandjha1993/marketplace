@@ -1,0 +1,92 @@
+{% extends 'accounts/layouts/account_layout.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block account_content %}
+<div class="card profile-content">
+    <div class="card-header">
+        <h5 class="card-title">Order History</h5>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><a href="{% url 'orders:order_detail' order.order_number %}" class="fw-bold text-primary">{{ order.order_number }}</a></td>
+                    <td>{{ order.created_at|date:"d M Y" }}</td>
+                    <td>{{ order.items.count }}</td>
+                    <td>₹{{ order.total }}</td>
+                    <td>
+                        {% if order.status == 'pending' %}
+                        <span class="badge bg-warning">Pending</span>
+                        {% elif order.status == 'processing' %}
+                        <span class="badge bg-info">Processing</span>
+                        {% elif order.status == 'shipped' %}
+                        <span class="badge bg-primary">Shipped</span>
+                        {% elif order.status == 'delivered' %}
+                        <span class="badge bg-success">Delivered</span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="badge bg-danger">Cancelled</span>
+                        {% elif order.status == 'refunded' %}
+                        <span class="badge bg-secondary">Refunded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-primary" title="View Order">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'orders:track_order' order.order_number %}" class="btn btn-outline-info" title="Track Order">
+                                <i class="fas fa-truck"></i>
+                            </a>
+                            <a href="{% url 'orders:generate_invoice' order.order_number %}" class="btn btn-outline-secondary" title="Download Invoice">
+                                <i class="fas fa-file-invoice"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+            <h3>No orders yet</h3>
+            <p class="text-muted">You haven't placed any orders yet.</p>
+            <a href="{% url 'products:browse_products' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-shopping-bag me-2"></i> Start Shopping
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block account_extra_js %}
+<script>
+    // Add hover effect to table rows
+    document.querySelectorAll('tbody tr').forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(var(--primary-color-rgb), 0.05)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        row.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+</script>
+{% endblock %}
