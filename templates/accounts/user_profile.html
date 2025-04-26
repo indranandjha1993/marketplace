@@ -224,8 +224,6 @@
 {% endblock %}
 
 {% block account_content %}
-{% include 'accounts/includes/profile_header_card.html' %}
-
 <div class="toast-container"></div>
 
 <div class="card profile-content">
@@ -849,7 +847,7 @@
     function hideSpinner() {
         spinnerOverlay.classList.remove('show');
     }
-    
+
     // Show toast notification
     function showToast(title, message, type = 'info') {
         // Create toast element
@@ -858,11 +856,11 @@
         toast.setAttribute('role', 'alert');
         toast.setAttribute('aria-live', 'assertive');
         toast.setAttribute('aria-atomic', 'true');
-        
+
         // Set icon based on type
         let icon = 'info-circle';
         let bgColor = 'primary';
-        
+
         if (type === 'success') {
             icon = 'check-circle';
             bgColor = 'success';
@@ -873,7 +871,7 @@
             icon = 'exclamation-triangle';
             bgColor = 'warning';
         }
-        
+
         // Create toast content
         toast.innerHTML = `
             <div class="toast-header">
@@ -886,15 +884,15 @@
                 ${message}
             </div>
         `;
-        
+
         // Add to container
         toastContainer.appendChild(toast);
-        
+
         // Show toast
         setTimeout(() => {
             toast.classList.add('show');
         }, 100);
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
             toast.classList.remove('show');
@@ -902,7 +900,7 @@
                 toast.remove();
             }, 300);
         }, 5000);
-        
+
         // Close button functionality
         const closeBtn = toast.querySelector('.btn-close');
         closeBtn.addEventListener('click', () => {
