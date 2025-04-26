@@ -1,0 +1,37 @@
+{% comment %}
+    Profile Sidebar Include
+    This template includes the user profile sidebar with navigation links
+    and user information display.
+{% endcomment %}
+
+<div class="profile-sidebar card">
+    <div class="card-body text-center profile-header">
+        {% if user_profile.profile_picture %}
+        <img src="{{ user_profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="profile-picture">
+        {% else %}
+        <div class="profile-picture-placeholder">
+            <i class="fas fa-user fa-3x text-secondary"></i>
+        </div>
+        {% endif %}
+        <h5 class="profile-name">{{ user.get_full_name|default:user.email }}</h5>
+        <p class="text-muted small">Member since {{ user.date_joined|date:"M Y" }}</p>
+    </div>
+    
+    <div class="list-group list-group-flush profile-nav">
+        <a href="{% url 'accounts:user_profile' %}" class="list-group-item list-group-item-action {% if active_tab == 'profile' %}active{% endif %}">
+            <i class="fas fa-user-circle me-2"></i> My Profile
+        </a>
+        <a href="{% url 'accounts:user_addresses' %}" class="list-group-item list-group-item-action {% if active_tab == 'addresses' %}active{% endif %}">
+            <i class="fas fa-map-marker-alt me-2"></i> My Addresses
+        </a>
+        <a href="{% url 'accounts:order_list' %}" class="list-group-item list-group-item-action {% if active_tab == 'orders' %}active{% endif %}">
+            <i class="fas fa-box me-2"></i> My Orders
+        </a>
+        <a href="{% url 'accounts:wishlist' %}" class="list-group-item list-group-item-action {% if active_tab == 'wishlist' %}active{% endif %}">
+            <i class="fas fa-heart me-2"></i> My Wishlist
+        </a>
+        <a href="{% url 'accounts:payment_methods' %}" class="list-group-item list-group-item-action {% if active_tab == 'payments' %}active{% endif %}">
+            <i class="fas fa-credit-card me-2"></i> Payment Methods
+        </a>
+    </div>
+</div>

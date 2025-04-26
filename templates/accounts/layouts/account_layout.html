@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/profile.css">
+{% block account_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 profile-container">
+    {% with page_title=page_title|default:"My Account" show_breadcrumbs=True breadcrumb_active=breadcrumb_active|default:page_title %}
+    {% include 'accounts/includes/account_header.html' %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            {% with active_tab=active_tab|default:"profile" %}
+            {% include 'accounts/includes/account_sidebar.html' %}
+            {% endwith %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            {% block account_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block account_extra_js %}{% endblock %}
+{% endblock %}

@@ -6,7 +6,7 @@
 <div class="card profile-content mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title">Saved Payment Methods</h5>
-        <a href="{% url 'payments:add_payment_method' %}" class="btn btn-primary btn-sm">
+        <a href="{% url 'accounts:add_payment_method' %}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus me-2"></i> Add Payment Method
         </a>
     </div>
@@ -38,7 +38,7 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="paymentOptions{{ method.id }}">
                                 {% if not method.is_default %}
                                 <li>
-                                    <form action="{% url 'payments:set_default_payment_method' method.id %}" method="POST">
+                                    <form action="{% url 'accounts:set_default_payment_method' method.id %}" method="POST">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item">
                                             <i class="fas fa-check-circle me-2"></i> Set as Default
@@ -47,7 +47,7 @@
                                 </li>
                                 {% endif %}
                                 <li>
-                                    <form action="{% url 'payments:remove_payment_method' method.id %}" method="POST" onsubmit="return confirm('Are you sure you want to remove this payment method?');">
+                                    <form action="{% url 'accounts:remove_payment_method' method.id %}" method="POST" onsubmit="return confirm('Are you sure you want to remove this payment method?');">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item text-danger">
                                             <i class="fas fa-trash me-2"></i> Remove
@@ -112,7 +112,7 @@
             <i class="fas fa-credit-card fa-4x text-muted mb-3"></i>
             <h3>No payment methods saved yet</h3>
             <p class="text-muted">Add a payment method to make checkout faster.</p>
-            <a href="{% url 'payments:add_payment_method' %}" class="btn btn-primary mt-3">
+            <a href="{% url 'accounts:add_payment_method' %}" class="btn btn-primary mt-3">
                 <i class="fas fa-plus me-2"></i> Add Payment Method
             </a>
         </div>

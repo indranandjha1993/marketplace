@@ -12,22 +12,7 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import UserAddress
 from cart.models import Cart
-from utils.email import send_order_confirmation_email
 from .models import Order, VendorOrder, OrderItem, Refund, OrderTracking, Coupon
-
-
-@login_required
-def order_list(request):
-    """
-    Display list of user's orders.
-    """
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-
-    context = {
-        'orders': orders
-    }
-
-    return render(request, 'orders/order_list.html', context)
 
 
 @login_required
@@ -321,24 +306,6 @@ def order_success(request, order_number):
     }
 
     return render(request, 'orders/order_success.html', context)
-
-
-@login_required
-def order_detail(request, order_number):
-    """
-    Display order details.
-    """
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    order_items = order.items.all()
-    vendor_orders = order.vendor_orders.all()
-
-    context = {
-        'order': order,
-        'order_items': order_items,
-        'vendor_orders': vendor_orders
-    }
-
-    return render(request, 'orders/order_detail.html', context)
 
 
 @login_required

@@ -1,122 +1,109 @@
-{% extends 'base.html' %}
+{% extends 'accounts/layouts/account_layout.html' %}
 
 {% block title %}My Profile{% endblock %}
 
-{% block content %}
-<div class="container py-4">
-    <h1 class="mb-4">My Profile</h1>
+{% block account_content %}
+<div class="card profile-content">
+    <div class="card-header">
+        <h5 class="card-title">Edit Profile</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" class="profile-form">
+            {% csrf_token %}
 
-    <div class="row">
-        <!-- Sidebar -->
-        <div class="col-md-3 mb-4">
-            <div class="card">
-                <div class="card-body text-center">
-                    {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" alt="{{ user.get_full_name }}" class="img-fluid rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
-                    {% else %}
-                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
-                        <i class="fas fa-user fa-4x text-secondary"></i>
-                    </div>
-                    {% endif %}
-                    <h5>{{ user.get_full_name|default:user.email }}</h5>
-                    <p class="text-muted small">Member since {{ user.date_joined|date:"M Y" }}</p>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="firstName" class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="firstName" name="first_name" value="{{ user.first_name }}">
                 </div>
-                <div class="list-group list-group-flush">
-                    <a href="{% url 'accounts:user_profile' %}" class="list-group-item list-group-item-action active">
-                        <i class="fas fa-user-circle me-2"></i> My Profile
-                    </a>
-                    <a href="{% url 'accounts:user_addresses' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-map-marker-alt me-2"></i> My Addresses
-                    </a>
-                    <a href="{% url 'orders:order_list' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-box me-2"></i> My Orders
-                    </a>
-                    <a href="{% url 'accounts:wishlist' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-heart me-2"></i> My Wishlist
-                    </a>
-                    <a href="{% url 'payments:payment_methods' %}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-credit-card me-2"></i> Payment Methods
-                    </a>
+                <div class="col-md-6 mb-3">
+                    <label for="lastName" class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}">
                 </div>
             </div>
-        </div>
 
-        <!-- Profile Form -->
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Edit Profile</h5>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
+                <div class="form-text">Email cannot be changed</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Phone Number</label>
+                <input type="tel" class="form-control" id="phoneNumber" name="phone_number" value="{{ user.phone_number }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="profilePicture" class="form-label">Profile Picture</label>
+                <input type="file" class="form-control" id="profilePicture" name="profile_picture" accept="image/*">
+                {% if user_profile.profile_picture %}
+                <div class="form-text">Current: {{ user_profile.profile_picture.name }}</div>
+                {% endif %}
+            </div>
+
+            <div class="profile-section-divider"></div>
+            <h5 class="profile-section-title">Address Information</h5>
+
+            <div class="mb-3">
+                <label for="addressLine1" class="form-label">Address Line 1</label>
+                <input type="text" class="form-control" id="addressLine1" name="address_line1" value="{{ user_profile.address_line1|default:'' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="addressLine2" class="form-label">Address Line 2</label>
+                <input type="text" class="form-control" id="addressLine2" name="address_line2" value="{{ user_profile.address_line2|default:'' }}">
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="city" class="form-label">City</label>
+                    <input type="text" class="form-control" id="city" name="city" value="{{ user_profile.city|default:'' }}">
                 </div>
-                <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="firstName" class="form-label">First Name</label>
-                                <input type="text" class="form-control" id="firstName" name="first_name" value="{{ user.first_name }}">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="lastName" class="form-label">Last Name</label>
-                                <input type="text" class="form-control" id="lastName" name="last_name" value="{{ user.last_name }}">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" value="{{ user.email }}" disabled>
-                            <div class="form-text">Email cannot be changed</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="phoneNumber" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phoneNumber" name="phone_number" value="{{ user.phone_number }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="profilePicture" class="form-label">Profile Picture</label>
-                            <input type="file" class="form-control" id="profilePicture" name="profile_picture" accept="image/*">
-                        </div>
-
-                        <h5 class="mt-4 mb-3">Address Information</h5>
-
-                        <div class="mb-3">
-                            <label for="addressLine1" class="form-label">Address Line 1</label>
-                            <input type="text" class="form-control" id="addressLine1" name="address_line1" value="{{ profile.address_line1|default:'' }}">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="addressLine2" class="form-label">Address Line 2</label>
-                            <input type="text" class="form-control" id="addressLine2" name="address_line2" value="{{ profile.address_line2|default:'' }}">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="city" class="form-label">City</label>
-                                <input type="text" class="form-control" id="city" name="city" value="{{ profile.city|default:'' }}">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="state" class="form-label">State</label>
-                                <input type="text" class="form-control" id="state" name="state" value="{{ profile.state|default:'' }}">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="postalCode" class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" id="postalCode" name="postal_code" value="{{ profile.postal_code|default:'' }}">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="country" class="form-label">Country</label>
-                            <input type="text" class="form-control" id="country" name="country" value="{{ profile.country|default:'' }}">
-                        </div>
-
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Save Profile</button>
-                        </div>
-                    </form>
+                <div class="col-md-4 mb-3">
+                    <label for="state" class="form-label">State</label>
+                    <input type="text" class="form-control" id="state" name="state" value="{{ user_profile.state|default:'' }}">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="postalCode" class="form-label">Postal Code</label>
+                    <input type="text" class="form-control" id="postalCode" name="postal_code" value="{{ user_profile.postal_code|default:'' }}">
                 </div>
             </div>
-        </div>
+
+            <div class="mb-4">
+                <label for="country" class="form-label">Country</label>
+                <input type="text" class="form-control" id="country" name="country" value="{{ user_profile.country|default:'' }}">
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary profile-save-btn">
+                    <i class="fas fa-save me-2"></i> Save Profile
+                </button>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
+
+{% block account_extra_js %}
+<script>
+    // Preview profile picture before upload
+    document.getElementById('profilePicture').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const profilePictures = document.querySelectorAll('.profile-picture');
+                profilePictures.forEach(pic => {
+                    pic.src = event.target.result;
+                });
+                
+                const placeholders = document.querySelectorAll('.profile-picture-placeholder');
+                placeholders.forEach(placeholder => {
+                    placeholder.style.display = 'none';
+                });
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
 {% endblock %}
