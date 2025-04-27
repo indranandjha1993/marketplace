@@ -6,19 +6,43 @@
 {% block account_content %}
 <div class="card profile-content">
     <div class="card-header">
-        <h5 class="card-title">Saved Products</h5>
+        <h5 class="card-title"><i class="far fa-heart me-2"></i>My Wishlist</h5>
     </div>
     <div class="card-body">
         {% if wishlist_products %}
         <div class="row g-4">
             {% for product in wishlist_products %}
-            <div class="col-md-4 col-6">
+            <div class="col-lg-4 col-md-6 col-12">
                 <div class="card product-card h-100 wishlist-product-card">
-                    {% if product.is_on_sale %}
-                    <div class="discount-badge">-{{ product.discount_percentage }}%</div>
-                    {% endif %}
+                    <div class="wishlist-card-badges">
+                        {% if product.is_on_sale %}
+                        <div class="discount-badge pulse-animation">-{{ product.discount_percentage }}%</div>
+                        {% endif %}
+                        {% if product.is_new %}
+                        <div class="new-badge">NEW</div>
+                        {% endif %}
+                    </div>
 
-                    <a href="{% url 'products:product_detail' product.slug %}">
+                    <div class="wishlist-quick-actions">
+                        <form action="{% url 'accounts:remove_from_wishlist' product.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-quick-action btn-remove" title="Remove from wishlist">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn-quick-action btn-cart" title="Add to cart">
+                                <i class="fas fa-shopping-cart"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <a href="{% url 'products:product_detail' product.slug %}" class="product-image-container">
+                        <div class="image-overlay">
+                            <span class="view-details">View Details</span>
+                        </div>
                         {% if product.primary_image %}
                         <img src="{{ product.primary_image.image.url }}" alt="{{ product.title }}" class="card-img-top product-image">
                         {% else %}
@@ -27,11 +51,14 @@
                     </a>
 
                     <div class="card-body">
-                        <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="text-muted small">
-                            {{ product.vendor.business_name }}
-                        </a>
+                        <div class="vendor-badge">
+                            <a href="{% url 'vendors:vendor_detail' product.vendor.slug %}" class="vendor-link">
+                                <i class="fas fa-store me-1"></i> {{ product.vendor.business_name }}
+                            </a>
+                        </div>
+                        
                         <h6 class="product-title">
-                            <a href="{% url 'products:product_detail' product.slug %}" class="text-dark">
+                            <a href="{% url 'products:product_detail' product.slug %}">
                                 {{ product.title }}
                             </a>
                         </h6>
@@ -40,14 +67,17 @@
                             {% if product.reviews.count > 0 %}
                             {% with avg_rating=product.reviews.all|avg_rating %}
                             {% display_stars avg_rating %}
-                            <span class="text-muted small">({{ product.reviews.count }})</span>
+                            <span class="rating-count">({{ product.reviews.count }})</span>
                             {% endwith %}
                             {% else %}
-                            <span class="text-muted small">No reviews yet</span>
+                            <div class="no-reviews">
+                                <i class="far fa-star me-1"></i>
+                                <span>No reviews yet</span>
+                            </div>
                             {% endif %}
                         </div>
 
-                        <div class="product-price mt-2">
+                        <div class="product-price">
                             {% if product.is_on_sale %}
                             <span class="original-price">₹{{ product.price }}</span>
                             {% endif %}
@@ -55,32 +85,29 @@
                         </div>
                     </div>
 
-                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
-                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="quantity" value="1">
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-shopping-cart me-1"></i> Add to Cart
-                            </button>
-                        </form>
-
-                        <form action="{% url 'accounts:remove_from_wishlist' product.id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                    <div class="card-footer bg-white">
+                        <div class="wishlist-actions">
+                            <form action="{% url 'cart:add_to_cart' product.id %}" method="POST" class="w-100">
+                                {% csrf_token %}
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn btn-primary btn-add-to-cart">
+                                    <i class="fas fa-shopping-cart me-2"></i> Add to Cart
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="far fa-heart fa-4x text-muted mb-3"></i>
+        <div class="empty-wishlist">
+            <div class="empty-wishlist-icon">
+                <i class="far fa-heart"></i>
+            </div>
             <h3>Your wishlist is empty</h3>
-            <p class="text-muted">Add items to your wishlist to keep track of products you're interested in.</p>
-            <a href="{% url 'products:browse_products' %}" class="btn btn-primary mt-3">
+            <p>Add items to your wishlist to keep track of products you're interested in.</p>
+            <a href="{% url 'products:browse_products' %}" class="btn btn-primary btn-lg mt-3">
                 <i class="fas fa-shopping-bag me-2"></i> Browse Products
             </a>
         </div>

@@ -128,6 +128,13 @@ class Product(models.Model):
     def is_in_stock(self):
         """Check if the product is in stock."""
         return self.quantity > 0
+        
+    @property
+    def is_new(self):
+        """Check if the product is new (added within the last 14 days)."""
+        from django.utils import timezone
+        import datetime
+        return (timezone.now() - self.created_at).days <= 7
 
     @property
     def primary_image(self):
@@ -269,6 +276,11 @@ class ProductVariant(models.Model):
     @property
     def is_in_stock(self):
         return self.quantity > 0
+        
+    @property
+    def is_new(self):
+        """Check if the product variant is new (based on the parent product)."""
+        return self.product.is_new
 
 
 class ProductReview(models.Model):
