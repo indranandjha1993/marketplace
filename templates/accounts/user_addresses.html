@@ -4,6 +4,12 @@
 
 {% block account_extra_css %}
 <style>
+    /* Card header positioning */
+    .card-header {
+        position: relative;
+        z-index: 101; /* Higher than spinner overlay */
+    }
+    
     /* Dropdown menu styling */
     .address-actions .dropdown-menu {
         border-radius: 0.75rem;
@@ -77,6 +83,9 @@
         transition: all 0.3s ease;
         border-radius: 0.5rem;
         box-shadow: 0 4px 10px rgba(var(--account-primary-rgb), 0.15);
+        position: relative;
+        z-index: 10;
+        cursor: pointer !important;
     }
     
     .add-address-btn:hover {
@@ -101,7 +110,8 @@
 {% block account_content %}
 
 <div class="card profile-content">
-    <div class="spinner-overlay">
+    <!-- Spinner overlay positioned to avoid blocking the header -->
+    <div class="spinner-overlay" style="top: 60px; height: calc(100% - 60px);">
         <div class="spinner-border" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
@@ -114,7 +124,7 @@
             </h5>
             <p class="text-muted small mb-0 mt-1">Manage your shipping and billing addresses</p>
         </div>
-        <button type="button" class="btn btn-primary add-address-btn" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+        <button type="button" class="btn btn-primary add-address-btn" data-bs-toggle="modal" data-bs-target="#addressModal" style="position: relative; z-index: 200; cursor: pointer !important;">
             <i class="fas fa-plus me-2"></i> Add New Address
         </button>
     </div>
@@ -313,7 +323,8 @@
     
     // DOM elements
     const addressesContainer = document.getElementById('addressesContainer');
-    const addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+    const addressModalElement = document.getElementById('addressModal');
+    const addressModal = new bootstrap.Modal(addressModalElement);
     const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
     const addressForm = document.getElementById('addressForm');
     const modalTitle = document.getElementById('modalTitle');
@@ -326,6 +337,9 @@
     
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
+        // Make sure spinner is hidden initially
+        hideSpinner();
+        
         // Load addresses
         loadAddresses();
         
@@ -355,9 +369,14 @@
         });
         
         // Show add address modal
-        document.querySelector('[data-bs-target="#addAddressModal"]').addEventListener('click', function() {
-            modalTitle.textContent = 'Add New Address';
-            addressModal.show();
+        document.querySelectorAll('[data-bs-target="#addressModal"]').forEach(button => {
+            button.addEventListener('click', function() {
+                modalTitle.textContent = 'Add New Address';
+                // Clear form data for new address
+                addressForm.reset();
+                document.getElementById('addressId').value = '';
+                currentAddressId = null;
+            });
         });
     }
     
@@ -402,7 +421,7 @@
                                 <i class="fas fa-check-circle text-primary me-2"></i> Set default addresses for faster checkout
                             </div>
                         </div>
-                        <button type="button" class="btn btn-primary add-address-btn mt-2" data-bs-toggle="modal" data-bs-target="#addressModal">
+                        <button type="button" class="btn btn-primary add-address-btn mt-2" data-bs-toggle="modal" data-bs-target="#addressModal" style="position: relative; z-index: 200; cursor: pointer !important;">
                             <i class="fas fa-plus me-2"></i> Add Your First Address
                         </button>
                     </div>
@@ -751,12 +770,20 @@
     
     // Show spinner overlay
     function showSpinner() {
-        spinnerOverlay.classList.add('show');
+        if (spinnerOverlay) {
+            spinnerOverlay.classList.add('show');
+            // Ensure pointer events are active
+            spinnerOverlay.style.pointerEvents = 'all';
+        }
     }
     
     // Hide spinner overlay
     function hideSpinner() {
-        spinnerOverlay.classList.remove('show');
+        if (spinnerOverlay) {
+            spinnerOverlay.classList.remove('show');
+            // Ensure pointer events are none
+            spinnerOverlay.style.pointerEvents = 'none';
+        }
     }
 </script>
 {% endblock %}
