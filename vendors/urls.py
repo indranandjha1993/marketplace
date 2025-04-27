@@ -13,6 +13,7 @@ urlpatterns = [
     path('dashboard/products/<slug:slug>/delete/', views.ProductDeleteView.as_view(), name='delete_product'),
     path('dashboard/orders/', views.vendor_orders, name='vendor_orders'),
     path('dashboard/order/<str:order_number>/', views.vendor_order_detail, name='vendor_order_detail'),
+    path('dashboard/order/update-status/<int:vendor_order_id>/', views.update_order_status, name='update_order_status'),
     path('dashboard/profile/', views.vendor_profile, name='vendor_profile'),
     path('dashboard/settings/', views.vendor_settings, name='vendor_settings'),
     path('delete-document/<int:document_id>/', views.delete_vendor_document, name='delete_document'),

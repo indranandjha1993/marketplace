@@ -1,14 +1,56 @@
-{% extends 'base.html' %}
+{% extends 'vendors/dashboard/layouts/vendor_layout.html' %}
 {% load static %}
 
 {% block title %}Edit Product - {{ product.title }}{% endblock %}
 
-{% block extra_css %}
+{% block vendor_extra_css %}
 <style>
+    /* Enhanced tab styling */
+    .tab-content > .tab-pane {
+        display: none;
+    }
+    
+    .tab-content > .active {
+        display: block;
+    }
+    
+    .nav-tabs .nav-link {
+        cursor: pointer;
+        font-weight: 600;
+        padding: 12px 20px;
+        transition: all 0.3s ease;
+        border-radius: 0;
+        border: none;
+        position: relative;
+        color: #495057;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #3498db;
+        background-color: #fff;
+        border-bottom: 3px solid #3498db;
+    }
+    
+    .nav-tabs .nav-link.active:after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: #3498db;
+    }
+    
     .image-wrapper {
         position: relative;
         padding-top: 100%; /* 1:1 Aspect Ratio */
         overflow: hidden;
+        border-radius: 8px;
     }
 
     .product-image {
@@ -22,8 +64,32 @@
         transition: transform 0.3s ease;
     }
 
+    .image-card {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 1px solid #dee2e6;
+    }
+    
+    .image-card.is-primary {
+        border: 2px solid var(--vendor-primary);
+    }
+
     .image-card:hover .product-image {
         transform: scale(1.05);
+    }
+    
+    .primary-badge {
+        position: absolute;
+        top: 10px;
+        left: 0;
+        background-color: var(--vendor-primary);
+        color: white;
+        font-size: 12px;
+        padding: 3px 8px;
+        border-radius: 0 4px 4px 0;
+        font-weight: 600;
+        z-index: 2;
     }
 
     .image-overlay {
@@ -97,210 +163,269 @@
         color: #dc3545;
         font-size: 12px;
     }
+    
+    .upload-area {
+        border: 2px dashed var(--vendor-gray-300);
+        border-radius: 8px;
+        background-color: var(--vendor-gray-100);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .upload-area:hover, .upload-area.dragover {
+        border-color: var(--vendor-primary);
+        background-color: rgba(var(--vendor-primary-rgb), 0.05);
+    }
+    
+    .upload-area-inner {
+        padding: 30px;
+    }
+    
+    .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-md-3 col-lg-2 mb-4">
-            {% include 'vendors/includes/sidebar.html' %}
-        </div>
-        <div class="col-md-9 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Edit Product</h1>
-                <div>
-                    <a href="{% url 'vendors:vendor_products' %}" class="btn btn-outline-secondary me-2">
-                        <i class="fas fa-arrow-left me-1"></i> Back to Products
-                    </a>
-                    <a href="{% url 'vendors:delete_product' product.slug %}" class="btn btn-outline-danger">
-                        <i class="fas fa-trash me-1"></i> Delete Product
-                    </a>
-                </div>
+{% block vendor_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'vendors:vendor_products' %}" class="vendor-btn vendor-btn-outline me-2">
+            <i class="fas fa-arrow-left me-1"></i> Back to Products
+        </a>
+    </div>
+    <div>
+        <a href="{% url 'vendors:delete_product' product.slug %}" class="vendor-btn vendor-btn-danger">
+            <i class="fas fa-trash me-1"></i> Delete Product
+        </a>
+    </div>
+</div>
+
+<!-- Tab indicator -->
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <div>
+        <h4 class="mb-1">Editing: {{ product.title }}</h4>
+        <p class="text-muted">
+            <span class="badge bg-primary">
+                <i class="fas {% if active_tab == 'basic-info' %}fa-info-circle{% elif active_tab == 'images' %}fa-images{% elif active_tab == 'variants' %}fa-tags{% elif active_tab == 'seo' %}fa-search{% endif %} me-1"></i>
+                {% if active_tab == 'basic-info' %}Basic Info{% elif active_tab == 'images' %}Images{% elif active_tab == 'variants' %}Variants{% elif active_tab == 'seo' %}SEO{% endif %} Section
+            </span>
+        </p>
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('tab-debug').style.display = document.getElementById('tab-debug').style.display === 'none' ? 'block' : 'none';">
+        <i class="fas fa-bug me-1"></i> Debug
+    </button>
+</div>
+
+<div class="vendor-content">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'basic-info' %}active{% endif %}" id="basic-info-tab" data-bs-toggle="tab" type="button" role="tab" aria-controls="basic-info" aria-selected="{% if active_tab == 'basic-info' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-info-circle me-2"></i> Basic Info
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'images' %}active{% endif %}" id="images-tab" data-bs-toggle="tab" type="button" role="tab" aria-controls="images" aria-selected="{% if active_tab == 'images' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-images me-2"></i> Images
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'variants' %}active{% endif %}" id="variants-tab" data-bs-toggle="tab" type="button" role="tab" aria-controls="variants" aria-selected="{% if active_tab == 'variants' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-tags me-2"></i> Variants
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if active_tab == 'seo' %}active{% endif %}" id="seo-tab" data-bs-toggle="tab" type="button" role="tab" aria-controls="seo" aria-selected="{% if active_tab == 'seo' %}true{% else %}false{% endif %}">
+                    <i class="fas fa-search me-2"></i> SEO
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content" id="productTabsContent">
+            <!-- Basic Info Tab -->
+            <div class="tab-pane fade {% if active_tab == 'basic-info' %}show active{% endif %}" id="basic-info" role="tabpanel" aria-labelledby="basic-info-tab">
+                <form method="post" id="basic-info-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_basic_info">
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="title" class="form-label required-field">Product Title</label>
+                                <input type="text" class="form-control" id="title" name="title" value="{{ product.title }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="description" class="form-label required-field">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="5" required>{{ product.description }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="category" class="form-label required-field">Category</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    {% for category in all_categories %}
+                                    <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="brand" class="form-label">Brand</label>
+                                <select class="form-select" id="brand" name="brand">
+                                    <option value="">Select Brand (Optional)</option>
+                                    {% for brand in brands %}
+                                    <option value="{{ brand.id }}" {% if product.brand and product.brand.id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="status" class="form-label required-field">Status</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="draft" {% if product.status == 'draft' %}selected{% endif %}>Draft</option>
+                                    <option value="active" {% if product.status == 'active' %}selected{% endif %}>Active</option>
+                                    <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="price" class="form-label required-field">Regular Price (₹)</label>
+                                <input type="number" class="form-control" id="price" name="price" value="{{ product.price|floatformat:'-1' }}" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="sale_price" class="form-label">Sale Price (₹)</label>
+                                <input type="number" class="form-control" id="sale_price" name="sale_price" value="{% if product.sale_price %}{{ product.sale_price|floatformat:'-1' }}{% endif %}" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="tax_rate" class="form-label">Tax Rate (%)</label>
+                                <input type="number" class="form-control" id="tax_rate" name="tax_rate" value="{{ product.tax_rate|floatformat:'-1' }}" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label required-field">Stock Quantity</label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" value="{{ product.quantity }}" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="sku" class="form-label required-field">SKU</label>
+                                <input type="text" class="form-control" id="sku" name="sku" value="{{ product.sku }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3 form-check mt-4">
+                                <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" {% if product.is_featured %}checked{% endif %}>
+                                <label class="form-check-label" for="is_featured">Feature this product on the homepage</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="vendor-btn vendor-btn-primary">
+                            <i class="fas fa-save me-2"></i> Save Basic Info
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <ul class="nav nav-tabs card-header-tabs" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if active_tab == 'basic-info' %}active{% endif %}" id="basic-info-tab" data-bs-toggle="tab" data-bs-target="#basic-info" type="button" role="tab" aria-controls="basic-info" aria-selected="{% if active_tab == 'basic-info' %}true{% else %}false{% endif %}">Basic Info</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if active_tab == 'images' %}active{% endif %}" id="images-tab" data-bs-toggle="tab" data-bs-target="#images" type="button" role="tab" aria-controls="images" aria-selected="{% if active_tab == 'images' %}true{% else %}false{% endif %}">Images</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if active_tab == 'variants' %}active{% endif %}" id="variants-tab" data-bs-toggle="tab" data-bs-target="#variants" type="button" role="tab" aria-controls="variants" aria-selected="{% if active_tab == 'variants' %}true{% else %}false{% endif %}">Variants</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link {% if active_tab == 'seo' %}active{% endif %}" id="seo-tab" data-bs-toggle="tab" data-bs-target="#seo" type="button" role="tab" aria-controls="seo" aria-selected="{% if active_tab == 'seo' %}true{% else %}false{% endif %}">SEO</button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    <div class="tab-content" id="productTabsContent">
-                        <!-- Basic Info Tab -->
-                        <div class="tab-pane fade {% if active_tab == 'basic-info' %}show active{% endif %}" id="basic-info" role="tabpanel" aria-labelledby="basic-info-tab">
-                            <form method="post" id="basic-info-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update_basic_info">
+            <!-- Images Tab -->
+            <div class="tab-pane fade {% if active_tab == 'images' %}show active{% endif %}" id="images" role="tabpanel" aria-labelledby="images-tab">
+                <form method="post" enctype="multipart/form-data" id="images-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_images">
 
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <div class="mb-3">
-                                            <label for="title" class="form-label required-field">Product Title</label>
-                                            <input type="text" class="form-control" id="title" name="title" value="{{ product.title }}" required>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="description" class="form-label required-field">Description</label>
-                                            <textarea class="form-control" id="description" name="description" rows="5" required>{{ product.description }}</textarea>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="mb-3">
-                                            <label for="category" class="form-label required-field">Category</label>
-                                            <select class="form-select" id="category" name="category" required>
-                                                <option value="">Select Category</option>
-                                                {% for category in all_categories %}
-                                                <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="brand" class="form-label">Brand</label>
-                                            <select class="form-select" id="brand" name="brand">
-                                                <option value="">Select Brand (Optional)</option>
-                                                {% for brand in brands %}
-                                                <option value="{{ brand.id }}" {% if product.brand and product.brand.id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="status" class="form-label required-field">Status</label>
-                                            <select class="form-select" id="status" name="status" required>
-                                                <option value="draft" {% if product.status == 'draft' %}selected{% endif %}>Draft</option>
-                                                <option value="active" {% if product.status == 'active' %}selected{% endif %}>Active</option>
-                                                <option value="inactive" {% if product.status == 'inactive' %}selected{% endif %}>Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="price" class="form-label required-field">Regular Price (₹)</label>
-                                            <input type="number" class="form-control" id="price" name="price" value="{{ product.price|floatformat:'-1' }}" min="0" step="0.01" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="sale_price" class="form-label">Sale Price (₹)</label>
-                                            <input type="number" class="form-control" id="sale_price" name="sale_price" value="{% if product.sale_price %}{{ product.sale_price|floatformat:'-1' }}{% endif %}" min="0" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="tax_rate" class="form-label">Tax Rate (%)</label>
-                                            <input type="number" class="form-control" id="tax_rate" name="tax_rate" value="{{ product.tax_rate|floatformat:'-1' }}" min="0" step="0.01">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="mb-3">
-                                            <label for="quantity" class="form-label required-field">Stock Quantity</label>
-                                            <input type="number" class="form-control" id="quantity" name="quantity" value="{{ product.quantity }}" min="0" required>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="mb-3">
-                                            <label for="sku" class="form-label required-field">SKU</label>
-                                            <input type="text" class="form-control" id="sku" name="sku" value="{{ product.sku }}" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="mb-3 form-check mt-4">
-                                            <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" {% if product.is_featured %}checked{% endif %}>
-                                            <label class="form-check-label" for="is_featured">Feature this product on the homepage</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">Save Basic Info</button>
-                                </div>
-                            </form>
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Current Images</h5>
                         </div>
-
-                        <!-- Images Tab -->
-                        <div class="tab-pane fade {% if active_tab == 'images' %}show active{% endif %}" id="images" role="tabpanel" aria-labelledby="images-tab">
-                            <form method="post" enctype="multipart/form-data" id="images-form">
-                                {% csrf_token %}
-                                <input type="hidden" name="action" value="update_images">
-
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0">Current Images</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        {% if product.images.exists %}
-                                        <div class="row image-gallery">
-                                            {% for image in product.images.all %}
-                                            <div class="col-md-3 col-sm-4 col-6 mb-3">
-                                                <div class="image-card">
-                                                    <div class="image-wrapper">
-                                                        <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" class="product-image">
-                                                        <div class="image-overlay">
-                                                            <div class="image-actions">
-                                                                <div class="form-check">
-                                                                    <input type="radio" class="form-check-input" name="primary_image" value="{{ image.id }}" id="image_{{ image.id }}" {% if image.is_primary %}checked{% endif %}>
-                                                                    <label class="form-check-label" for="image_{{ image.id }}">Primary</label>
-                                                                </div>
-                                                                <div class="form-check">
-                                                                    <input type="checkbox" class="form-check-input" name="delete_images" value="{{ image.id }}" id="delete_{{ image.id }}">
-                                                                    <label class="form-check-label" for="delete_{{ image.id }}">Delete</label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                        <div class="card-body">
+                            {% if product.images.exists %}
+                            <div class="row image-gallery">
+                                {% for image in product.images.all %}
+                                <div class="col-md-3 col-sm-4 col-6 mb-3">
+                                    <div class="image-card {% if image.is_primary %}is-primary{% endif %}">
+                                        <div class="image-wrapper">
+                                            <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" class="product-image">
+                                            {% if image.is_primary %}
+                                            <div class="primary-badge">Primary Image</div>
+                                            {% endif %}
+                                            <div class="image-overlay">
+                                                <div class="image-actions">
+                                                    <div class="form-check">
+                                                        <input type="radio" class="form-check-input" name="primary_image" value="{{ image.id }}" id="image_{{ image.id }}" {% if image.is_primary %}checked{% endif %}>
+                                                        <label class="form-check-label" for="image_{{ image.id }}">Set as Primary</label>
+                                                    </div>
+                                                    <div class="form-check">
+                                                        <input type="checkbox" class="form-check-input" name="delete_images" value="{{ image.id }}" id="delete_{{ image.id }}">
+                                                        <label class="form-check-label" for="delete_{{ image.id }}">Delete</label>
                                                     </div>
                                                 </div>
                                             </div>
-                                            {% endfor %}
-                                        </div>
-                                        {% else %}
-                                        <div class="alert alert-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            No product images have been uploaded yet.
-                                        </div>
-                                        {% endif %}
                                     </div>
                                 </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                No product images have been uploaded yet.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                                <div class="card mb-4">
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0">Add New Images</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-3">
-                                            <label for="new_images" class="form-label">Select Images</label>
-                                            <input type="file" class="form-control" id="new_images" name="new_images" multiple accept="image/*">
-                                            <div class="form-text text-muted mt-1">
-                                                <i class="fas fa-info-circle me-1"></i>
-                                                You can select multiple images. The first image will be set as primary if no primary image is already set.
-                                            </div>
-                                        </div>
-
-                                        <div id="image-preview-container" class="row mt-3" style="display: none;">
-                                            <div class="col-12">
-                                                <h6>Preview:</h6>
-                                                <div class="image-previews row"></div>
-                                            </div>
-                                        </div>
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Add New Images</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="upload-area" id="upload-area">
+                                    <div class="upload-area-inner text-center p-4">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                        <h5>Drag & Drop Images Here</h5>
+                                        <p class="text-muted mb-3">or</p>
+                                        <label for="new_images" class="vendor-btn vendor-btn-outline">
+                                            <i class="fas fa-images me-2"></i> Browse Images
+                                        </label>
+                                        <input type="file" class="form-control visually-hidden" id="new_images" name="new_images" multiple accept="image/*">
                                     </div>
                                 </div>
+                                <div class="form-text text-muted mt-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    You can select multiple images. The first image will be set as primary if no primary image is already set.
+                                </div>
+                            </div>
 
-                                <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i> Save Images
-                                    </button>
+                            <div id="image-preview-container" class="mt-4" style="display: none;">
+                                <h6 class="mb-3">New Images Preview:</h6>
+                                <div class="image-previews d-flex flex-wrap gap-3"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="vendor-btn vendor-btn-primary">
+                            <i class="fas fa-save me-2"></i> Save Images
+                        </button>
                                 </div>
                             </form>
                         </div>
@@ -310,7 +435,7 @@
                             <div class="mb-3 form-check">
                                 <input type="checkbox" class="form-check-input" id="has_variants" name="has_variants" {% if has_active_variants %}checked{% endif %}>
                                 <label class="form-check-label" for="has_variants">This product has multiple variants</label>
-                                <button type="button" id="save_variants_setting" class="btn btn-primary ms-3" style="display: none;">Apply</button>
+                                <button type="button" id="save_variants_setting" class="vendor-btn vendor-btn-primary ms-3" style="display: none;">Apply</button>
                             </div>
 
                             <div id="variants_container" {% if not has_active_variants %}style="display: none;"{% endif %}>
@@ -452,19 +577,63 @@
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">Save SEO Settings</button>
+                                    <button type="submit" class="vendor-btn vendor-btn-primary">
+                                        <i class="fas fa-save me-2"></i> Save SEO Settings
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
-{% block extra_js %}
+{% block vendor_extra_js %}
+<!-- Debug info for tab system -->
+<div id="tab-debug" class="mt-4 p-3 bg-light border rounded" style="display: none;">
+    <h5>Tab Debug Info</h5>
+    <div id="tab-debug-content"></div>
+    <div class="mt-3">
+        <h6>Manual Tab Navigation:</h6>
+        <div class="btn-group">
+            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('basic-info')">Basic Info</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('images')">Images</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('variants')">Variants</button>
+            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('seo')">SEO</button>
+        </div>
+    </div>
+    <button class="btn btn-sm btn-secondary mt-3" onclick="document.getElementById('tab-debug').style.display='none';">Close</button>
+</div>
+
+<script>
+// Global function for manual tab activation
+function manualActivateTab(tabId) {
+    // Hide all tab panes
+    document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.remove('show', 'active');
+    });
+    
+    // Show the selected tab pane
+    const selectedPane = document.getElementById(tabId);
+    if (selectedPane) {
+        selectedPane.classList.add('show', 'active');
+        console.log(`Manually activated tab: ${tabId}`);
+        
+        // Update the active tab button
+        document.querySelectorAll('#productTabs .nav-link').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const tabButton = document.getElementById(`${tabId}-tab`);
+        if (tabButton) {
+            tabButton.classList.add('active');
+        }
+    } else {
+        console.error(`Could not find tab pane: ${tabId}`);
+    }
+}
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Track unsaved changes
@@ -509,6 +678,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check if form has changes compared to original values
     function checkFormChanges(form) {
         if (!form || !form.id) return false;
+
+        // Make sure we have original values for this form
+        if (!Object.keys(originalFormValues).some(key => key.startsWith(form.id + '_'))) {
+            storeOriginalValues(form);
+            return false;
+        }
 
         const formData = new FormData(form);
         let changed = false;
@@ -800,7 +975,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset form tracking after successful submission
     function resetFormChanges(form) {
         if (!form || !form.id) return;
-        storeOriginalValues(form);
+        
+        // Re-store original values for this form
+        const formData = new FormData(form);
+        for (let [key, value] of formData.entries()) {
+            // Skip csrf token
+            if (key === 'csrfmiddlewaretoken') continue;
+            // Store values
+            originalFormValues[form.id + '_' + key] = value;
+        }
+        
+        // Special handling for checkboxes
+        form.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            originalFormValues[form.id + '_' + checkbox.name] = checkbox.checked ? 'on' : '';
+        });
 
         const saveBtn = form.querySelector('button[type="submit"]');
         if (saveBtn) {
@@ -809,46 +997,198 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    form.addEventListener('submit', function() {
-        setTimeout(() => resetFormChanges(form), 100);
+    // Add submit event listeners to all forms
+    document.querySelectorAll('form[id]').forEach(formElement => {
+        formElement.addEventListener('submit', function() {
+            setTimeout(() => resetFormChanges(formElement), 100);
+        });
     });
 });
 
-// Image preview functionality
+// Enhanced tab navigation system
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug function
+    function debugTab(message) {
+        const debugElement = document.getElementById('tab-debug-content');
+        if (debugElement) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugElement.innerHTML += `<div><strong>${timestamp}:</strong> ${message}</div>`;
+            document.getElementById('tab-debug').style.display = 'block';
+        }
+        console.log(`[Tab Debug] ${message}`);
+    }
+    
+    // Get all tab buttons
+    const tabButtons = document.querySelectorAll('#productTabs .nav-link');
+    debugTab(`Found ${tabButtons.length} tab buttons`);
+    
+    // Function to activate a tab
+    function activateTab(tabId) {
+        debugTab(`Activating tab: ${tabId}`);
+        
+        // Hide all tab panes
+        const allPanes = document.querySelectorAll('.tab-pane');
+        debugTab(`Found ${allPanes.length} tab panes to hide`);
+        allPanes.forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+        
+        // Deactivate all tab buttons
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
+        });
+        
+        // Activate the selected tab button
+        const selectedButton = document.querySelector(`#${tabId}-tab`);
+        if (selectedButton) {
+            debugTab(`Found tab button: #${tabId}-tab`);
+            selectedButton.classList.add('active');
+            selectedButton.setAttribute('aria-selected', 'true');
+        } else {
+            debugTab(`ERROR: Could not find tab button: #${tabId}-tab`);
+        }
+        
+        // Show the selected tab pane
+        const selectedPane = document.getElementById(tabId);
+        if (selectedPane) {
+            debugTab(`Found tab pane: #${tabId}`);
+            selectedPane.classList.add('show', 'active');
+        } else {
+            debugTab(`ERROR: Could not find tab pane: #${tabId}`);
+        }
+    }
+    
+    // Add click event listeners to all tab buttons
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabId = this.getAttribute('aria-controls');
+            activateTab(tabId);
+            
+            // Update URL with tab info (optional)
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabId);
+            window.history.replaceState({}, '', url);
+        });
+    });
+    
+    // Check if there's a tab parameter in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    // Activate the appropriate tab
+    if (tabParam && document.getElementById(tabParam)) {
+        activateTab(tabParam);
+    } else if (document.querySelector('.nav-link.active')) {
+        // If a tab is already marked as active, activate its pane
+        const activeTabId = document.querySelector('.nav-link.active').getAttribute('aria-controls');
+        activateTab(activeTabId);
+    } else {
+        // Default to the first tab if none is active
+        const firstTabId = tabButtons[0]?.getAttribute('aria-controls');
+        if (firstTabId) {
+            activateTab(firstTabId);
+        }
+    }
+    
+    // Add visual feedback when clicking tabs
+    tabButtons.forEach(button => {
+        button.addEventListener('mousedown', function() {
+            this.style.transform = 'scale(0.97)';
+        });
+        
+        button.addEventListener('mouseup', function() {
+            this.style.transform = 'scale(1)';
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+
+// Image preview and drag-drop functionality
 document.addEventListener('DOMContentLoaded', function() {
     const newImagesInput = document.getElementById('new_images');
     const previewContainer = document.getElementById('image-preview-container');
     const previewsDiv = document.querySelector('.image-previews');
+    const uploadArea = document.getElementById('upload-area');
 
-    if (newImagesInput) {
-        newImagesInput.addEventListener('change', function() {
+    if (newImagesInput && uploadArea) {
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('dragover');
+        }
+
+        uploadArea.addEventListener('drop', handleDrop, false);
+        uploadArea.addEventListener('click', function() {
+            newImagesInput.click();
+        });
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            newImagesInput.files = files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
             previewsDiv.innerHTML = '';
 
-            if (this.files.length > 0) {
+            if (files.length > 0) {
                 previewContainer.style.display = 'block';
 
-                Array.from(this.files).forEach((file, index) => {
+                Array.from(files).forEach((file, index) => {
                     if (file.type.match('image.*')) {
                         const reader = new FileReader();
 
                         reader.onload = function(e) {
                             const preview = document.createElement('div');
-                            preview.className = 'image-preview-item col-auto';
-                            preview.innerHTML = `
-                                <img src="${e.target.result}" alt="Preview">
-                                <span class="remove-preview" data-index="${index}"><i class="fas fa-times"></i></span>
-                            `;
+                            preview.className = 'image-preview-item';
+                            preview.style.width = '120px';
+                            preview.style.height = '120px';
+                            preview.style.position = 'relative';
+                            preview.style.borderRadius = '8px';
+                            preview.style.overflow = 'hidden';
+                            preview.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                            preview.style.margin = '5px';
+                            
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.style.width = '100%';
+                            img.style.height = '100%';
+                            img.style.objectFit = 'cover';
+                            
+                            const removeBtn = document.createElement('span');
+                            removeBtn.className = 'remove-preview';
+                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                            removeBtn.dataset.index = index;
+                            
+                            preview.appendChild(img);
+                            preview.appendChild(removeBtn);
                             previewsDiv.appendChild(preview);
-
-                            // Add remove functionality
-                            preview.querySelector('.remove-preview').addEventListener('click', function() {
-                                preview.remove();
-                                // If no previews left, hide container
-                                if (previewsDiv.children.length === 0) {
-                                    previewContainer.style.display = 'none';
-                                }
-                                // Note: Can't actually remove from FileList, just visual feedback
-                            });
                         };
 
                         reader.readAsDataURL(file);
@@ -856,6 +1196,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else {
                 previewContainer.style.display = 'none';
+            }
+        }
+
+        newImagesInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        // Add event delegation for remove buttons
+        previewsDiv.addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.remove-preview');
+            if (removeBtn) {
+                const previewItem = removeBtn.closest('.image-preview-item');
+                if (previewItem) {
+                    previewItem.remove();
+                    
+                    // If no previews left, hide container
+                    if (previewsDiv.children.length === 0) {
+                        previewContainer.style.display = 'none';
+                    }
+                    // Note: Can't actually remove from FileList, just visual feedback
+                }
             }
         });
     }

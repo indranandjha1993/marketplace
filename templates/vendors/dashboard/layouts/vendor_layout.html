@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/vendors.css">
+{% block vendor_extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 vendor-container">
+    {% with page_title=page_title|default:"Vendor Dashboard" show_breadcrumbs=True breadcrumb_active=breadcrumb_active|default:page_title header_icon=header_icon|default:"store" %}
+    {% include 'vendors/dashboard/includes/vendor_header.html' %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            {% with active_tab=active_tab|default:"dashboard" %}
+            {% include 'vendors/dashboard/includes/vendor_sidebar.html' %}
+            {% endwith %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            {% block vendor_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% block vendor_extra_js %}{% endblock %}
+{% endblock %}

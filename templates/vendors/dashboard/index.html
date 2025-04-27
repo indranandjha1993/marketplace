@@ -1,178 +1,184 @@
-{% extends 'base.html' %}
+{% extends 'vendors/dashboard/layouts/vendor_layout.html' %}
 
 {% block title %}Vendor Dashboard{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <div class="row">
-        <div class="col-md-3 col-lg-2 mb-4">
-            {% include 'vendors/includes/sidebar.html' %}
+{% block vendor_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="btn-group">
+        <a href="{% url 'vendors:add_product' %}" class="vendor-btn vendor-btn-primary">
+            <i class="fas fa-plus me-2"></i> Add New Product
+        </a>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="vendor-content mb-4">
+    <div class="card-body">
+        <form method="GET" class="d-flex align-items-center">
+            <label class="me-3 mb-0">Date Range:</label>
+            <div class="btn-group" role="group">
+                <a href="?range=7days" class="vendor-btn {% if date_range == '7days' %}vendor-btn-primary{% else %}vendor-btn-outline{% endif %}">7 Days</a>
+                <a href="?range=30days" class="vendor-btn {% if date_range == '30days' %}vendor-btn-primary{% else %}vendor-btn-outline{% endif %}">30 Days</a>
+                <a href="?range=90days" class="vendor-btn {% if date_range == '90days' %}vendor-btn-primary{% else %}vendor-btn-outline{% endif %}">90 Days</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Dashboard Overview -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="vendor-stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: var(--vendor-primary);">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+                <h6 class="stat-label">Total Sales</h6>
+                <div class="stat-value">₹{{ total_sales }}</div>
+            </div>
         </div>
-        <div class="col-md-9 col-lg-10">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0">Welcome, {{ vendor.business_name }}</h1>
-                <div class="btn-group">
-                    <a href="{% url 'vendors:add_product' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i> Add New Product
-                    </a>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="vendor-stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: var(--vendor-success);">
+                    <i class="fas fa-shopping-cart"></i>
                 </div>
+                <h6 class="stat-label">Total Orders</h6>
+                <div class="stat-value">{{ total_orders }}</div>
             </div>
-
-            <!-- Date Range Filter -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <form method="GET" class="d-flex align-items-center">
-                        <label class="me-3 mb-0">Date Range:</label>
-                        <div class="btn-group" role="group">
-                            <a href="?range=7days" class="btn btn-outline-secondary {% if date_range == '7days' %}active{% endif %}">7 Days</a>
-                            <a href="?range=30days" class="btn btn-outline-secondary {% if date_range == '30days' %}active{% endif %}">30 Days</a>
-                            <a href="?range=90days" class="btn btn-outline-secondary {% if date_range == '90days' %}active{% endif %}">90 Days</a>
-                        </div>
-                    </form>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="vendor-stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: var(--vendor-info);">
+                    <i class="fas fa-box"></i>
                 </div>
+                <h6 class="stat-label">Active Products</h6>
+                <div class="stat-value">{{ active_products }}</div>
             </div>
-
-            <!-- Dashboard Overview -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-primary text-white h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Sales</h5>
-                            <p class="card-text display-6">₹{{ total_sales }}</p>
-                        </div>
-                    </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="vendor-stat-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background: var(--vendor-warning);">
+                    <i class="fas fa-clock"></i>
                 </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-success text-white h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Total Orders</h5>
-                            <p class="card-text display-6">{{ total_orders }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-info text-white h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Active Products</h5>
-                            <p class="card-text display-6">{{ active_products }}</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-3">
-                    <div class="card bg-warning text-dark h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">Pending Orders</h5>
-                            <p class="card-text display-6">{{ pending_orders }}</p>
-                        </div>
-                    </div>
-                </div>
+                <h6 class="stat-label">Pending Orders</h6>
+                <div class="stat-value">{{ pending_orders }}</div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Sales Chart -->
-            <div class="card mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Sales Overview</h5>
+<!-- Sales Chart -->
+<div class="vendor-chart-container mb-4">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Sales Overview</h5>
+    </div>
+    <div class="vendor-chart-body">
+        <canvas id="salesChart" height="250"></canvas>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="vendor-chart-container mb-4">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Recent Orders</h5>
+        <a href="{% url 'vendors:vendor_orders' %}" class="vendor-btn vendor-btn-outline">
+            <i class="fas fa-eye me-1"></i> View All
+        </a>
+    </div>
+    <div class="vendor-chart-body p-0">
+        {% if recent_orders %}
+        <div class="table-responsive">
+            <table class="vendor-table">
+                <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in recent_orders|slice:":5" %}
+                <tr>
+                    <td>
+                        <a href="{% url 'vendors:vendor_order_detail' order.order.order_number %}">
+                            {{ order.order.order_number }}
+                        </a>
+                    </td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>{{ order.order.user.get_full_name|default:order.order.user.email }}</td>
+                    <td>₹{{ order.total_vendor_amount }}</td>
+                    <td>
+                        {% if order.status == 'pending' %}
+                        <span class="vendor-badge vendor-badge-warning">Pending</span>
+                        {% elif order.status == 'processing' %}
+                        <span class="vendor-badge vendor-badge-info">Processing</span>
+                        {% elif order.status == 'shipped' %}
+                        <span class="vendor-badge vendor-badge-primary">Shipped</span>
+                        {% elif order.status == 'delivered' %}
+                        <span class="vendor-badge vendor-badge-success">Delivered</span>
+                        {% elif order.status == 'cancelled' %}
+                        <span class="vendor-badge vendor-badge-danger">Cancelled</span>
+                        {% elif order.status == 'refunded' %}
+                        <span class="vendor-badge vendor-badge-secondary">Refunded</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'vendors:vendor_order_detail' order.order.order_number %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <p class="text-muted mb-0">No orders yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Inventory Status -->
+<div class="vendor-chart-container">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Inventory Status</h5>
+        <a href="{% url 'vendors:vendor_products' %}" class="vendor-btn vendor-btn-outline">
+            <i class="fas fa-boxes me-1"></i> Manage Inventory
+        </a>
+    </div>
+    <div class="vendor-chart-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="vendor-icon-wrapper">
+                    <i class="fas fa-box fa-2x"></i>
                 </div>
-                <div class="card-body">
-                    <canvas id="salesChart" height="250"></canvas>
-                </div>
+                <h2 class="display-6">{{ total_products }}</h2>
+                <p class="text-muted">Total Products</p>
             </div>
-
-            <!-- Recent Orders -->
-            <div class="card mb-4">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Recent Orders</h5>
-                    <a href="{% url 'vendors:vendor_orders' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            <div class="col-md-4 text-center">
+                <div class="vendor-icon-wrapper" style="background: var(--vendor-success);">
+                    <i class="fas fa-check-circle fa-2x"></i>
                 </div>
-                <div class="card-body p-0">
-                    {% if recent_orders %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                            <tr>
-                                <th>Order #</th>
-                                <th>Date</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {% for order in recent_orders|slice:":5" %}
-                            <tr>
-                                <td>
-                                    <a href="{% url 'vendors:vendor_order_detail' order.order.order_number %}">
-                                        {{ order.order.order_number }}
-                                    </a>
-                                </td>
-                                <td>{{ order.created_at|date:"M d, Y" }}</td>
-                                <td>{{ order.order.user.get_full_name|default:order.order.user.email }}</td>
-                                <td>₹{{ order.total_vendor_amount }}</td>
-                                <td>
-                                    {% if order.status == 'pending' %}
-                                    <span class="badge bg-warning">Pending</span>
-                                    {% elif order.status == 'processing' %}
-                                    <span class="badge bg-info">Processing</span>
-                                    {% elif order.status == 'shipped' %}
-                                    <span class="badge bg-primary">Shipped</span>
-                                    {% elif order.status == 'delivered' %}
-                                    <span class="badge bg-success">Delivered</span>
-                                    {% elif order.status == 'cancelled' %}
-                                    <span class="badge bg-danger">Cancelled</span>
-                                    {% elif order.status == 'refunded' %}
-                                    <span class="badge bg-secondary">Refunded</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'vendors:vendor_order_detail' order.order.order_number %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-4">
-                        <p class="text-muted mb-0">No orders yet.</p>
-                    </div>
-                    {% endif %}
-                </div>
+                <h2 class="display-6">{{ active_products }}</h2>
+                <p class="text-muted">Active Products</p>
             </div>
-
-            <!-- Low Stock Products -->
-            <div class="card">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Inventory Status</h5>
-                    <a href="{% url 'vendors:vendor_products' %}" class="btn btn-sm btn-outline-primary">Manage Inventory</a>
+            <div class="col-md-4 text-center">
+                <div class="vendor-icon-wrapper" style="background: var(--vendor-warning);">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle p-3 mb-3" style="width: 80px; height: 80px;">
-                                <i class="fas fa-box fa-2x text-primary"></i>
-                            </div>
-                            <h2 class="display-6">{{ total_products }}</h2>
-                            <p class="text-muted">Total Products</p>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle p-3 mb-3" style="width: 80px; height: 80px;">
-                                <i class="fas fa-check-circle fa-2x text-success"></i>
-                            </div>
-                            <h2 class="display-6">{{ active_products }}</h2>
-                            <p class="text-muted">Active Products</p>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="d-inline-flex justify-content-center align-items-center bg-light rounded-circle p-3 mb-3" style="width: 80px; height: 80px;">
-                                <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
-                            </div>
-                            <h2 class="display-6">{{ out_of_stock }}</h2>
-                            <p class="text-muted">Out of Stock</p>
-                        </div>
-                    </div>
-                </div>
+                <h2 class="display-6">{{ out_of_stock }}</h2>
+                <p class="text-muted">Out of Stock</p>
             </div>
         </div>
     </div>
@@ -184,66 +190,148 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Sales chart
-        const salesData = {{ daily_sales|safe }};
-        const dates = salesData.map(d => new Date(d.day).toLocaleDateString());
-        const revenues = salesData.map(d => d.revenue);
-        const orderCounts = salesData.map(d => d.orders);
+        try {
+            const salesData = JSON.parse('{{ daily_sales|escapejs }}');
+            
+            if (salesData && salesData.length > 0) {
+                const dates = salesData.map(d => {
+                    const date = new Date(d.day);
+                    return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+                });
+                const revenues = salesData.map(d => d.revenue);
+                const orderCounts = salesData.map(d => d.orders);
 
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [
-                    {
-                        label: 'Revenue',
-                        data: revenues,
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        yAxisID: 'y',
-                        tension: 0.1
+                const ctx = document.getElementById('salesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dates,
+                        datasets: [
+                            {
+                                label: 'Revenue',
+                                data: revenues,
+                                borderColor: 'rgb(52, 152, 219)',
+                                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                                borderWidth: 2,
+                                yAxisID: 'y',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Orders',
+                                data: orderCounts,
+                                borderColor: 'rgb(46, 204, 113)',
+                                backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                                borderWidth: 2,
+                                yAxisID: 'y1',
+                                tension: 0.3
+                            }
+                        ]
                     },
-                    {
-                        label: 'Orders',
-                        data: orderCounts,
-                        borderColor: 'rgb(255, 99, 132)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        yAxisID: 'y1',
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                scales: {
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Revenue (₹)'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        grid: {
-                            drawOnChartArea: false,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
                         },
-                        title: {
-                            display: true,
-                            text: 'Order Count'
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    usePointStyle: true,
+                                    padding: 20
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#333',
+                                bodyColor: '#666',
+                                borderColor: '#ddd',
+                                borderWidth: 1,
+                                padding: 12,
+                                boxPadding: 6,
+                                usePointStyle: true,
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.datasetIndex === 0) {
+                                            label += '₹' + context.parsed.y.toFixed(2);
+                                        } else {
+                                            label += context.parsed.y;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            },
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Revenue (₹)',
+                                    color: 'rgb(52, 152, 219)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₹' + value;
+                                    }
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Order Count',
+                                    color: 'rgb(46, 204, 113)',
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            }
                         }
                     }
-                }
+                });
+            } else {
+                // No data available
+                const chartContainer = document.getElementById('salesChart').parentNode;
+                chartContainer.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No sales data available for the selected period.</p>
+                    </div>
+                `;
             }
-        });
+        } catch (error) {
+            console.error('Error initializing chart:', error);
+            // Show error message
+            const chartContainer = document.getElementById('salesChart').parentNode;
+            chartContainer.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <p class="text-muted">There was an error loading the sales chart. Please try again later.</p>
+                </div>
+            `;
+        }
     });
 </script>
 {% endblock %}

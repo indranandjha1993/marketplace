@@ -1,0 +1,25 @@
+<div class="vendor-page-header animate-fadeInUp">
+    <div class="vendor-header-content">
+        <div class="vendor-header-icon">
+            <i class="fas fa-{{ header_icon|default:'store' }}"></i>
+        </div>
+        <div class="vendor-header-text">
+            <h1>{{ page_title }}</h1>
+            {% if subtitle %}
+            <p class="text-muted">{{ subtitle }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if show_breadcrumbs %}
+    <nav aria-label="breadcrumb" class="vendor-breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'products:home' %}"><i class="fas fa-home me-1"></i> Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'vendors:vendor_dashboard' %}"><i class="fas fa-store me-1"></i> Vendor Dashboard</a></li>
+            {% if breadcrumb_active %}
+            <li class="breadcrumb-item active" aria-current="page">{{ breadcrumb_active }}</li>
+            {% endif %}
+        </ol>
+    </nav>
+    {% endif %}
+</div>

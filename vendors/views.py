@@ -37,7 +37,7 @@ def vendor_list(request):
 
     # Pagination
     paginator = Paginator(vendors, 12)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', '')
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -68,7 +68,7 @@ def vendor_detail(request, vendor_slug):
     )
 
     # Apply filters and sorting
-    category_id = request.GET.get('category')
+    category_id = request.GET.get('category', '')
     sort = request.GET.get('sort', '-created_at')  # Default sorting by newest
 
     if category_id:
@@ -90,7 +90,7 @@ def vendor_detail(request, vendor_slug):
 
     # Pagination
     paginator = Paginator(products, 20)  # 20 products per page
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', '')
     page_obj = paginator.get_page(page_number)
 
     # Get vendor reviews
@@ -214,6 +214,25 @@ def vendor_dashboard(request):
         revenue=Sum('total_vendor_amount'),
         orders=Count('id')
     ).order_by('day')
+    
+    # Convert Decimal to float for JSON serialization
+    import json
+    from decimal import Decimal
+    
+    class DecimalEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if isinstance(obj, Decimal):
+                return float(obj)
+            return super(DecimalEncoder, self).default(obj)
+    
+    # Format the daily sales data for the chart
+    formatted_daily_sales = []
+    for item in daily_sales:
+        formatted_daily_sales.append({
+            'day': item['day'].strftime('%Y-%m-%d'),
+            'revenue': float(item['revenue']) if item['revenue'] else 0,
+            'orders': item['orders']
+        })
 
     # Get sales statistics
     total_sales = sum(
@@ -235,8 +254,13 @@ def vendor_dashboard(request):
         'total_products': total_products,
         'active_products': active_products,
         'out_of_stock': out_of_stock,
-        'daily_sales': list(daily_sales),
-        'date_range': date_range
+        'daily_sales': json.dumps(formatted_daily_sales, cls=DecimalEncoder),
+        'date_range': date_range,
+        # Add layout template variables
+        'page_title': 'Dashboard',
+        'breadcrumb_active': 'Dashboard',
+        'active_tab': 'dashboard',
+        'header_icon': 'tachometer-alt'
     }
 
     return render(request, 'vendors/dashboard/index.html', context)
@@ -258,18 +282,18 @@ def vendor_products(request):
     products = vendor.products.all().order_by('-created_at')
 
     # Filter by status if requested
-    status = request.GET.get('status')
+    status = request.GET.get('status', '')
     if status:
         products = products.filter(status=status)
 
     # Search by name if requested
-    search = request.GET.get('search')
+    search = request.GET.get('search', '')
     if search:
         products = products.filter(title__icontains=search)
 
     # Pagination
     paginator = Paginator(products, 10)  # 10 products per page
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', '')
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -277,6 +301,11 @@ def vendor_products(request):
         'page_obj': page_obj,
         'current_status': status,
         'search_query': search,
+        # Add layout template variables
+        'page_title': 'Products',
+        'breadcrumb_active': 'Products',
+        'active_tab': 'products',
+        'header_icon': 'box'
     }
 
     return render(request, 'vendors/dashboard/products.html', context)
@@ -366,6 +395,11 @@ def add_product(request):
         'vendor': vendor,
         'categories': categories,
         'brands': brands,
+        # Add layout template variables
+        'page_title': 'Add New Product',
+        'breadcrumb_active': 'Add Product',
+        'active_tab': 'products',
+        'header_icon': 'plus-circle'
     }
 
     return render(request, 'vendors/dashboard/add_product.html', context)
@@ -725,7 +759,12 @@ def edit_product(request, product_slug):
         'attributes': attributes,
         'active_tab': active_tab,
         'has_active_variants': has_active_variants,
-        'has_any_variants': has_any_variants
+        'has_any_variants': has_any_variants,
+        # Add layout template variables
+        'page_title': f'Edit {product.title}',
+        'breadcrumb_active': 'Edit Product',
+        'active_tab': 'products',
+        'header_icon': 'edit'
     }
 
     return render(request, 'vendors/dashboard/edit_product.html', context)
@@ -761,18 +800,18 @@ def vendor_orders(request):
     orders = vendor.orders.all().order_by('-created_at')
 
     # Filter by status if requested
-    status = request.GET.get('status')
+    status = request.GET.get('status', '')
     if status:
         orders = orders.filter(status=status)
 
     # Search by order number if requested
-    search = request.GET.get('search')
+    search = request.GET.get('search', '')
     if search:
         orders = orders.filter(order__order_number__icontains=search)
 
     # Pagination
     paginator = Paginator(orders, 10)
-    page_number = request.GET.get('page')
+    page_number = request.GET.get('page', '')
     page_obj = paginator.get_page(page_number)
 
     context = {
@@ -780,6 +819,11 @@ def vendor_orders(request):
         'page_obj': page_obj,
         'current_status': status,
         'search_query': search,
+        # Add layout template variables
+        'page_title': 'Orders',
+        'breadcrumb_active': 'Orders',
+        'active_tab': 'orders',
+        'header_icon': 'shopping-cart'
     }
 
     return render(request, 'vendors/dashboard/orders.html', context)
@@ -807,9 +851,60 @@ def vendor_order_detail(request, order_number):
         'vendor': vendor,
         'vendor_order': vendor_order,
         'order_items': order_items,
+        # Add layout template variables
+        'page_title': f'Order #{order_number}',
+        'breadcrumb_active': f'Order #{order_number}',
+        'active_tab': 'orders',
+        'header_icon': 'file-invoice'
     }
 
     return render(request, 'vendors/dashboard/order_detail.html', context)
+
+
+@login_required
+def update_order_status(request, vendor_order_id):
+    """
+    View for updating the status of a vendor order.
+    """
+    # Check if the user is a vendor
+    if not request.user.is_vendor or not hasattr(request.user, 'vendor'):
+        messages.error(request, 'You need to register as a vendor to access the dashboard')
+        return redirect('vendors:become_vendor')
+
+    vendor = request.user.vendor
+
+    # Get the vendor order
+    vendor_order = get_object_or_404(vendor.orders, id=vendor_order_id)
+
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        
+        # Validate the status
+        valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded']
+        if new_status in valid_statuses:
+            # Update the status
+            vendor_order.status = new_status
+            vendor_order.save()
+            
+            # Create a tracking history entry
+            from orders.models import OrderTracking
+            OrderTracking.objects.create(
+                vendor_order=vendor_order,
+                status=new_status,
+                comment=f"Status updated to {new_status} by vendor",
+                updated_by=request.user
+            )
+            
+            # Log the status change
+            logger.info(f"Vendor {vendor.id} updated order {vendor_order.id} status to {new_status}")
+            
+            # Add a success message
+            messages.success(request, f'Order status updated to {new_status.title()}')
+        else:
+            messages.error(request, 'Invalid status')
+    
+    # Redirect back to the order detail page
+    return redirect('vendors:vendor_order_detail', order_number=vendor_order.order.order_number)
 
 
 @login_required
@@ -851,6 +946,11 @@ def vendor_profile(request):
 
     context = {
         'vendor': vendor,
+        # Add layout template variables
+        'page_title': 'Profile',
+        'breadcrumb_active': 'Profile',
+        'active_tab': 'profile',
+        'header_icon': 'user-circle'
     }
 
     return render(request, 'vendors/dashboard/profile.html', context)
@@ -929,6 +1029,11 @@ def vendor_settings(request):
         'bank_form': bank_form,
         'document_form': document_form,
         'documents': documents,
+        # Add layout template variables
+        'page_title': 'Settings',
+        'breadcrumb_active': 'Settings',
+        'active_tab': 'settings',
+        'header_icon': 'cog'
     }
     return render(request, 'vendors/dashboard/settings.html', context)
 
@@ -952,8 +1057,8 @@ def vendor_analytics(request):
 
     # Handle date range selection
     date_range = request.GET.get('range', '30days')
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
+    start_date_str = request.GET.get('start_date', '')
+    end_date_str = request.GET.get('end_date', '')
 
     # Default to 30 days if no custom range is provided
     end_date = datetime.now()
@@ -1090,6 +1195,11 @@ def vendor_analytics(request):
         'date_range': date_range,
         'start_date': start_date.strftime('%Y-%m-%d'),
         'end_date': end_date.strftime('%Y-%m-%d'),
+        # Add layout template variables
+        'page_title': 'Analytics',
+        'breadcrumb_active': 'Analytics',
+        'active_tab': 'analytics',
+        'header_icon': 'chart-bar'
     }
 
     return render(request, 'vendors/dashboard/analytics.html', context)
@@ -1113,3 +1223,13 @@ class ProductDeleteView(DeleteView):
 
     def get_queryset(self):
         return self.model.objects.filter(vendor=self.request.user.vendor)
+        
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+            'page_title': 'Delete Product',
+            'breadcrumb_active': 'Delete Product',
+            'active_tab': 'products',
+            'header_icon': 'trash-alt'
+        })
+        return context

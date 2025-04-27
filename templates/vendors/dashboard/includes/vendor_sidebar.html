@@ -1,0 +1,36 @@
+<div class="vendor-sidebar card">
+    <div class="card-body text-center vendor-header">
+        <div class="vendor-icon-wrapper">
+            <i class="fas fa-store fa-3x"></i>
+        </div>
+        <h5 class="vendor-name">{{ vendor.business_name }}</h5>
+        <p class="text-muted small">Vendor since {{ vendor.joined_date|date:"M Y" }}</p>
+    </div>
+    
+    <div class="list-group list-group-flush vendor-nav">
+        <a href="{% url 'vendors:vendor_dashboard' %}" class="list-group-item list-group-item-action {% if active_tab == 'dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+        </a>
+        <a href="{% url 'vendors:vendor_products' %}" class="list-group-item list-group-item-action {% if active_tab == 'products' %}active{% endif %}">
+            <i class="fas fa-box me-2"></i> Products
+        </a>
+        <a href="{% url 'vendors:vendor_orders' %}" class="list-group-item list-group-item-action {% if active_tab == 'orders' %}active{% endif %}">
+            <i class="fas fa-shopping-cart me-2"></i> Orders
+        </a>
+        <a href="{% url 'vendors:vendor_analytics' %}" class="list-group-item list-group-item-action {% if active_tab == 'analytics' %}active{% endif %}">
+            <i class="fas fa-chart-bar me-2"></i> Analytics
+        </a>
+        <a href="{% url 'vendors:vendor_profile' %}" class="list-group-item list-group-item-action {% if active_tab == 'profile' %}active{% endif %}">
+            <i class="fas fa-user-circle me-2"></i> Profile
+        </a>
+        <a href="{% url 'vendors:vendor_settings' %}" class="list-group-item list-group-item-action {% if active_tab == 'settings' %}active{% endif %}">
+            <i class="fas fa-cog me-2"></i> Settings
+        </a>
+    </div>
+    
+    <div class="card-footer text-center py-3">
+        <a href="{% url 'account_logout' %}" class="btn btn-outline-danger btn-sm">
+            <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </a>
+    </div>
+</div>

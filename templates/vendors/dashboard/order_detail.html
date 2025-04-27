@@ -1,0 +1,214 @@
+{% extends 'vendors/dashboard/layouts/vendor_layout.html' %}
+
+{% block title %}Order Detail{% endblock %}
+
+{% block vendor_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Order #{{ vendor_order.order.order_number }}</h4>
+    <a href="{% url 'vendors:vendor_orders' %}" class="vendor-btn vendor-btn-outline">
+        <i class="fas fa-arrow-left me-2"></i> Back to Orders
+    </a>
+</div>
+
+<!-- Order Information -->
+<div class="vendor-content mb-4">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Order Information</h5>
+        <div class="dropdown">
+            <button class="vendor-btn vendor-btn-outline dropdown-toggle" type="button" id="orderStatusDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Update Status
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="orderStatusDropdown">
+                {% if vendor_order.status == 'pending' or vendor_order.status == 'cancelled' %}
+                <li>
+                    <form method="post" action="{% url 'vendors:update_order_status' vendor_order.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="processing">
+                        <button type="submit" class="dropdown-item">Mark as Processing</button>
+                    </form>
+                </li>
+                {% endif %}
+                
+                {% if vendor_order.status == 'processing' or vendor_order.status == 'pending' %}
+                <li>
+                    <form method="post" action="{% url 'vendors:update_order_status' vendor_order.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="shipped">
+                        <button type="submit" class="dropdown-item">Mark as Shipped</button>
+                    </form>
+                </li>
+                {% endif %}
+                
+                {% if vendor_order.status == 'shipped' %}
+                <li>
+                    <form method="post" action="{% url 'vendors:update_order_status' vendor_order.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="delivered">
+                        <button type="submit" class="dropdown-item">Mark as Delivered</button>
+                    </form>
+                </li>
+                {% endif %}
+                
+                {% if vendor_order.status != 'cancelled' and vendor_order.status != 'delivered' and vendor_order.status != 'refunded' %}
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    <form method="post" action="{% url 'vendors:update_order_status' vendor_order.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="cancelled">
+                        <button type="submit" class="dropdown-item text-danger">Cancel Order</button>
+                    </form>
+                </li>
+                {% endif %}
+                
+                {% if vendor_order.status == 'delivered' %}
+                <li>
+                    <form method="post" action="{% url 'vendors:update_order_status' vendor_order.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="refunded">
+                        <button type="submit" class="dropdown-item text-warning">Mark as Refunded</button>
+                    </form>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+    <div class="vendor-chart-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6 class="vendor-section-title">Order Details</h6>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Order Date:</span>
+                        <span class="vendor-info-value">{{ vendor_order.order.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Status:</span>
+                        <span class="vendor-info-value">
+                            {% if vendor_order.status == 'pending' %}
+                            <span class="vendor-badge vendor-badge-warning">Pending</span>
+                            {% elif vendor_order.status == 'processing' %}
+                            <span class="vendor-badge vendor-badge-info">Processing</span>
+                            {% elif vendor_order.status == 'shipped' %}
+                            <span class="vendor-badge vendor-badge-primary">Shipped</span>
+                            {% elif vendor_order.status == 'delivered' %}
+                            <span class="vendor-badge vendor-badge-success">Delivered</span>
+                            {% elif vendor_order.status == 'cancelled' %}
+                            <span class="vendor-badge vendor-badge-danger">Cancelled</span>
+                            {% elif vendor_order.status == 'refunded' %}
+                            <span class="vendor-badge vendor-badge-secondary">Refunded</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Total Amount:</span>
+                        <span class="vendor-info-value">₹{{ vendor_order.total_vendor_amount }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-4">
+                    <h6 class="vendor-section-title">Customer Information</h6>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Name:</span>
+                        <span class="vendor-info-value">{{ vendor_order.order.user.get_full_name|default:vendor_order.order.user.email }}</span>
+                    </div>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Email:</span>
+                        <span class="vendor-info-value">{{ vendor_order.order.user.email }}</span>
+                    </div>
+                    <div class="vendor-info-item">
+                        <span class="vendor-info-label">Phone:</span>
+                        <span class="vendor-info-value">{{ vendor_order.order.shipping_phone|default:"Not provided" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Items -->
+<div class="vendor-content">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Order Items</h5>
+    </div>
+    <div class="vendor-chart-body p-0">
+        <div class="table-responsive">
+            <table class="vendor-table">
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for item in order_items %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            {% if item.product.images.exists %}
+                            <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% endif %}
+                            <div>
+                                <div>{{ item.product.title }}</div>
+                                <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>₹{{ item.price }}</td>
+                    <td>₹{{ item.total_price }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                        <td>₹{{ vendor_order.total_vendor_amount }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end"><strong>Commission:</strong></td>
+                        <td>₹{{ vendor_order.commission_amount }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="text-end"><strong>Total Earnings:</strong></td>
+                        <td>₹{{ vendor_order.total_vendor_amount }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Order Tracking History -->
+<div class="vendor-content mt-4">
+    <div class="vendor-chart-header">
+        <h5 class="mb-0">Order Timeline</h5>
+    </div>
+    <div class="vendor-chart-body">
+        <div class="order-timeline">
+            {% if vendor_order.tracking_history.exists %}
+                <ul class="timeline-list">
+                    {% for tracking in vendor_order.tracking_history.all %}
+                    <li class="timeline-item">
+                        <div class="timeline-marker {% if tracking.status == 'delivered' %}bg-success{% elif tracking.status == 'cancelled' %}bg-danger{% elif tracking.status == 'shipped' %}bg-primary{% else %}bg-info{% endif %}"></div>
+                        <div class="timeline-content">
+                            <h6 class="timeline-title">{{ tracking.get_status_display }}</h6>
+                            <p class="timeline-date">{{ tracking.timestamp|date:"M d, Y H:i" }}</p>
+                            {% if tracking.comment %}
+                            <p class="timeline-text">{{ tracking.comment }}</p>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> No tracking history available for this order.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

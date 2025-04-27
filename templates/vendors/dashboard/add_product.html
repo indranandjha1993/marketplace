@@ -1,0 +1,263 @@
+{% extends 'vendors/dashboard/layouts/vendor_layout.html' %}
+{% load static %}
+
+{% block title %}Add New Product{% endblock %}
+
+{% block vendor_content %}
+<div class="vendor-content">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="add-product-form">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="mb-4">
+                <h5 class="vendor-section-title">Basic Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="title" class="form-label">Product Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="slug" class="form-label">Slug <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="slug" name="slug" required>
+                        <small class="text-muted">URL-friendly name (e.g., "blue-t-shirt")</small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                        <select class="form-select" id="category" name="category" required>
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="brand" class="form-label">Brand</label>
+                        <select class="form-select" id="brand" name="brand">
+                            <option value="">Select Brand</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pricing & Inventory -->
+            <div class="mb-4">
+                <h5 class="vendor-section-title">Pricing & Inventory</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="price" class="form-label">Price (₹) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="compare_price" class="form-label">Compare at Price (₹)</label>
+                        <input type="number" class="form-control" id="compare_price" name="compare_price" min="0" step="0.01">
+                        <small class="text-muted">Original price for showing discount</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="cost_price" class="form-label">Cost Price (₹)</label>
+                        <input type="number" class="form-control" id="cost_price" name="cost_price" min="0" step="0.01">
+                        <small class="text-muted">Your cost (for profit calculation)</small>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="quantity" class="form-label">Quantity <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" min="0" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="sku" class="form-label">SKU</label>
+                        <input type="text" class="form-control" id="sku" name="sku">
+                        <small class="text-muted">Stock Keeping Unit</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="barcode" class="form-label">Barcode</label>
+                        <input type="text" class="form-control" id="barcode" name="barcode">
+                        <small class="text-muted">UPC, EAN, ISBN, etc.</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Images -->
+            <div class="mb-4">
+                <h5 class="vendor-section-title">Product Images</h5>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="images" class="form-label">Upload Images <span class="text-danger">*</span></label>
+                        <input type="file" class="form-control" id="images" name="images" multiple accept="image/*" required>
+                        <small class="text-muted">You can select multiple images. First image will be the primary image.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div id="image-preview-container" style="display: none;">
+                            <h6>Image Preview:</h6>
+                            <div class="image-previews d-flex flex-wrap gap-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipping -->
+            <div class="mb-4">
+                <h5 class="vendor-section-title">Shipping</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="weight" class="form-label">Weight (kg)</label>
+                        <input type="number" class="form-control" id="weight" name="weight" min="0" step="0.01">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="length" class="form-label">Length (cm)</label>
+                        <input type="number" class="form-control" id="length" name="length" min="0" step="0.1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="width" class="form-label">Width (cm)</label>
+                        <input type="number" class="form-control" id="width" name="width" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="height" class="form-label">Height (cm)</label>
+                        <input type="number" class="form-control" id="height" name="height" min="0" step="0.1">
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label for="shipping_class" class="form-label">Shipping Class</label>
+                        <select class="form-select" id="shipping_class" name="shipping_class">
+                            <option value="">Standard Shipping</option>
+                            <option value="free">Free Shipping</option>
+                            <option value="express">Express Shipping</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SEO -->
+            <div class="mb-4">
+                <h5 class="vendor-section-title">SEO Information</h5>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="meta_title" class="form-label">Meta Title</label>
+                        <input type="text" class="form-control" id="meta_title" name="meta_title">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="meta_description" class="form-label">Meta Description</label>
+                        <textarea class="form-control" id="meta_description" name="meta_description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="meta_keywords" class="form-label">Meta Keywords</label>
+                        <input type="text" class="form-control" id="meta_keywords" name="meta_keywords">
+                        <small class="text-muted">Separate keywords with commas</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit -->
+            <div class="text-end">
+                <button type="submit" class="vendor-btn vendor-btn-primary">
+                    <i class="fas fa-save me-2"></i> Add Product
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block vendor_extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-generate slug from title
+        const titleInput = document.getElementById('title');
+        const slugInput = document.getElementById('slug');
+        
+        titleInput.addEventListener('input', function() {
+            const title = this.value;
+            const slug = title.toLowerCase()
+                .replace(/[^\w\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, '-')     // Replace spaces with hyphens
+                .replace(/-+/g, '-');     // Replace multiple hyphens with single hyphen
+            
+            slugInput.value = slug;
+        });
+        
+        // Image preview functionality
+        const imageInput = document.getElementById('images');
+        const previewContainer = document.getElementById('image-preview-container');
+        const previewsDiv = previewContainer.querySelector('.image-previews');
+        
+        imageInput.addEventListener('change', function() {
+            // Clear previous previews
+            previewsDiv.innerHTML = '';
+            
+            if (this.files.length > 0) {
+                previewContainer.style.display = 'block';
+                
+                // Create previews for each selected file
+                Array.from(this.files).forEach((file, index) => {
+                    if (!file.type.match('image.*')) return;
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const previewItem = document.createElement('div');
+                        previewItem.className = 'image-preview-item';
+                        previewItem.style.width = '120px';
+                        previewItem.style.height = '120px';
+                        previewItem.style.position = 'relative';
+                        previewItem.style.borderRadius = '8px';
+                        previewItem.style.overflow = 'hidden';
+                        previewItem.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
+                        previewItem.style.border = index === 0 ? '2px solid #3498db' : '1px solid #dee2e6';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        
+                        if (index === 0) {
+                            const primaryBadge = document.createElement('div');
+                            primaryBadge.className = 'primary-badge';
+                            primaryBadge.textContent = 'Primary';
+                            primaryBadge.style.position = 'absolute';
+                            primaryBadge.style.bottom = '0';
+                            primaryBadge.style.left = '0';
+                            primaryBadge.style.right = '0';
+                            primaryBadge.style.backgroundColor = 'rgba(52, 152, 219, 0.8)';
+                            primaryBadge.style.color = 'white';
+                            primaryBadge.style.fontSize = '12px';
+                            primaryBadge.style.padding = '2px 0';
+                            primaryBadge.style.textAlign = 'center';
+                            
+                            previewItem.appendChild(primaryBadge);
+                        }
+                        
+                        previewItem.appendChild(img);
+                        previewsDiv.appendChild(previewItem);
+                    };
+                    
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %}
