@@ -78,7 +78,7 @@ def user_profile(request):
 
     context = {
         'user_profile': profile,  # Changed to match template variable name
-        'profile': profile,       # Keep for backward compatibility
+        'profile': profile,  # Keep for backward compatibility
         'order_stats': order_stats,
         'recent_orders': recent_orders,
         'page_title': 'My Profile',
@@ -527,3 +527,32 @@ def set_default_payment_method(request, method_id):
 
     messages.success(request, 'Default payment method updated.')
     return redirect('accounts:payment_methods')
+
+
+@login_required
+def track_order(request, order_number):
+    """
+    Track order status and delivery progress.
+    """
+    order = get_object_or_404(Order, order_number=order_number, user=request.user)
+    vendor_orders = order.vendor_orders.all()
+
+    tracking_history = []
+
+    for vendor_order in vendor_orders:
+        history = vendor_order.tracking_history.all().order_by('timestamp')
+        tracking_history.append({
+            'vendor': vendor_order.vendor,
+            'vendor_order': vendor_order,
+            'history': history
+        })
+
+    context = {
+        'order': order,
+        'tracking_history': tracking_history,
+        'page_title': 'Order Tracking',
+        'breadcrumb_active': 'Order Tracking',
+        'active_tab': 'orders',
+    }
+
+    return render(request, 'accounts/track_order.html', context)

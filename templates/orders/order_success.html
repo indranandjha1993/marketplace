@@ -27,7 +27,7 @@
                     <p class="mb-4">We've sent a confirmation email to {{ order.user.email }} with all the order details.</p>
 
                     <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary">
+                        <a href="{% url 'accounts:order_detail' order.order_number %}" class="btn btn-primary">
                             <i class="fas fa-info-circle me-2"></i> View Order Details
                         </a>
                         <a href="{% url 'products:home' %}" class="btn btn-outline-primary">

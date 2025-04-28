@@ -21,4 +21,5 @@ urlpatterns = [
     path('methods/add/', views.add_payment_method, name='add_payment_method'),
     path('methods/remove/<int:method_id>/', views.remove_payment_method, name='remove_payment_method'),
     path('methods/set-default/<int:method_id>/', views.set_default_payment_method, name='set_default_payment_method'),
+    path('track-order/<str:order_number>/', views.track_order, name='track_order'),
 ]

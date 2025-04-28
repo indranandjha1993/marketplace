@@ -418,32 +418,6 @@ def return_order(request, order_number):
 
 
 @login_required
-def track_order(request, order_number):
-    """
-    Track order status and delivery progress.
-    """
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
-    vendor_orders = order.vendor_orders.all()
-
-    tracking_history = []
-
-    for vendor_order in vendor_orders:
-        history = vendor_order.tracking_history.all().order_by('timestamp')
-        tracking_history.append({
-            'vendor': vendor_order.vendor,
-            'vendor_order': vendor_order,
-            'history': history
-        })
-
-    context = {
-        'order': order,
-        'tracking_history': tracking_history
-    }
-
-    return render(request, 'orders/track_order.html', context)
-
-
-@login_required
 def generate_invoice(request, order_number):
     """
     Generate and download invoice for an order.
