@@ -46,6 +46,7 @@
         background-color: #3498db;
     }
     
+    /* Enhanced image management styling */
     .image-wrapper {
         position: relative;
         padding-top: 100%; /* 1:1 Aspect Ratio */
@@ -69,14 +70,41 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
         border: 1px solid #dee2e6;
+        position: relative;
+        cursor: grab;
     }
     
     .image-card.is-primary {
         border: 2px solid var(--vendor-primary);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
     }
 
     .image-card:hover .product-image {
         transform: scale(1.05);
+    }
+    
+    .image-card.dragging {
+        opacity: 0.5;
+        cursor: grabbing;
+        transform: scale(0.95);
+        z-index: 10;
+    }
+    
+    .image-card .image-order {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        font-size: 12px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        z-index: 2;
     }
     
     .primary-badge {
@@ -90,6 +118,7 @@
         border-radius: 0 4px 4px 0;
         font-weight: 600;
         z-index: 2;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .image-overlay {
@@ -99,22 +128,52 @@
         right: 0;
         background-color: rgba(0, 0, 0, 0.7);
         padding: 10px;
-        transition: opacity 0.3s ease;
+        transition: all 0.3s ease;
+        opacity: 0;
     }
-
-    .form-check .form-check-input {
-        float: left;
-        margin-left: 1.5em;
+    
+    .image-card:hover .image-overlay {
+        opacity: 1;
     }
 
     .image-actions {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+    }
+    
+    .image-action-btn {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 14px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .image-action-btn:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .image-action-btn.primary-btn {
+        color: #3498db;
+    }
+    
+    .image-action-btn.delete-btn {
+        color: #e74c3c;
+    }
+    
+    .image-action-btn.edit-btn {
+        color: #2ecc71;
     }
 
     .form-check {
         margin: 0;
         padding: 0;
+        display: flex;
+        align-items: center;
     }
 
     .form-check label {
@@ -127,19 +186,26 @@
         vertical-align: middle;
     }
 
+    /* Enhanced image preview styling */
     .image-previews {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 15px;
     }
 
     .image-preview-item {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         position: relative;
-        border-radius: 5px;
+        border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        transition: all 0.2s ease;
+    }
+    
+    .image-preview-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     .image-preview-item img {
@@ -150,35 +216,107 @@
 
     .image-preview-item .remove-preview {
         position: absolute;
-        top: 3px;
-        right: 3px;
-        background: rgba(255,255,255,0.8);
+        top: 5px;
+        right: 5px;
+        background: rgba(255,255,255,0.9);
         border-radius: 50%;
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
         display: flex;
         justify-content: center;
         align-items: center;
         cursor: pointer;
         color: #dc3545;
         font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
     }
     
+    .image-preview-item .remove-preview:hover {
+        background: #dc3545;
+        color: white;
+        transform: scale(1.1);
+    }
+    
+    /* Enhanced upload area styling */
     .upload-area {
         border: 2px dashed var(--vendor-gray-300);
-        border-radius: 8px;
+        border-radius: 12px;
         background-color: var(--vendor-gray-100);
         transition: all 0.3s ease;
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
     }
     
     .upload-area:hover, .upload-area.dragover {
         border-color: var(--vendor-primary);
         background-color: rgba(var(--vendor-primary-rgb), 0.05);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
     }
     
     .upload-area-inner {
-        padding: 30px;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    
+    .upload-icon-container {
+        margin-bottom: 15px;
+        display: inline-block;
+        background-color: rgba(var(--vendor-primary-rgb), 0.1);
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .upload-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        background-color: var(--vendor-primary);
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+    
+    /* Drag and drop sorting styles */
+    .cursor-grab {
+        cursor: grab;
+    }
+    
+    .cursor-grab:active {
+        cursor: grabbing;
+    }
+    
+    .dragging {
+        opacity: 0.5;
+        transform: scale(0.95);
+        z-index: 10;
+    }
+    
+    .drag-over {
+        border: 2px dashed var(--vendor-primary);
+        transform: scale(1.02);
+    }
+    
+    .sort-mode .image-card {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    /* File info styles */
+    .file-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        font-size: 11px;
+        background-color: rgba(255,255,255,0.8);
+        padding: 2px 5px;
     }
     
     .visually-hidden {
@@ -210,19 +348,14 @@
 </div>
 
 <!-- Tab indicator -->
-<div class="mb-3 d-flex justify-content-between align-items-center">
-    <div>
-        <h4 class="mb-1">Editing: {{ product.title }}</h4>
-        <p class="text-muted">
-            <span class="badge bg-primary">
-                <i class="fas {% if active_tab == 'basic-info' %}fa-info-circle{% elif active_tab == 'images' %}fa-images{% elif active_tab == 'variants' %}fa-tags{% elif active_tab == 'seo' %}fa-search{% endif %} me-1"></i>
-                {% if active_tab == 'basic-info' %}Basic Info{% elif active_tab == 'images' %}Images{% elif active_tab == 'variants' %}Variants{% elif active_tab == 'seo' %}SEO{% endif %} Section
-            </span>
-        </p>
-    </div>
-    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('tab-debug').style.display = document.getElementById('tab-debug').style.display === 'none' ? 'block' : 'none';">
-        <i class="fas fa-bug me-1"></i> Debug
-    </button>
+<div class="mb-3">
+    <h4 class="mb-1">Editing: {{ product.title }}</h4>
+    <p class="text-muted">
+        <span class="badge bg-primary">
+            <i class="fas {% if active_tab == 'basic-info' %}fa-info-circle{% elif active_tab == 'images' %}fa-images{% elif active_tab == 'variants' %}fa-tags{% elif active_tab == 'seo' %}fa-search{% endif %} me-1"></i>
+            {% if active_tab == 'basic-info' %}Basic Info{% elif active_tab == 'images' %}Images{% elif active_tab == 'variants' %}Variants{% elif active_tab == 'seo' %}SEO{% endif %} Section
+        </span>
+    </p>
 </div>
 
 <div class="vendor-content">
@@ -351,38 +484,82 @@
                 <form method="post" enctype="multipart/form-data" id="images-form">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="update_images">
+                    <input type="hidden" name="image_order" id="image_order" value="">
 
+                    <!-- Quick Tips Card -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-body bg-light">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-lightbulb text-warning fa-2x me-3"></i>
+                                <h5 class="mb-0">Image Management Tips</h5>
+                            </div>
+                            <ul class="mb-0 ps-4">
+                                <li>Drag and drop images to reorder them</li>
+                                <li>The primary image will be displayed first in product listings</li>
+                                <li>Recommended image size: 1000×1000 pixels</li>
+                                <li>Maximum file size: 5MB per image</li>
+                                <li>Supported formats: JPG, PNG, WebP</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Current Images Card -->
                     <div class="card mb-4">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">Current Images</h5>
+                            {% if product.images.exists %}
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-alt-text">
+                                    <i class="fas fa-font me-1"></i> Edit Alt Text
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="toggle-sort-mode">
+                                    <i class="fas fa-sort me-1"></i> Reorder Images
+                                </button>
+                            </div>
+                            {% endif %}
                         </div>
                         <div class="card-body">
                             {% if product.images.exists %}
-                            <div class="row image-gallery">
+                            <div class="row image-gallery" id="sortable-images">
                                 {% for image in product.images.all %}
-                                <div class="col-md-3 col-sm-4 col-6 mb-3">
+                                <div class="col-md-3 col-sm-4 col-6 mb-3" data-image-id="{{ image.id }}">
                                     <div class="image-card {% if image.is_primary %}is-primary{% endif %}">
                                         <div class="image-wrapper">
                                             <img src="{{ image.image.url }}" alt="{{ image.alt_text|default:product.title }}" class="product-image">
                                             {% if image.is_primary %}
-                                            <div class="primary-badge">Primary Image</div>
+                                            <div class="primary-badge">Primary</div>
                                             {% endif %}
+                                            <div class="image-order">{{ forloop.counter }}</div>
                                             <div class="image-overlay">
                                                 <div class="image-actions">
-                                                    <div class="form-check">
-                                                        <input type="radio" class="form-check-input" name="primary_image" value="{{ image.id }}" id="image_{{ image.id }}" {% if image.is_primary %}checked{% endif %}>
-                                                        <label class="form-check-label" for="image_{{ image.id }}">Set as Primary</label>
-                                                    </div>
-                                                    <div class="form-check">
-                                                        <input type="checkbox" class="form-check-input" name="delete_images" value="{{ image.id }}" id="delete_{{ image.id }}">
-                                                        <label class="form-check-label" for="delete_{{ image.id }}">Delete</label>
-                                                    </div>
+                                                    <button type="button" class="image-action-btn primary-btn set-primary" data-image-id="{{ image.id }}" title="Set as primary image">
+                                                        <i class="fas fa-star"></i>
+                                                    </button>
+                                                    <button type="button" class="image-action-btn edit-btn edit-alt-text" data-image-id="{{ image.id }}" title="Edit alt text">
+                                                        <i class="fas fa-font"></i>
+                                                    </button>
+                                                    <button type="button" class="image-action-btn delete-btn delete-image" data-image-id="{{ image.id }}" title="Delete image">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="alt-text-editor p-2 bg-light" style="display: none;">
+                                            <div class="form-group mb-2">
+                                                <label for="alt_text_{{ image.id }}" class="form-label small">Alt Text (Accessibility)</label>
+                                                <input type="text" class="form-control form-control-sm" id="alt_text_{{ image.id }}" name="alt_text_{{ image.id }}" value="{{ image.alt_text|default:'' }}" placeholder="Describe this image">
+                                            </div>
+                                        </div>
+                                        <!-- Hidden inputs for form submission -->
+                                        <input type="radio" class="visually-hidden primary-radio" name="primary_image" value="{{ image.id }}" id="image_{{ image.id }}" {% if image.is_primary %}checked{% endif %}>
+                                        <input type="checkbox" class="visually-hidden delete-checkbox" name="delete_images" value="{{ image.id }}" id="delete_{{ image.id }}">
                                     </div>
                                 </div>
                                 {% endfor %}
+                            </div>
+                            <div id="sort-instructions" class="alert alert-info mt-3" style="display: none;">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Drag and drop images to reorder them. The order will be saved when you click "Save Images".
                             </div>
                             {% else %}
                             <div class="alert alert-info">
@@ -393,6 +570,7 @@
                         </div>
                     </div>
 
+                    <!-- Add New Images Card -->
                     <div class="card mb-4">
                         <div class="card-header bg-light">
                             <h5 class="mb-0">Add New Images</h5>
@@ -400,33 +578,99 @@
                         <div class="card-body">
                             <div class="mb-3">
                                 <div class="upload-area" id="upload-area">
-                                    <div class="upload-area-inner text-center p-4">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                                    <div class="upload-area-inner">
+                                        <div class="upload-icon-container">
+                                            <i class="fas fa-cloud-upload-alt fa-2x text-primary"></i>
+                                        </div>
                                         <h5>Drag & Drop Images Here</h5>
                                         <p class="text-muted mb-3">or</p>
                                         <label for="new_images" class="vendor-btn vendor-btn-outline">
                                             <i class="fas fa-images me-2"></i> Browse Images
                                         </label>
-                                        <input type="file" class="form-control visually-hidden" id="new_images" name="new_images" multiple accept="image/*">
+                                        <input type="file" class="form-control visually-hidden" id="new_images" name="new_images" multiple accept="image/jpeg,image/png,image/webp">
+                                        <div class="upload-progress" id="upload-progress"></div>
                                     </div>
                                 </div>
                                 <div class="form-text text-muted mt-2">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    You can select multiple images. The first image will be set as primary if no primary image is already set.
+                                    You can select multiple images. For best results, use square images (1:1 ratio).
                                 </div>
                             </div>
 
                             <div id="image-preview-container" class="mt-4" style="display: none;">
-                                <h6 class="mb-3">New Images Preview:</h6>
-                                <div class="image-previews d-flex flex-wrap gap-3"></div>
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="mb-0">New Images Preview:</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="clear-previews">
+                                        <i class="fas fa-times me-1"></i> Clear All
+                                    </button>
+                                </div>
+                                <div class="image-previews"></div>
+                                
+                                <div class="alert alert-warning mt-3 file-size-warning" style="display: none;">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    <span>Some images exceed the recommended file size of 5MB. This may affect page load times.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="vendor-btn vendor-btn-primary">
-                            <i class="fas fa-save me-2"></i> Save Images
-                        </button>
+                    <!-- Image Optimization Tips -->
+                    <div class="card mb-4 border-light">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Image Optimization Tips</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-compress-arrows-alt text-success fa-lg me-2"></i>
+                                        <h6 class="mb-0">Size & Resolution</h6>
+                                    </div>
+                                    <ul class="small ps-4">
+                                        <li>Use 1000×1000px for product images</li>
+                                        <li>Keep file sizes under 200KB when possible</li>
+                                        <li>Maintain consistent aspect ratios</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-camera text-primary fa-lg me-2"></i>
+                                        <h6 class="mb-0">Photography Tips</h6>
+                                    </div>
+                                    <ul class="small ps-4">
+                                        <li>Use natural lighting when possible</li>
+                                        <li>Show products from multiple angles</li>
+                                        <li>Include size reference when relevant</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="fas fa-universal-access text-warning fa-lg me-2"></i>
+                                        <h6 class="mb-0">Accessibility</h6>
+                                    </div>
+                                    <ul class="small ps-4">
+                                        <li>Always add descriptive alt text</li>
+                                        <li>Ensure good color contrast</li>
+                                        <li>Avoid text in images when possible</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <span class="text-muted small" id="image-count-info">
+                                {% if product.images.exists %}
+                                <i class="fas fa-image me-1"></i> {{ product.images.count }} image(s)
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div>
+                            <button type="submit" class="vendor-btn vendor-btn-primary">
+                                <i class="fas fa-save me-2"></i> Save Images
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -590,22 +834,6 @@
 {% endblock %}
 
 {% block vendor_extra_js %}
-<!-- Debug info for tab system -->
-<div id="tab-debug" class="mt-4 p-3 bg-light border rounded" style="display: none;">
-    <h5>Tab Debug Info</h5>
-    <div id="tab-debug-content"></div>
-    <div class="mt-3">
-        <h6>Manual Tab Navigation:</h6>
-        <div class="btn-group">
-            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('basic-info')">Basic Info</button>
-            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('images')">Images</button>
-            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('variants')">Variants</button>
-            <button class="btn btn-sm btn-outline-primary" onclick="manualActivateTab('seo')">SEO</button>
-        </div>
-    </div>
-    <button class="btn btn-sm btn-secondary mt-3" onclick="document.getElementById('tab-debug').style.display='none';">Close</button>
-</div>
-
 <script>
 // Global function for manual tab activation
 function manualActivateTab(tabId) {
@@ -1109,102 +1337,178 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Image preview and drag-drop functionality
+// Enhanced image management functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Image upload and preview functionality
+    initImageUpload();
+    
+    // Image sorting functionality
+    initImageSorting();
+    
+    // Image actions (primary, delete, alt text)
+    initImageActions();
+    
+    // Form submission handling
+    initFormSubmission();
+});
+
+// Initialize image upload and preview functionality
+function initImageUpload() {
     const newImagesInput = document.getElementById('new_images');
     const previewContainer = document.getElementById('image-preview-container');
     const previewsDiv = document.querySelector('.image-previews');
     const uploadArea = document.getElementById('upload-area');
+    const uploadProgress = document.getElementById('upload-progress');
+    const clearPreviewsBtn = document.getElementById('clear-previews');
+    const fileSizeWarning = document.querySelector('.file-size-warning');
+    
+    if (!newImagesInput || !uploadArea) return;
+    
+    // Drag and drop functionality
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
 
-    if (newImagesInput && uploadArea) {
-        // Drag and drop functionality
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
+    function highlight() {
+        uploadArea.classList.add('dragover');
+    }
 
-        function highlight() {
-            uploadArea.classList.add('dragover');
-        }
+    function unhighlight() {
+        uploadArea.classList.remove('dragover');
+    }
 
-        function unhighlight() {
-            uploadArea.classList.remove('dragover');
-        }
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-        uploadArea.addEventListener('click', function() {
+    uploadArea.addEventListener('drop', handleDrop, false);
+    uploadArea.addEventListener('click', function(e) {
+        // Prevent clicking on the input itself or the label from triggering another click
+        const isLabel = e.target.closest('label[for="new_images"]');
+        if (e.target !== newImagesInput && !isLabel) {
             newImagesInput.click();
-        });
+        }
+    });
 
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        // Simulate progress for better UX
+        simulateProgress();
+        
+        // Process the files
+        setTimeout(() => {
             newImagesInput.files = files;
             handleFiles(files);
-        }
-
-        function handleFiles(files) {
-            previewsDiv.innerHTML = '';
-
-            if (files.length > 0) {
-                previewContainer.style.display = 'block';
-
-                Array.from(files).forEach((file, index) => {
-                    if (file.type.match('image.*')) {
-                        const reader = new FileReader();
-
-                        reader.onload = function(e) {
-                            const preview = document.createElement('div');
-                            preview.className = 'image-preview-item';
-                            preview.style.width = '120px';
-                            preview.style.height = '120px';
-                            preview.style.position = 'relative';
-                            preview.style.borderRadius = '8px';
-                            preview.style.overflow = 'hidden';
-                            preview.style.boxShadow = '0 2px 5px rgba(0,0,0,0.1)';
-                            preview.style.margin = '5px';
-                            
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.style.width = '100%';
-                            img.style.height = '100%';
-                            img.style.objectFit = 'cover';
-                            
-                            const removeBtn = document.createElement('span');
-                            removeBtn.className = 'remove-preview';
-                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                            removeBtn.dataset.index = index;
-                            
-                            preview.appendChild(img);
-                            preview.appendChild(removeBtn);
-                            previewsDiv.appendChild(preview);
-                        };
-
-                        reader.readAsDataURL(file);
-                    }
-                });
-            } else {
-                previewContainer.style.display = 'none';
+        }, 500);
+    }
+    
+    function simulateProgress() {
+        let progress = 0;
+        uploadProgress.style.width = '0%';
+        
+        const interval = setInterval(() => {
+            progress += 5;
+            uploadProgress.style.width = `${progress}%`;
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                setTimeout(() => {
+                    uploadProgress.style.width = '0%';
+                }, 500);
             }
-        }
+        }, 30);
+    }
 
+    function handleFiles(files) {
+        previewsDiv.innerHTML = '';
+        let hasLargeFiles = false;
+
+        if (files.length > 0) {
+            previewContainer.style.display = 'block';
+            simulateProgress();
+
+            Array.from(files).forEach((file, index) => {
+                if (file.type.match('image.*')) {
+                    // Check file size (5MB limit warning)
+                    if (file.size > 5 * 1024 * 1024) {
+                        hasLargeFiles = true;
+                    }
+                    
+                    const reader = new FileReader();
+
+                    reader.onload = function(e) {
+                        const preview = document.createElement('div');
+                        preview.className = 'image-preview-item';
+                        
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = `Preview image ${index + 1}`;
+                        
+                        const removeBtn = document.createElement('span');
+                        removeBtn.className = 'remove-preview';
+                        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                        removeBtn.setAttribute('title', 'Remove image');
+                        removeBtn.dataset.index = index;
+                        
+                        // Add file info
+                        const fileInfo = document.createElement('div');
+                        fileInfo.className = 'file-info p-1 bg-light small text-center';
+                        fileInfo.textContent = formatFileSize(file.size);
+                        
+                        preview.appendChild(img);
+                        preview.appendChild(removeBtn);
+                        preview.appendChild(fileInfo);
+                        previewsDiv.appendChild(preview);
+                    };
+
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Show warning for large files
+            fileSizeWarning.style.display = hasLargeFiles ? 'block' : 'none';
+        } else {
+            previewContainer.style.display = 'none';
+            fileSizeWarning.style.display = 'none';
+        }
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+        else return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    // File input change handler
+    if (newImagesInput) {
         newImagesInput.addEventListener('change', function() {
             handleFiles(this.files);
         });
-        
-        // Add event delegation for remove buttons
+    }
+    
+    // Clear previews button
+    if (clearPreviewsBtn) {
+        clearPreviewsBtn.addEventListener('click', function() {
+            previewsDiv.innerHTML = '';
+            previewContainer.style.display = 'none';
+            fileSizeWarning.style.display = 'none';
+            newImagesInput.value = ''; // Clear the file input
+        });
+    }
+    
+    // Add event delegation for remove buttons
+    if (previewsDiv) {
         previewsDiv.addEventListener('click', function(e) {
             const removeBtn = e.target.closest('.remove-preview');
             if (removeBtn) {
@@ -1215,12 +1519,301 @@ document.addEventListener('DOMContentLoaded', function() {
                     // If no previews left, hide container
                     if (previewsDiv.children.length === 0) {
                         previewContainer.style.display = 'none';
+                        fileSizeWarning.style.display = 'none';
                     }
-                    // Note: Can't actually remove from FileList, just visual feedback
                 }
             }
         });
     }
-});
+}
+
+// Initialize image sorting functionality
+function initImageSorting() {
+    const sortableContainer = document.getElementById('sortable-images');
+    const toggleSortBtn = document.getElementById('toggle-sort-mode');
+    const sortInstructions = document.getElementById('sort-instructions');
+    const imageOrderInput = document.getElementById('image_order');
+    
+    if (!sortableContainer || !toggleSortBtn) return;
+    
+    let sortMode = false;
+    
+    // Toggle sort mode
+    toggleSortBtn.addEventListener('click', function() {
+        sortMode = !sortMode;
+        
+        if (sortMode) {
+            // Enable sort mode
+            toggleSortBtn.classList.add('active');
+            toggleSortBtn.innerHTML = '<i class="fas fa-check me-1"></i> Done Reordering';
+            sortInstructions.style.display = 'block';
+            sortableContainer.classList.add('sort-mode');
+            
+            // Make items draggable
+            const items = sortableContainer.querySelectorAll('.col-md-3');
+            items.forEach(item => {
+                item.setAttribute('draggable', 'true');
+                item.classList.add('cursor-grab');
+            });
+            
+            // Add drag events
+            enableDragSort();
+        } else {
+            // Disable sort mode
+            toggleSortBtn.classList.remove('active');
+            toggleSortBtn.innerHTML = '<i class="fas fa-sort me-1"></i> Reorder Images';
+            sortInstructions.style.display = 'none';
+            sortableContainer.classList.remove('sort-mode');
+            
+            // Remove draggable attribute
+            const items = sortableContainer.querySelectorAll('.col-md-3');
+            items.forEach(item => {
+                item.removeAttribute('draggable');
+                item.classList.remove('cursor-grab');
+            });
+            
+            // Update order numbers
+            updateImageOrder();
+        }
+    });
+    
+    // Enable drag and sort functionality
+    function enableDragSort() {
+        const items = sortableContainer.querySelectorAll('.col-md-3');
+        
+        items.forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('dragenter', handleDragEnter);
+            item.addEventListener('dragleave', handleDragLeave);
+            item.addEventListener('drop', handleDrop);
+            item.addEventListener('dragend', handleDragEnd);
+        });
+    }
+    
+    let draggedItem = null;
+    
+    function handleDragStart(e) {
+        draggedItem = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.innerHTML);
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+    
+    function handleDragEnter(e) {
+        this.classList.add('drag-over');
+    }
+    
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+    
+    function handleDrop(e) {
+        e.stopPropagation();
+        
+        if (draggedItem !== this) {
+            // Get the positions
+            const allItems = Array.from(sortableContainer.querySelectorAll('.col-md-3'));
+            const draggedIndex = allItems.indexOf(draggedItem);
+            const targetIndex = allItems.indexOf(this);
+            
+            // Reorder in DOM
+            if (draggedIndex < targetIndex) {
+                this.parentNode.insertBefore(draggedItem, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(draggedItem, this);
+            }
+        }
+        
+        return false;
+    }
+    
+    function handleDragEnd(e) {
+        // Remove all drag classes
+        const items = sortableContainer.querySelectorAll('.col-md-3');
+        items.forEach(item => {
+            item.classList.remove('dragging', 'drag-over');
+        });
+        
+        // Update order numbers
+        updateImageOrder();
+    }
+    
+    // Update image order numbers and hidden input
+    function updateImageOrder() {
+        const items = sortableContainer.querySelectorAll('.col-md-3');
+        const orderNumbers = [];
+        
+        items.forEach((item, index) => {
+            // Update visible order number
+            const orderBadge = item.querySelector('.image-order');
+            if (orderBadge) {
+                orderBadge.textContent = index + 1;
+            }
+            
+            // Add to order array
+            const imageId = item.dataset.imageId;
+            if (imageId) {
+                orderNumbers.push(imageId);
+            }
+        });
+        
+        // Update hidden input with order
+        if (imageOrderInput) {
+            imageOrderInput.value = orderNumbers.join(',');
+        }
+    }
+}
+
+// Initialize image actions (primary, delete, alt text)
+function initImageActions() {
+    const imagesContainer = document.querySelector('.image-gallery');
+    const toggleAltTextBtn = document.getElementById('toggle-alt-text');
+    
+    if (!imagesContainer) return;
+    
+    // Set primary image
+    imagesContainer.addEventListener('click', function(e) {
+        // Primary button click
+        if (e.target.closest('.set-primary')) {
+            const btn = e.target.closest('.set-primary');
+            const imageId = btn.dataset.imageId;
+            const imageCard = btn.closest('.image-card');
+            const radioInput = document.getElementById(`image_${imageId}`);
+            
+            // Update UI
+            document.querySelectorAll('.image-card').forEach(card => {
+                card.classList.remove('is-primary');
+            });
+            imageCard.classList.add('is-primary');
+            
+            // Update hidden radio
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+            
+            // Remove existing primary badges
+            document.querySelectorAll('.primary-badge').forEach(badge => {
+                badge.remove();
+            });
+            
+            // Add primary badge to this image
+            const imageWrapper = imageCard.querySelector('.image-wrapper');
+            if (imageWrapper) {
+                const badge = document.createElement('div');
+                badge.className = 'primary-badge';
+                badge.textContent = 'Primary';
+                imageWrapper.appendChild(badge);
+            }
+        }
+        
+        // Delete button click
+        if (e.target.closest('.delete-image')) {
+            const btn = e.target.closest('.delete-image');
+            const imageId = btn.dataset.imageId;
+            const imageCard = btn.closest('.image-card');
+            const checkboxInput = document.getElementById(`delete_${imageId}`);
+            
+            // Confirm deletion
+            if (confirm('Are you sure you want to delete this image? This cannot be undone.')) {
+                // Mark for deletion
+                if (checkboxInput) {
+                    checkboxInput.checked = true;
+                }
+                
+                // Visual feedback
+                imageCard.style.opacity = '0.3';
+                imageCard.style.filter = 'grayscale(100%)';
+                
+                // Disable buttons
+                const buttons = imageCard.querySelectorAll('.image-action-btn');
+                buttons.forEach(button => {
+                    button.disabled = true;
+                });
+                
+                // Add deleted indicator
+                const deletedIndicator = document.createElement('div');
+                deletedIndicator.className = 'position-absolute top-0 start-0 end-0 bottom-0 d-flex align-items-center justify-content-center';
+                deletedIndicator.innerHTML = '<span class="badge bg-danger">Marked for deletion</span>';
+                imageCard.appendChild(deletedIndicator);
+            }
+        }
+        
+        // Edit alt text button click
+        if (e.target.closest('.edit-alt-text')) {
+            const btn = e.target.closest('.edit-alt-text');
+            const imageCard = btn.closest('.image-card');
+            const altTextEditor = imageCard.querySelector('.alt-text-editor');
+            
+            if (altTextEditor) {
+                // Toggle visibility
+                const isVisible = altTextEditor.style.display !== 'none';
+                altTextEditor.style.display = isVisible ? 'none' : 'block';
+                
+                // Focus input if showing
+                if (!isVisible) {
+                    const input = altTextEditor.querySelector('input');
+                    if (input) {
+                        setTimeout(() => input.focus(), 100);
+                    }
+                }
+            }
+        }
+    });
+    
+    // Toggle all alt text editors
+    if (toggleAltTextBtn) {
+        toggleAltTextBtn.addEventListener('click', function() {
+            const editors = document.querySelectorAll('.alt-text-editor');
+            const isAnyVisible = Array.from(editors).some(editor => editor.style.display !== 'none');
+            
+            editors.forEach(editor => {
+                editor.style.display = isAnyVisible ? 'none' : 'block';
+            });
+            
+            // Update button text
+            if (isAnyVisible) {
+                toggleAltTextBtn.innerHTML = '<i class="fas fa-font me-1"></i> Edit Alt Text';
+                toggleAltTextBtn.classList.remove('active');
+            } else {
+                toggleAltTextBtn.innerHTML = '<i class="fas fa-check me-1"></i> Done Editing';
+                toggleAltTextBtn.classList.add('active');
+            }
+        });
+    }
+}
+
+// Initialize form submission handling
+function initFormSubmission() {
+    const imagesForm = document.getElementById('images-form');
+    
+    if (!imagesForm) return;
+    
+    imagesForm.addEventListener('submit', function(e) {
+        // Update image order before submission
+        const sortableContainer = document.getElementById('sortable-images');
+        const imageOrderInput = document.getElementById('image_order');
+        
+        if (sortableContainer && imageOrderInput) {
+            const items = sortableContainer.querySelectorAll('.col-md-3');
+            const orderNumbers = [];
+            
+            items.forEach(item => {
+                const imageId = item.dataset.imageId;
+                if (imageId) {
+                    orderNumbers.push(imageId);
+                }
+            });
+            
+            imageOrderInput.value = orderNumbers.join(',');
+        }
+    });
+}
 </script>
 {% endblock %}
