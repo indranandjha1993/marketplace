@@ -68,7 +68,7 @@
                 </div>
                 <div class="card-body">
                     {% if order.status == 'pending' or order.status == 'processing' %}
-                    <form action="{% url 'orders:cancel_order' order.order_number %}" method="POST" class="mb-2">
+                    <form action="{% url 'accounts:cancel_order' order.order_number %}" method="POST" class="mb-2">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this order?')">
                             <i class="fas fa-times me-2"></i> Cancel Order

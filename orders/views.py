@@ -310,53 +310,6 @@ def order_success(request, order_number):
 
 @login_required
 @require_POST
-def cancel_order(request, order_number):
-    """
-    Cancel an order if it's still pending.
-    """
-    order = get_object_or_404(Order, order_number=order_number, user=request.user)
-
-    # Check if order can be cancelled
-    if order.status not in ['pending', 'processing']:
-        messages.error(request, "This order cannot be cancelled.")
-        return redirect('orders:order_detail', order_number=order_number)
-
-    # Update order status
-    order.status = 'cancelled'
-    order.save()
-
-    # Update vendor orders
-    for vendor_order in order.vendor_orders.all():
-        vendor_order.status = 'cancelled'
-        vendor_order.save()
-
-        # Add tracking entry
-        OrderTracking.objects.create(
-            vendor_order=vendor_order,
-            status='cancelled',
-            comment='Order cancelled by customer',
-            updated_by=request.user
-        )
-
-    # Handle refund if payment was made
-    if order.payment_status == 'paid':
-        order.payment_status = 'refunded'
-        order.save()
-
-        # Create refund record
-        Refund.objects.create(
-            order=order,
-            amount=order.total,
-            reason='Order cancelled by customer',
-            status='approved'
-        )
-
-    messages.success(request, "Your order has been cancelled successfully.")
-    return redirect('orders:order_detail', order_number=order_number)
-
-
-@login_required
-@require_POST
 def return_order(request, order_number):
     """
     Request a return for delivered order.
@@ -414,7 +367,7 @@ def return_order(request, order_number):
     )
 
     messages.success(request, "Your return request has been submitted successfully.")
-    return redirect('orders:order_detail', order_number=order_number)
+    return redirect('accounts:order_detail', order_number=order_number)
 
 
 @login_required
