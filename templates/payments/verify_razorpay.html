@@ -2,32 +2,202 @@
 
 {% block title %}Verifying Payment{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/payment.css">
+<style>
+    .verify-note {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+    .order-info {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 2rem;
+    }
+    .order-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    .order-info-label {
+        color: #7f8c8d;
+    }
+    .order-info-value {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
+<div class="container py-5 verify-container">
+    <!-- Payment Progress Steps -->
+    <div class="payment-steps mb-4">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <div class="step-label">Cart</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <div class="step-label">Shipping</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">3</div>
+            <div class="step-label">Payment</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">4</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
+
     <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="card">
+        <div class="col-lg-8">
+            <div class="card verify-card text-center">
                 <div class="card-body py-5">
-                    <div class="mb-4">
-                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                            <span class="visually-hidden">Loading...</span>
+                    <div class="loader-container">
+                        <div class="loader">
+                            <div class="loader-circle"></div>
+                            <div class="loader-icon">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
                         </div>
                     </div>
-                    <h2 class="mb-3">Verifying Your Payment</h2>
-                    <p class="lead mb-0">Please wait while we verify your payment for order #{{ order.order_number }}...</p>
+                    
+                    <h1 class="verify-title">Verifying Your Payment</h1>
+                    <p class="verify-message">
+                        Please wait while we securely verify your payment for order #{{ order.order_number }}.
+                    </p>
+                    <p class="verify-note">
+                        This usually takes just a few seconds. Please do not close this page or refresh your browser.
+                    </p>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-info">
+                        <div class="order-info-row">
+                            <span class="order-info-label">Order Number:</span>
+                            <span class="order-info-value">{{ order.order_number }}</span>
+                        </div>
+                        <div class="order-info-row">
+                            <span class="order-info-label">Amount:</span>
+                            <span class="order-info-value">₹{{ order.total }}</span>
+                        </div>
+                        <div class="order-info-row">
+                            <span class="order-info-label">Payment Method:</span>
+                            <span class="order-info-value">{{ order.payment_method|title }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Redirect to the verification URL after a short delay
+        // Show a message about verification
+        if (typeof djangoToast !== 'undefined') {
+            djangoToast.info('Verifying your payment. Please wait...');
+        }
+        
+        // Animate the progress bar
+        const progressFill = document.querySelector('.progress-fill');
+        let progress = 0;
+        const interval = setInterval(function() {
+            progress += 1;
+            progressFill.style.width = progress + '%';
+            
+            // If we reach 90%, slow down to wait for the actual verification
+            if (progress >= 90) {
+                clearInterval(interval);
+                
+                // Continue with slower progress
+                const slowInterval = setInterval(function() {
+                    progress += 0.2;
+                    progressFill.style.width = progress + '%';
+                    
+                    if (progress >= 99) {
+                        clearInterval(slowInterval);
+                    }
+                }, 100);
+            }
+        }, 30);
+        
+        // Add status messages that update
+        const verifyMessage = document.querySelector('.verify-message');
+        const originalMessage = verifyMessage.textContent;
+        const statusMessages = [
+            "Connecting to payment gateway...",
+            "Retrieving payment information...",
+            "Validating transaction details...",
+            "Confirming payment status...",
+            "Finalizing your order...",
+            "Almost done! Preparing your confirmation..."
+        ];
+        
+        let messageIndex = 0;
+        const messageInterval = setInterval(function() {
+            if (messageIndex < statusMessages.length) {
+                verifyMessage.textContent = statusMessages[messageIndex];
+                messageIndex++;
+            } else {
+                clearInterval(messageInterval);
+                verifyMessage.textContent = originalMessage;
+            }
+        }, 1000);
+        
+        // Check if the payment was already verified
+        let checkCount = 0;
+        const maxChecks = 10;
+        
+        function checkPaymentStatus() {
+            checkCount++;
+            
+            // Make an AJAX request to check payment status
+            fetch('{% url "payments:verify_payment" order.order_number %}', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                // If we get redirected, follow the redirect
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+                
+                // If we've checked too many times, just redirect
+                if (checkCount >= maxChecks) {
+                    window.location.href = '{% url "payments:verify_payment" order.order_number %}';
+                    return;
+                }
+                
+                // Otherwise, check again after a delay
+                setTimeout(checkPaymentStatus, 1000);
+            })
+            .catch(error => {
+                console.error('Error checking payment status:', error);
+                // On error, redirect to the verification URL
+                window.location.href = '{% url "payments:verify_payment" order.order_number %}';
+            });
+        }
+        
+        // Start checking payment status after a short delay
+        setTimeout(checkPaymentStatus, 2000);
+        
+        // Set a maximum timeout to prevent endless waiting
         setTimeout(function() {
             window.location.href = '{% url "payments:verify_payment" order.order_number %}';
-        }, 3000);
+        }, 15000);
     });
 </script>
 {% endblock %}

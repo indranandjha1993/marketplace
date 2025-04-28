@@ -1,0 +1,190 @@
+{% comment %}
+Razorpay payment script
+Usage: Include this template in Razorpay checkout page
+{% endcomment %}
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show loading indicator when payment button is clicked
+        const payBtn = document.getElementById('pay-btn');
+        const originalBtnText = payBtn.innerHTML;
+        const paymentForm = document.getElementById('razorpay-payment-form');
+        let paymentInProgress = false;
+        
+        // Function to manually submit the form with payment details
+        function submitPaymentForm(paymentId, signature) {
+            console.log("Manually submitting payment form");
+            document.getElementById('razorpay_payment_id').value = paymentId;
+            document.getElementById('razorpay_signature').value = signature;
+            
+            // Show processing message
+            if (typeof djangoToast !== 'undefined') {
+                djangoToast.info('Payment received. Processing your order...');
+            }
+            
+            payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Processing...';
+            payBtn.disabled = true;
+            
+            // Submit the form
+            setTimeout(function() {
+                paymentForm.submit();
+            }, 1000);
+        }
+        
+        // Configure Razorpay options
+        const options = {
+            key: "{{ razorpay_merchant_key }}",
+            amount: "{{ razorpay_amount }}",
+            currency: "{{ currency }}",
+            name: "Multi-Vendor Marketplace",
+            description: "Order #{{ order.order_number }}",
+            order_id: "{{ razorpay_order_id }}",
+            handler: function (response) {
+                console.log("Payment successful", response);
+                paymentInProgress = false;
+                
+                // Set form values and submit
+                submitPaymentForm(response.razorpay_payment_id, response.razorpay_signature);
+            },
+            prefill: {
+                name: "{{ prefill.name|default:order.user.get_full_name|default:order.user.email }}",
+                email: "{{ prefill.email|default:order.user.email }}",
+                contact: "{{ prefill.contact|default:'' }}"
+            },
+            theme: {
+                color: "#3498db"
+            },
+            modal: {
+                escape: false,  // Prevent closing on ESC key
+                backdropclose: false,  // Prevent closing on backdrop click
+                ondismiss: function() {
+                    console.log("Payment modal dismissed");
+                    // Reset button if payment modal is dismissed
+                    payBtn.innerHTML = originalBtnText;
+                    payBtn.disabled = false;
+                    
+                    // If payment was in progress, check if it was completed
+                    if (paymentInProgress) {
+                        checkPaymentStatus();
+                    }
+                    
+                    paymentInProgress = false;
+                }
+            },
+            notes: {
+                order_number: "{{ order.order_number }}",
+                user_id: "{{ order.user.id }}"
+            }
+        };
+
+        // Function to check payment status if modal is dismissed
+        function checkPaymentStatus() {
+            console.log("Checking payment status after modal dismissal");
+            if (typeof djangoToast !== 'undefined') {
+                djangoToast.info('Verifying payment status...');
+            }
+            
+            // Show a loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style.position = 'fixed';
+            loadingOverlay.style.top = '0';
+            loadingOverlay.style.left = '0';
+            loadingOverlay.style.width = '100%';
+            loadingOverlay.style.height = '100%';
+            loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+            loadingOverlay.style.display = 'flex';
+            loadingOverlay.style.justifyContent = 'center';
+            loadingOverlay.style.alignItems = 'center';
+            loadingOverlay.style.zIndex = '9999';
+            loadingOverlay.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h4>Verifying Payment Status...</h4>
+                    <p class="text-muted">Please wait while we confirm your payment</p>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            // Redirect to verification page to check status
+            setTimeout(function() {
+                window.location.href = "{{ callback_url }}";
+            }, 2000);
+        }
+
+        // Create Razorpay instance
+        let rzp = null;
+        try {
+            rzp = new Razorpay(options);
+            console.log("Razorpay instance created successfully");
+        } catch (error) {
+            console.error("Error creating Razorpay instance:", error);
+            // Show error message
+            if (typeof djangoToast !== 'undefined') {
+                djangoToast.error('Error initializing payment gateway. Please try again.');
+            }
+        }
+
+        // Handle payment button click
+        payBtn.onclick = function(e) {
+            e.preventDefault();
+            
+            if (!rzp) {
+                console.error("Razorpay instance not created");
+                if (typeof djangoToast !== 'undefined') {
+                    djangoToast.error('Payment gateway not initialized. Please refresh and try again.');
+                }
+                return;
+            }
+            
+            payBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Loading Payment...';
+            payBtn.disabled = true;
+            
+            console.log("Opening Razorpay payment modal");
+            
+            // Short timeout to show loading state before opening Razorpay
+            setTimeout(function() {
+                try {
+                    paymentInProgress = true;
+                    rzp.open();
+                    console.log("Razorpay modal opened");
+                    // Reset button after Razorpay opens
+                    setTimeout(function() {
+                        payBtn.innerHTML = originalBtnText;
+                        payBtn.disabled = false;
+                    }, 1000);
+                } catch (error) {
+                    console.error("Error opening Razorpay modal:", error);
+                    payBtn.innerHTML = originalBtnText;
+                    payBtn.disabled = false;
+                    paymentInProgress = false;
+                    
+                    if (typeof djangoToast !== 'undefined') {
+                        djangoToast.error('Error opening payment gateway. Please try again.');
+                    }
+                }
+            }, 500);
+        };
+        
+        // Add event listener for beforeunload to check payment status
+        window.addEventListener('beforeunload', function(e) {
+            // If payment is in progress, show confirmation dialog
+            if (paymentInProgress || document.querySelector('.razorpay-container') !== null) {
+                e.preventDefault();
+                e.returnValue = 'Payment is in progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+        
+        // Auto-open Razorpay on page load (after a short delay)
+        setTimeout(function() {
+            if (rzp) {
+                console.log("Auto-opening Razorpay payment modal");
+                paymentInProgress = true;
+                rzp.open();
+            }
+        }, 1500);
+    });
+</script>

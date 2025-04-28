@@ -1,0 +1,29 @@
+{% comment %}
+Payment methods selection component
+Usage: Include this template in checkout page
+{% endcomment %}
+
+<div class="payment-methods">
+    {% for method, info in payment_services.items %}
+        {% if info.configured or method == 'cod' %}
+            <div class="form-check mb-3">
+                <input class="form-check-input" 
+                       type="radio" 
+                       name="payment_method" 
+                       id="payment-{{ method }}" 
+                       value="{{ method }}"
+                       {% if method == 'razorpay' and info.configured %}checked{% elif not has_payment_gateways and method == 'cod' %}checked{% endif %}>
+                <label class="form-check-label" for="payment-{{ method }}">
+                    <i class="{{ info.icon }} me-2"></i> {{ info.display_name }}
+                </label>
+                {% if info.description %}
+                    <div class="text-muted small ms-4">{{ info.description }}</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% empty %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle me-2"></i> No payment methods are available. Please contact support.
+        </div>
+    {% endfor %}
+</div>

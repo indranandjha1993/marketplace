@@ -2,49 +2,220 @@
 
 {% block title %}Payment Failed{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/payment.css">
+<style>
+    .help-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        margin-top: 2rem;
+    }
+    .common-issues {
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+    }
+    .issue-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed #e0e0e0;
+    }
+    .issue-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    .issue-title {
+        font-weight: 600;
+        color: #e74c3c;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    .issue-title i {
+        margin-right: 0.5rem;
+    }
+    .issue-solution {
+        color: #666;
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card text-center">
+<div class="container py-5 failed-container">
+    <!-- Payment Progress Steps -->
+    <div class="payment-steps mb-4">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <div class="step-label">Cart</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <div class="step-label">Shipping</div>
+        </div>
+        <div class="step error">
+            <div class="step-number">3</div>
+            <div class="step-label">Payment</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card failed-card text-center">
                 <div class="card-body py-5">
-                    <div class="mb-4">
-                        <i class="fas fa-times-circle fa-5x text-danger"></i>
+                    <div class="failed-icon">
+                        <i class="fas fa-exclamation"></i>
                     </div>
-                    <h1 class="mb-3">Payment Failed</h1>
-                    <p class="lead mb-4">We were unable to process your payment for order #{{ order.order_number }}.</p>
-                    <p class="mb-4">
-                        This could be due to insufficient funds, incorrect card details, or a temporary issue with your payment method.
+                    <h1 class="failed-title">Payment Failed</h1>
+                    <p class="failed-message">
+                        We were unable to process your payment for order #{{ order.order_number }}. 
                         Don't worry, your order is saved and you can try again.
                     </p>
 
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'payments:process_payment' order.order_number %}" class="btn btn-primary">
-                            <i class="fas fa-redo me-2"></i> Try Again
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="{% url 'payments:process_payment' order.order_number %}" class="btn action-btn primary-btn">
+                            <i class="fas fa-redo me-2"></i> Try Payment Again
                         </a>
-                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-outline-primary">
+                        <a href="{% url 'accounts:order_detail' order.order_number %}" class="btn action-btn outline-btn">
                             <i class="fas fa-info-circle me-2"></i> View Order
                         </a>
                     </div>
                 </div>
             </div>
 
+            <!-- Common Issues -->
+            <div class="common-issues mt-4">
+                <h5 class="mb-3">Common Payment Issues</h5>
+                
+                <div class="issue-item">
+                    <div class="issue-title">
+                        <i class="fas fa-credit-card"></i> Insufficient Funds
+                    </div>
+                    <p class="issue-solution">
+                        Ensure your card has sufficient balance to cover the transaction amount. You might want to check your account balance or try a different card.
+                    </p>
+                </div>
+                
+                <div class="issue-item">
+                    <div class="issue-title">
+                        <i class="fas fa-lock"></i> Card Security Restrictions
+                    </div>
+                    <p class="issue-solution">
+                        Some banks block online transactions for security reasons. Contact your bank to authorize online payments or enable international transactions if needed.
+                    </p>
+                </div>
+                
+                <div class="issue-item">
+                    <div class="issue-title">
+                        <i class="fas fa-exclamation-triangle"></i> Incorrect Card Details
+                    </div>
+                    <p class="issue-solution">
+                        Double-check your card number, expiration date, and CVV when trying again. Even a small typo can cause payment failure.
+                    </p>
+                </div>
+                
+                <div class="issue-item">
+                    <div class="issue-title">
+                        <i class="fas fa-wifi"></i> Network or Connection Issues
+                    </div>
+                    <p class="issue-solution">
+                        Unstable internet connections can interrupt the payment process. Try again with a stable connection or switch to a different network.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
             <!-- Need Help? -->
-            <div class="card mt-4">
-                <div class="card-header bg-white">
+            <div class="card help-card">
+                <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0">Need Help?</h5>
                 </div>
-                <div class="card-body">
-                    <p class="mb-3">If you continue to face issues with payment, you can:</p>
-                    <ul>
-                        <li>Try a different payment method</li>
-                        <li>Contact your bank to ensure there are no restrictions on your card</li>
-                        <li>Reach out to our customer support at <a href="mailto:support@marketplace.com">support@marketplace.com</a></li>
-                        <li>Try again after some time</li>
-                    </ul>
+                <div class="card-body p-4">
+                    <div class="help-item">
+                        <div class="help-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="help-content">
+                            <h6>Try a Different Payment Method</h6>
+                            <p>We accept credit/debit cards, UPI, net banking, and wallets. Try an alternative payment option.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="help-content">
+                            <h6>Contact Your Bank</h6>
+                            <p>Reach out to your bank to check if there are any restrictions on your card for online transactions.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-icon">
+                            <i class="fas fa-headset"></i>
+                        </div>
+                        <div class="help-content">
+                            <h6>Customer Support</h6>
+                            <p>Our team is here to help! Contact us at <a href="mailto:support@marketplace.com">support@marketplace.com</a> or call us at +91-1234567890.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-item">
+                        <div class="help-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="help-content">
+                            <h6>Try Again Later</h6>
+                            <p>Sometimes payment gateways experience temporary issues. Wait for a while and try again.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Details -->
+            <div class="card help-card mt-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Order Details</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Order Number:</span>
+                        <span class="fw-bold">{{ order.order_number }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Date:</span>
+                        <span>{{ order.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Payment Method:</span>
+                        <span>{{ order.payment_method|title }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Total Amount:</span>
+                        <span class="fw-bold">₹{{ order.total }}</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show toast notification
+        if (typeof djangoToast !== 'undefined') {
+            djangoToast.error('Payment failed. Please try again or use a different payment method.');
+        }
+    });
+</script>
 {% endblock %}

@@ -89,6 +89,12 @@ def checkout(request):
         'total': cart.total - coupon_discount,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+        'settings': {
+            'STRIPE_PUBLIC_KEY': settings.STRIPE_PUBLIC_KEY,
+            'STRIPE_SECRET_KEY': bool(settings.STRIPE_SECRET_KEY),  # Just send if it exists, not the actual key
+            'RAZORPAY_KEY_ID': settings.RAZORPAY_KEY_ID,
+            'RAZORPAY_KEY_SECRET': bool(settings.RAZORPAY_KEY_SECRET),  # Just send if it exists, not the actual key
+        },
     }
 
     return render(request, 'orders/checkout.html', context)

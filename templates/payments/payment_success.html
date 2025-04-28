@@ -2,45 +2,191 @@
 
 {% block title %}Payment Successful{% endblock %}
 
-{% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card text-center">
-                <div class="card-body py-5">
-                    <div class="mb-4">
-                        <i class="fas fa-check-circle fa-5x text-success"></i>
-                    </div>
-                    <h1 class="mb-3">Payment Successful!</h1>
-                    <p class="lead mb-4">Your payment for order #{{ order.order_number }} has been successfully processed.</p>
-                    <p class="mb-4">We've sent a confirmation email to {{ order.user.email }} with all the order details.</p>
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/payment.css">
+<style>
+    .primary-btn {
+        background: linear-gradient(135deg, #2ecc71, #27ae60);
+        border: none;
+        color: white;
+    }
+    .primary-btn:hover {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+    }
+    .what-next-card {
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    .what-next-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    .next-step-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+    .next-step-item i {
+        color: #3498db;
+        margin-right: 0.75rem;
+        margin-top: 0.25rem;
+    }
+</style>
+{% endblock %}
 
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{% url 'orders:order_detail' order.order_number %}" class="btn btn-primary">
+{% block content %}
+<div class="container py-5 success-container">
+    <!-- Payment Progress Steps -->
+    <div class="payment-steps mb-4">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <div class="step-label">Cart</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <div class="step-label">Shipping</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">3</div>
+            <div class="step-label">Payment</div>
+        </div>
+        <div class="step completed active">
+            <div class="step-number">4</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card success-card text-center">
+                <div class="card-body py-5">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h1 class="success-title">Payment Successful!</h1>
+                    <p class="success-message">
+                        Your payment for order #{{ order.order_number }} has been successfully processed. 
+                        We've sent a confirmation email to {{ order.user.email }} with all the order details.
+                    </p>
+
+                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                        <a href="{% url 'accounts:order_detail' order.order_number %}" class="btn action-btn primary-btn">
                             <i class="fas fa-info-circle me-2"></i> View Order Details
                         </a>
-                        <a href="{% url 'products:home' %}" class="btn btn-outline-primary">
+                        <a href="{% url 'products:home' %}" class="btn action-btn outline-btn">
                             <i class="fas fa-home me-2"></i> Continue Shopping
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Order Summary -->
-            <div class="card mt-4">
-                <div class="card-header bg-white">
+            <!-- Order Timeline -->
+            <div class="card success-card mt-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Order Status</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="order-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ order.created_at|date:"F d, Y, g:i A" }}</div>
+                            <div class="timeline-title">Order Placed</div>
+                            <div class="timeline-text">Your order has been successfully placed.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ order.updated_at|date:"F d, Y, g:i A" }}</div>
+                            <div class="timeline-title">Payment Confirmed</div>
+                            <div class="timeline-text">We've received your payment of ₹{{ order.total }}.</div>
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-date">Next Step</div>
+                            <div class="timeline-title">Order Processing</div>
+                            <div class="timeline-text">Your order is being processed by our team.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What's Next -->
+            <div class="what-next-card">
+                <h5 class="what-next-title">What's Next?</h5>
+                <div class="next-step-item">
+                    <i class="fas fa-box"></i>
+                    <div>
+                        <strong>Order Processing</strong>
+                        <p class="mb-0">Our team is preparing your order for shipment. You'll receive updates as your order progresses.</p>
+                    </div>
+                </div>
+                <div class="next-step-item">
+                    <i class="fas fa-truck"></i>
+                    <div>
+                        <strong>Shipping</strong>
+                        <p class="mb-0">Once your order is ready, it will be shipped to your address. You'll receive a tracking number via email.</p>
+                    </div>
+                </div>
+                <div class="next-step-item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <strong>Stay Updated</strong>
+                        <p class="mb-0">Check your email for order updates or visit your <a href="#">account dashboard</a> to track your order status.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card success-card">
+                <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0">Order Summary</h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
-                            <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
-                            <p class="mb-1"><strong>Payment Method:</strong> {{ order.payment_method }}</p>
-                            <p class="mb-0"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Shipping Address:</strong></p>
+                <div class="card-body p-4">
+                    <div class="order-info-item">
+                        <span class="order-info-label">Order Number</span>
+                        <span class="order-info-value">{{ order.order_number }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Date</span>
+                        <span class="order-info-value">{{ order.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Payment Method</span>
+                        <span class="order-info-value">{{ order.payment_method|title }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Subtotal</span>
+                        <span class="order-info-value">₹{{ order.subtotal }}</span>
+                    </div>
+                    {% if order.shipping_cost > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Shipping</span>
+                        <span class="order-info-value">₹{{ order.shipping_cost }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.tax_amount > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Tax</span>
+                        <span class="order-info-value">₹{{ order.tax_amount }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.discount_amount > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Discount</span>
+                        <span class="order-info-value text-success">-₹{{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="order-info-item">
+                        <span class="order-info-label fw-bold">Total</span>
+                        <span class="order-info-value fw-bold">₹{{ order.total }}</span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6 class="mb-2">Shipping Address</h6>
+                        <div class="address-card">
                             <p class="mb-0">
                                 {{ order.shipping_address.full_name }}<br>
                                 {{ order.shipping_address.address_line1 }}
@@ -55,4 +201,15 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show toast notification
+        if (typeof djangoToast !== 'undefined') {
+            djangoToast.success('Payment successful! Your order is being processed.');
+        }
+    });
+</script>
 {% endblock %}

@@ -2,43 +2,154 @@
 
 {% block title %}Complete Payment{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/payment.css">
+<style>
+    .payment-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .payment-header h1 {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    .payment-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+    .pay-btn {
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #3498db, #2980b9);
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .pay-btn:hover {
+        background: linear-gradient(135deg, #2980b9, #3498db);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+    }
+    .pay-btn:active {
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Complete Your Payment</h5>
-                </div>
-                <div class="card-body text-center py-5">
-                    <h3 class="mb-4">Total Amount: ₹{{ order.total }}</h3>
-                    <p class="mb-4">Please click the button below to complete your payment for order #{{ order.order_number }}.</p>
+<div class="container py-5 payment-container">
+    <!-- Payment Progress Steps -->
+    <div class="payment-steps mb-4">
+        <div class="step completed">
+            <div class="step-number">1</div>
+            <div class="step-label">Cart</div>
+        </div>
+        <div class="step completed">
+            <div class="step-number">2</div>
+            <div class="step-label">Shipping</div>
+        </div>
+        <div class="step active">
+            <div class="step-number">3</div>
+            <div class="step-label">Payment</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+    </div>
 
-                    <form action="{{ callback_url }}" method="POST" id="razorpay-payment-form">
-                        {% csrf_token %}
-                        <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
-                        <input type="hidden" name="razorpay_order_id" value="{{ razorpay_order_id }}">
-                        <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+    <div class="payment-header">
+        <h1>Complete Your Payment</h1>
+        <p>You're just one step away from completing your purchase</p>
+    </div>
 
-                        <button id="pay-btn" class="btn btn-primary btn-lg">Pay Now</button>
-                    </form>
+    <div class="row">
+        <!-- Payment Details -->
+        <div class="col-lg-7 mb-4">
+            <div class="card payment-card">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <h2 class="payment-amount mb-2">₹{{ order.total }}</h2>
+                        <p class="text-muted mb-4">Order #{{ order.order_number }}</p>
+                        
+                        <form action="{{ callback_url }}" method="POST" id="razorpay-payment-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
+                            <input type="hidden" name="razorpay_order_id" value="{{ razorpay_order_id }}">
+                            <input type="hidden" name="razorpay_signature" id="razorpay_signature">
+                            
+                            <button id="pay-btn" type="button" class="btn btn-primary btn-lg pay-btn">
+                                <i class="fas fa-lock me-2"></i>Pay Securely Now
+                            </button>
+                        </form>
+                        
+                        <div class="secure-badge mt-3">
+                            <i class="fas fa-shield-alt"></i> Secured by Razorpay
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h5 class="mb-3">Payment Methods</h5>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            <div class="badge bg-light text-dark p-2"><i class="fab fa-cc-visa payment-method-icon"></i>Visa</div>
+                            <div class="badge bg-light text-dark p-2"><i class="fab fa-cc-mastercard payment-method-icon"></i>Mastercard</div>
+                            <div class="badge bg-light text-dark p-2"><i class="fab fa-cc-amex payment-method-icon"></i>Amex</div>
+                            <div class="badge bg-light text-dark p-2"><i class="fas fa-university payment-method-icon"></i>NetBanking</div>
+                            <div class="badge bg-light text-dark p-2"><i class="fas fa-wallet payment-method-icon"></i>UPI</div>
+                            <div class="badge bg-light text-dark p-2"><i class="fas fa-money-bill-wave payment-method-icon"></i>Wallet</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Order Summary -->
-            <div class="card mt-4">
-                <div class="card-header bg-white">
+        </div>
+        
+        <!-- Order Summary -->
+        <div class="col-lg-5">
+            <div class="card payment-card">
+                <div class="card-header bg-white py-3">
                     <h5 class="card-title mb-0">Order Summary</h5>
                 </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Order Number:</strong> {{ order.order_number }}</p>
-                            <p class="mb-1"><strong>Date:</strong> {{ order.created_at|date:"F d, Y" }}</p>
-                            <p class="mb-0"><strong>Total Amount:</strong> ₹{{ order.total }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1"><strong>Shipping Address:</strong></p>
+                <div class="card-body p-4">
+                    <div class="order-info-item">
+                        <span class="order-info-label">Order Number</span>
+                        <span class="order-info-value">{{ order.order_number }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Date</span>
+                        <span class="order-info-value">{{ order.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="order-info-item">
+                        <span class="order-info-label">Subtotal</span>
+                        <span class="order-info-value">₹{{ order.subtotal }}</span>
+                    </div>
+                    {% if order.shipping_cost > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Shipping</span>
+                        <span class="order-info-value">₹{{ order.shipping_cost }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.tax_amount > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Tax</span>
+                        <span class="order-info-value">₹{{ order.tax_amount }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.discount_amount > 0 %}
+                    <div class="order-info-item">
+                        <span class="order-info-label">Discount</span>
+                        <span class="order-info-value text-success">-₹{{ order.discount_amount }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="order-info-item">
+                        <span class="order-info-label fw-bold">Total</span>
+                        <span class="order-info-value fw-bold">₹{{ order.total }}</span>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6 class="mb-2">Shipping Address</h6>
+                        <div class="address-card">
                             <p class="mb-0">
                                 {{ order.shipping_address.full_name }}<br>
                                 {{ order.shipping_address.address_line1 }}
@@ -54,38 +165,7 @@
     </div>
 </div>
 {% endblock %}
+
 {% block extra_js %}
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const options = {
-            key: "{{ razorpay_merchant_key }}",
-            amount: "{{ razorpay_amount }}",
-            currency: "{{ currency }}",
-            name: "Multi-Vendor Marketplace",
-            description: "Order #{{ order.order_number }}",
-            order_id: "{{ razorpay_order_id }}",
-            handler: function (response) {
-                document.getElementById('razorpay_payment_id').value = response.razorpay_payment_id;
-                document.getElementById('razorpay_signature').value = response.razorpay_signature;
-                document.getElementById('razorpay-payment-form').submit();
-            },
-            prefill: {
-                name: "{{ order.user.get_full_name|default:order.user.email }}",
-                email: "{{ order.user.email }}",
-                contact: "{{ order.user.phone_number|default:'' }}"
-            },
-            theme: {
-                color: "#3498db"
-            }
-        };
-
-        const rzp = new Razorpay(options);
-
-        document.getElementById('pay-btn').onclick = function(e) {
-            rzp.open();
-            e.preventDefault();
-        };
-    });
-</script>
+{% include 'payments/includes/razorpay_script.html' %}
 {% endblock %}

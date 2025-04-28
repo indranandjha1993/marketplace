@@ -217,28 +217,7 @@
                         <h5 class="card-title mb-0">Payment Method</h5>
                     </div>
                     <div class="card-body">
-                        <div class="payment-methods">
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-card" value="stripe" checked>
-                                <label class="form-check-label" for="payment-card">
-                                    <i class="far fa-credit-card me-2"></i> Credit/Debit Card
-                                </label>
-                            </div>
-
-                            <div class="form-check mb-3">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-razorpay" value="razorpay">
-                                <label class="form-check-label" for="payment-razorpay">
-                                    <i class="fas fa-money-bill-wave me-2"></i> UPI/Netbanking (Razorpay)
-                                </label>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment_method" id="payment-cod" value="cod">
-                                <label class="form-check-label" for="payment-cod">
-                                    <i class="fas fa-hand-holding-usd me-2"></i> Cash on Delivery
-                                </label>
-                            </div>
-                        </div>
+                        {% include 'payments/includes/payment_methods.html' %}
                     </div>
                 </div>
             </div>

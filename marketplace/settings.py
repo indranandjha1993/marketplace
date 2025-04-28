@@ -72,6 +72,7 @@ TEMPLATES = [
                 "cart.context_processors.cart_items_count",
                 'products.context_processors.categories_processor',
                 'accounts.context_processors.user_profile_context',
+                'payments.context_processors.payment_services',
             ],
             'libraries': {
                 'common_tags': 'utils.templatetags.common_tags',
