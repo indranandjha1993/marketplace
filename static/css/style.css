@@ -2006,7 +2006,6 @@ header {
 
 /* Main product detail image */
 .product-detail-image {
-    height: 400px;
     object-fit: contain;
     background-color: white;
 }
@@ -2786,12 +2785,6 @@ body.loading::before {
  * Large devices (desktops, less than 992px)
  */
 @media (max-width: 992px) {
-    /* Removed conflicting height */
-
-    .product-detail-image {
-        height: 300px;
-    }
-
     /* Adjust dashboard sidebar height */
     .dashboard-sidebar {
         min-height: auto;
@@ -2819,10 +2812,6 @@ body.loading::before {
     .product-title {
         font-size: 0.9rem;
         height: 2.6rem;
-    }
-
-    .product-detail-image {
-        height: 300px;
     }
 
     /* Stack sort controls vertically */
@@ -3015,20 +3004,10 @@ select:focus {
     overflow: hidden;
     cursor: zoom-in;
     background-color: white;
-    height: 400px; /* Fixed height for consistent layout */
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-/* Main product detail image */
-.product-gallery .product-detail-image {
-    transition: transform 0.2s;
-    max-height: 390px; /* Allow some padding */
-    max-width: 100%;
-    object-fit: contain;
-    display: block;
-    margin: 0 auto;
+    background-color: rgba(0, 0, 0, 0.075);
 }
 
 /* Zoom icon indicator */
@@ -3282,33 +3261,8 @@ select:focus {
  * Responsive styles for product gallery across different screen sizes.
  */
 
-/* Large devices (desktops, less than 992px) */
-@media (max-width: 992px) {
-    /* Smaller image container */
-    .product-gallery .product-image-container {
-        height: 350px;
-    }
-
-    /* Adjusted modal content */
-    .product-gallery .product-zoom-modal-content {
-        width: 95%;
-        margin: 5% auto;
-        max-height: 80vh;
-    }
-}
-
 /* Medium devices (tablets, less than 768px) */
 @media (max-width: 768px) {
-    /* Further reduced image container */
-    .product-gallery .product-image-container {
-        height: 300px;
-    }
-
-    /* Adjusted detail image */
-    .product-gallery .product-detail-image {
-        max-height: 290px;
-    }
-
     /* Smaller thumbnails */
     .product-gallery .product-thumbnail-image {
         width: 60px;
@@ -3332,16 +3286,6 @@ select:focus {
 
 /* Small devices (phones, less than 576px) */
 @media (max-width: 576px) {
-    /* Smallest image container */
-    .product-gallery .product-image-container {
-        height: 250px;
-    }
-
-    /* Smallest detail image */
-    .product-gallery .product-detail-image {
-        max-height: 240px;
-    }
-
     /* Smallest thumbnails */
     .product-gallery .product-thumbnail-image {
         width: 50px;
