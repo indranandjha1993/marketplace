@@ -1,13 +1,144 @@
 # Multi-Vendor E-Commerce Marketplace
 
-A scalable, feature-rich multi-vendor e-commerce platform built with Django. This platform enables third-party sellers
-to list and manage their products while providing a seamless shopping experience for buyers.
+A scalable, feature-rich multivendor e-commerce platform built with Django. This platform enables third-party sellers to list and manage their products while providing a seamless shopping experience for buyers.
+
+## System Architecture
+
+This marketplace is built using Django's MVT (Model-View-Template) architecture with a modular approach for scalability:
+
+- **Frontend**: HTML/CSS/JavaScript with Django templates
+- **Backend**: Django 
+- **Database**: Configured for MySQL in production, SQLite for development
+- **Containerization**: Docker support for easy deployment
+
+## Core Components
+
+The application is organized into the following core modules:
+
+### Accounts Module
+- Custom user model supporting both regular customers and vendors
+- Profile management including address book functionality
+- Authentication with multiple options
+
+### Products Module
+- Comprehensive product catalog with categories, attributes, and variants
+- Review and Q&A system
+- Advanced filtering and search capabilities
+
+### Vendors Module
+- Vendor registration and profile management
+- Product listing and inventory management
+- Sales analytics and reporting
+
+### Cart Module
+- Interactive shopping cart with save-for-later functionality
+- Real-time price calculations
+
+### Orders Module
+- Multi-vendor order processing
+- Order tracking and status updates
+- Coupon system for discounts
+
+### Payments Module
+- Multiple payment method support
+- Transaction management
+- Vendor payout system
 
 ## Features
 
 ### For Buyers
 
 - User registration with email, phone, and social login
+- Comprehensive product search and filtering
+- Shopping cart and wishlist management
+- Secure checkout process with multiple payment options
+- Order tracking and history
+- Product reviews and questions
+- Personal address book management
+
+### For Vendors
+
+- Dedicated vendor dashboard
+- Product management (add, edit, remove listings)
+- Inventory tracking
+- Order processing and fulfillment
+- Sales analytics and reporting
+- Commission rate visibility
+- Secure payout system
+
+### For Administrators
+
+- Platform-wide analytics dashboard
+- User and vendor management
+- Product category/attribute management
+- Order oversight and intervention capabilities
+- Commission structure configuration
+- Coupon and promotion management
+
+## Development Setup
+
+### Prerequisites
+- Python 3.12+
+- Docker and Docker Compose (optional, for containerized setup)
+- Virtual environment tool (recommended)
+
+### Local Setup
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/indranandjha1993/marketplace.git
+   cd marketplace
+   ```
+
+2. Create and activate a virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+4. Set up environment variables:
+   ```
+   cp .env.template .env
+   # Edit .env file with your configuration
+   ```
+
+5. Apply migrations:
+   ```
+   python manage.py migrate
+   ```
+   
+6. Create a superuser:
+   ```
+   docker-compose exec web python manage.py createsuperuser
+    ```
+
+7. Seed database with sample data (optional):
+   ```
+   python manage.py seed_database
+   ```
+
+8. Run the development server:
+   ```
+   python manage.py runserver
+   ```
+
+### Docker Setup
+
+1. Build and run using Docker Compose:
+   ```
+   docker-compose up --build
+   ```
+
+2. Access the application at http://localhost:8000
+
+## Testing
+
+Run the test suite:
 - Personalized product search with advanced filters
 - Detailed product pages with images, videos, descriptions, and reviews
 - Shopping cart, wishlist, and secure checkout
@@ -29,85 +160,10 @@ to list and manage their products while providing a seamless shopping experience
 - **Database**: MySQL for transactional data, Redis for caching
 - **Payment Integration**: Stripe, Razorpay, PayPal
 - **Containerization**: Docker
-
-## Installation and Setup
-
-### Prerequisites
-
-- Docker and Docker Compose
-- Python 3.10 or higher (for local development)
-
-### Using Docker (Recommended)
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/indranandjha1993/marketplace.git
-   cd marketplace
-   ```
-
-2. Create environment variables file:
-   ```bash
-   cp .env.template .env
-   ```
-   Edit the `.env` file and set appropriate values.
-
-3. Build and start the containers:
-   ```bash
-   docker-compose up -d
-   ```
-
-4. Create a superuser:
-   ```bash
-   docker-compose exec web python manage.py createsuperuser
-   ```
-
-5. Access the application:
-    - Website: http://localhost:8000
-    - Admin panel: http://localhost:8000/admin
-
-### Local Development Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/marketplace.git
-   cd marketplace
-   ```
-
-2. Create and activate a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Create environment variables file:
-   ```bash
-   cp .env.template .env
-   ```
-   Edit the `.env` file and set appropriate values.
-
-5. Run migrations:
-   ```bash
-   python manage.py migrate
-   ```
-
-6. Create a superuser:
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-7. Start the development server:
-   ```bash
-   python manage.py runserver
-   ```
-
-8. Access the application:
-    - Website: http://localhost:8000
-    - Admin panel: http://localhost:8000/admin
+- **Deployment**: Docker Compose, Nginx for reverse proxy
+- **Testing**: Pytest, Factory
+- **Version Control**: Git
+- **Documentation**: Markdown
 
 ## Project Structure
 
@@ -131,26 +187,6 @@ marketplace/
 └── requirements.txt     # Python dependencies
 ```
 
-## Deployment
-
-### Production Deployment
-
-1. Update the `.env` file with production settings:
-    - Set `DEBUG=False`
-    - Update `ALLOWED_HOSTS` with your domain
-    - Configure production database settings
-    - Set up email settings
-    - Configure payment gateway credentials
-
-2. Set up static and media files storage:
-    - For AWS S3, configure the AWS settings in `.env`
-    - For local storage, make sure your web server is configured to serve files from the appropriate directories
-
-3. Build and deploy with Docker:
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
 ## Contributing
 
 1. Fork the repository
@@ -161,7 +197,7 @@ marketplace/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License—see the LICENSE file for details.
 
 ## Acknowledgements
 

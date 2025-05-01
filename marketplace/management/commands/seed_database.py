@@ -97,61 +97,259 @@ class Command(BaseCommand):
         # Delete all users except superuser
         User.objects.filter(is_superuser=False).delete()
 
-    def get_random_image(self, width=500, height=500, category=""):
-        """Get a random placeholder image."""
+    def get_random_image(self, width=500, height=500, category="", entity_type="product"):
+        """
+        Get a random contextual image based on entity type.
+        
+        Args:
+            width: Image width
+            height: Image height
+            category: Main category/subject of the image
+            entity_type: Type of entity (product, user, vendor, category, brand)
+        """
         try:
-            # Construct appropriate URL for the category
+            # Adjust dimensions based on entity type
+            if entity_type == "profile" or entity_type == "avatar":
+                # Square aspect ratio for profile pictures
+                width = height = 400
+            elif entity_type == "logo":
+                width, height = 300, 150
+            elif entity_type == "banner":
+                width, height = 1200, 400
+            elif entity_type == "category":
+                width, height = 800, 600
+            elif entity_type == "product":
+                width, height = 800, 800
+            
+            # Enhance search query based on entity type and category
+            query_terms = []
+            
             if category:
-                url = f"https://source.unsplash.com/random/{width}x{height}/?{category}"
+                query_terms.append(category)
+                
+            if entity_type == "profile" or entity_type == "avatar":
+                query_terms.extend(["portrait", "person", "professional"])
+            elif entity_type == "logo":
+                query_terms.extend(["logo", "minimal", "brand"])
+            elif entity_type == "banner":
+                query_terms.extend(["storefront", "shop", "retail", "banner"])
+            elif entity_type == "document":
+                query_terms.extend(["document", "paper", "certificate"])
+                
+            # Filter out empty strings and join with commas
+            query = ','.join([term for term in query_terms if term])
+            
+            # Construct URL with enhanced query
+            if query:
+                url = f"https://source.unsplash.com/random/{width}x{height}/?{query}"
             else:
                 url = f"https://source.unsplash.com/random/{width}x{height}"
-
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                return ContentFile(response.content,
-                                   name=f"{slugify(category or 'image')}-{random.randint(1, 10000)}.jpg")
-            else:
-                # Fallback to local generation
-                return self.generate_placeholder_image(width, height)
+    
+            # Try alternative image sources if available
+            alternative_sources = [
+                url,
+                f"https://picsum.photos/{width}/{height}",  # Lorem Picsum as fallback
+            ]
+            
+            for source_url in alternative_sources:
+                response = requests.get(source_url, timeout=10)
+                if response.status_code == 200:
+                    # Create a descriptive filename
+                    filename = f"{slugify(entity_type)}-{slugify(category or 'image')}-{random.randint(1, 10000)}.jpg"
+                    return ContentFile(response.content, name=filename)
+            
+            # If all sources fail, fallback to local generation
+            return self.generate_placeholder_image(width, height, entity_type)
+            
         except Exception as e:
             self.stdout.write(self.style.WARNING(f"Error fetching image: {e}"))
-            return self.generate_placeholder_image(width, height)
+            return self.generate_placeholder_image(width, height, entity_type)
 
-    def generate_placeholder_image(self, width=500, height=500):
-        """Generate a simple colored placeholder image."""
-        color = (
-            random.randint(100, 255),
-            random.randint(100, 255),
-            random.randint(100, 255)
-        )
-        image = Image.new('RGB', (width, height), color=color)
-
-        # Add some random shapes for variety
-        for _ in range(5):
-            shape_color = (
-                random.randint(0, 100),
-                random.randint(0, 100),
-                random.randint(0, 100)
+    def generate_placeholder_image(self, width=500, height=500, entity_type="product"):
+        """
+        Generate a contextual placeholder image based on entity type.
+        
+        Args:
+            width: Image width
+            height: Image height
+            entity_type: Type of entity (product, profile, logo, banner, etc.)
+        """
+        # Select color palette based on entity type
+        if entity_type == "product":
+            # Bright, product-friendly colors
+            bg_color = (
+                random.randint(200, 255),
+                random.randint(200, 255),
+                random.randint(200, 255)
             )
-            x1 = random.randint(0, width)
-            y1 = random.randint(0, height)
-            x2 = random.randint(0, width)
-            y2 = random.randint(0, height)
-
-            shape = Image.new('RGB', (width, height))
-            # draw a rectangle
-            for x in range(min(x1, x2), max(x1, x2)):
-                for y in range(min(y1, y2), max(y1, y2)):
-                    if 0 <= x < width and 0 <= y < height:
-                        shape.putpixel((x, y), shape_color)
-
-            image = Image.blend(image, shape, 0.3)
-
+        elif entity_type in ["profile", "avatar"]:
+            # Neutral tones for profile pictures
+            bg_color = (
+                random.randint(220, 240),
+                random.randint(220, 240),
+                random.randint(220, 240)
+            )
+        elif entity_type == "logo":
+            # Clean white background for logos
+            bg_color = (255, 255, 255)
+        elif entity_type == "banner":
+            # Vibrant colors for banners
+            bg_color = (
+                random.randint(100, 200),
+                random.randint(100, 200),
+                random.randint(200, 255)
+            )
+        elif entity_type == "document":
+            # Paper-like background for documents
+            bg_color = (245, 245, 245)
+        else:
+            # Default color
+            bg_color = (
+                random.randint(180, 255),
+                random.randint(180, 255),
+                random.randint(180, 255)
+            )
+        
+        # Create base image
+        image = Image.new('RGB', (width, height), color=bg_color)
+        
+        # Generate appropriate placeholder content based on entity type
+        if entity_type in ["profile", "avatar"]:
+            # Create a simple avatar-like image
+            center_x, center_y = width // 2, height // 2
+            radius = min(width, height) // 3
+            
+            # Draw head
+            avatar_color = (
+                random.randint(50, 150),
+                random.randint(50, 150),
+                random.randint(50, 150)
+            )
+            
+            for x in range(width):
+                for y in range(height):
+                    # Create circular head
+                    if ((x - center_x) ** 2 + (y - center_y) ** 2) <= radius ** 2:
+                        image.putpixel((x, y), avatar_color)
+            
+            # Draw body (shoulder outline)
+            body_top = center_y + radius
+            for x in range(center_x - radius, center_x + radius):
+                for y in range(body_top, min(body_top + radius, height)):
+                    if center_x - radius//2 <= x <= center_x + radius//2:
+                        image.putpixel((x, y), avatar_color)
+            
+        elif entity_type == "logo":
+            # Create a simple logo placeholder
+            accent_color = (
+                random.randint(0, 100),
+                random.randint(0, 100),
+                random.randint(100, 200)
+            )
+            
+            # Draw a simple shape
+            shape_width = width // 2
+            shape_height = height // 2
+            start_x = (width - shape_width) // 2
+            start_y = (height - shape_height) // 2
+            
+            for x in range(start_x, start_x + shape_width):
+                for y in range(start_y, start_y + shape_height):
+                    # Create a rounded rectangle
+                    if (start_x + shape_width//5 <= x <= start_x + shape_width - shape_width//5 or
+                        start_y + shape_height//5 <= y <= start_y + shape_height - shape_height//5):
+                        image.putpixel((x, y), accent_color)
+                        
+        elif entity_type == "banner":
+            # Create a gradient background for banners
+            for x in range(width):
+                for y in range(height):
+                    r = bg_color[0] - int((y / height) * 50)
+                    g = bg_color[1] - int((y / height) * 50)
+                    b = bg_color[2]
+                    image.putpixel((x, y), (max(0, r), max(0, g), b))
+                    
+            # Add some decorative elements
+            for _ in range(3):
+                element_color = (
+                    random.randint(200, 255),
+                    random.randint(200, 255),
+                    random.randint(200, 255)
+                )
+                element_x = random.randint(0, width - width//4)
+                element_width = width // 4
+                element_height = height // 3
+                
+                for x in range(element_x, min(element_x + element_width, width)):
+                    for y in range(height - element_height, height):
+                        if random.random() > 0.5:  # Create some texture
+                            image.putpixel((x, y), element_color)
+                
+        elif entity_type == "document":
+            # Create document-like lines
+            line_color = (180, 180, 180)
+            for y in range(height // 6, height, height // 15):
+                for x in range(width // 10, width - width // 10):
+                    if y % (height // 12) == 0:
+                        image.putpixel((x, y), line_color)
+                        
+            # Add a "header"
+            header_color = (150, 150, 150)
+            for x in range(width // 10, width // 2):
+                for y in range(height // 20, height // 10):
+                    image.putpixel((x, y), header_color)
+            
+        else:  # Default for products and other types
+            # Add some random shapes for variety
+            for _ in range(5):
+                shape_color = (
+                    random.randint(50, 150),
+                    random.randint(50, 150),
+                    random.randint(50, 150)
+                )
+                x1 = random.randint(0, width)
+                y1 = random.randint(0, height)
+                x2 = random.randint(0, width)
+                y2 = random.randint(0, height)
+    
+                shape = Image.new('RGB', (width, height))
+                # draw a rectangle
+                for x in range(min(x1, x2), max(x1, x2)):
+                    for y in range(min(y1, y2), max(y1, y2)):
+                        if 0 <= x < width and 0 <= y < height:
+                            shape.putpixel((x, y), shape_color)
+    
+                image = Image.blend(image, shape, 0.3)
+                
+            # Add a simple product outline for product images
+            if entity_type == "product":
+                product_outline = Image.new('RGB', (width, height))
+                center_x, center_y = width // 2, height // 2
+                outline_width = width // 2
+                outline_height = height // 2
+                
+                outline_color = (
+                    random.randint(50, 100),
+                    random.randint(50, 100),
+                    random.randint(50, 100)
+                )
+                
+                for x in range(center_x - outline_width//2, center_x + outline_width//2):
+                    for y in range(center_y - outline_height//2, center_y + outline_height//2):
+                        if (abs(x - (center_x - outline_width//2)) < 5 or 
+                            abs(x - (center_x + outline_width//2 - 1)) < 5 or
+                            abs(y - (center_y - outline_height//2)) < 5 or
+                            abs(y - (center_y + outline_height//2 - 1)) < 5):
+                            if 0 <= x < width and 0 <= y < height:
+                                product_outline.putpixel((x, y), outline_color)
+                                
+                image = Image.blend(image, product_outline, 0.7)
+    
         # Save image to in-memory file
         img_io = BytesIO()
         image.save(img_io, format='JPEG', quality=85)
         img_io.seek(0)
-        return ContentFile(img_io.getvalue(), name=f'placeholder-{random.randint(1, 10000)}.jpg')
+        return ContentFile(img_io.getvalue(), name=f'placeholder-{entity_type}-{random.randint(1, 10000)}.jpg')
 
     def create_users(self):
         """Create predefined users for testing."""
