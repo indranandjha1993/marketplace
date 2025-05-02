@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load common_tags %}
 
 {% block title %}Shopping Cart{% endblock %}
 
@@ -7,12 +8,66 @@
     <h1 class="mb-4">Shopping Cart</h1>
 
     {% if cart_items %}
+    
+    <!-- Alerts for cart issues -->
+    {% if out_of_stock_items or price_changed_items %}
+    <div class="cart-alerts mb-4">
+        {% if out_of_stock_items %}
+        <div class="alert alert-warning">
+            <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Availability Issues</h5>
+            <p>The following items in your cart have availability issues:</p>
+            <ul class="mb-0">
+                {% for item in out_of_stock_items %}
+                <li>
+                    <strong>{{ item.product.title }}</strong>
+                    {% if item.variant %}
+                    ({{ item.variant.attribute_values.all|join:", " }})
+                    {% endif %}
+                    - Out of stock
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        {% if price_changed_items %}
+        <div class="alert alert-info">
+            <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Price Changes</h5>
+            <p>The prices of the following items have changed since they were added to your cart:</p>
+            <ul class="mb-0">
+                {% for item in price_changed_items %}
+                <li>
+                    <strong>{{ item.product.title }}</strong>
+                    {% if item.variant %}
+                    ({{ item.variant.attribute_values.all|join:", " }})
+                    {% endif %}
+                    - 
+                    {% if item.price_change_amount > 0 %}
+                    Price increased by {{ item.price_change_amount|currency }}
+                    {% else %}
+                    Price decreased by {{ item.price_change_amount|absolute|currency }}
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    
     <div class="row">
         <!-- Cart Items -->
         <div class="col-md-8">
             <div class="card mb-4">
-                <div class="card-header bg-white">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">Cart Items ({{ cart.total_items }})</h5>
+                    {% if cart.has_digital_items and cart.has_physical_items %}
+                    <span class="badge bg-info">Mixed Cart</span>
+                    {% elif cart.has_digital_items %}
+                    <span class="badge bg-primary">Digital Items</span>
+                    {% elif cart.has_physical_items %}
+                    <span class="badge bg-secondary">Physical Items</span>
+                    {% endif %}
                 </div>
                 <div class="card-body p-0">
                     {% for item in cart_items %}
@@ -72,14 +127,27 @@
                             <div class="col-md-3 col-6 text-end mt-3 mt-md-0">
                                 <div class="product-price">
                                     {% if item.variant %}
-                                    <span class="fw-bold">{{ item.variant.current_price }}</span>
+                                    <span class="fw-bold">{{ item.variant.current_price|currency }}</span>
                                     {% else %}
-                                    <span class="fw-bold">{{ item.product.current_price }}</span>
+                                    <span class="fw-bold">{{ item.product.current_price|currency }}</span>
                                     {% endif %}
                                 </div>
                                 <div class="text-muted small">
-                                    <span>₹{{ item.unit_price }}</span> × {{ item.quantity }}
+                                    <span>{{ item.unit_price|currency }}</span> × {{ item.quantity }}
                                 </div>
+                                {% if item.has_price_changed %}
+                                <div class="mt-1">
+                                    {% if item.price_change_amount > 0 %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-arrow-up"></i> Price increased by {{ item.price_change_amount|currency }}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-arrow-down"></i> Price decreased by {{ item.price_change_amount|absolute|currency }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -111,21 +179,35 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <span>Subtotal</span>
-                        <span>₹{{ cart.subtotal }}</span>
+                        <span>{{ cart.subtotal|currency }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Shipping</span>
-                        <span>₹{{ shipping_cost|default:"0.00" }}</span>
+                        <span>{{ shipping_cost|currency }}</span>
+                        {% if cart.has_physical_items and cart.subtotal < free_shipping_threshold %}
+                        <div class="free-shipping-progress mt-2 w-100">
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ cart.subtotal|floatformat:0 }}%;" 
+                                     aria-valuenow="{{ cart.subtotal|floatformat:0 }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="{{ free_shipping_threshold }}"></div>
+                            </div>
+                            <div class="text-center mt-1">
+                                <small class="text-muted">Add {{ amount_needed_for_free_shipping|currency }} more for free shipping</small>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span>Tax</span>
-                        <span>₹{{ cart.tax_amount }}</span>
+                        <span>{{ cart.tax_amount|currency }}</span>
                     </div>
 
                     {% if coupon %}
                     <div class="d-flex justify-content-between mb-2 text-success">
                         <span>Coupon Discount ({{ coupon.code }})</span>
-                        <span>-₹{{ coupon_discount }}</span>
+                        <span>-{{ coupon_discount|currency }}</span>
                     </div>
                     {% endif %}
 
@@ -133,8 +215,22 @@
 
                     <div class="d-flex justify-content-between mb-4 fw-bold">
                         <span>Total</span>
-                        <span>₹{{ final_total }}</span>
+                        <span>{{ final_total|currency }}</span>
                     </div>
+                    
+                    {% if estimated_delivery %}
+                    <div class="estimated-delivery mb-3">
+                        <div class="d-flex align-items-center text-muted">
+                            <i class="fas fa-truck me-2"></i>
+                            <span>Estimated Delivery:</span>
+                        </div>
+                        <div class="delivery-date mt-1">
+                            <span class="fw-medium">
+                                {{ estimated_delivery.min_date|date:"M d" }} - {{ estimated_delivery.max_date|date:"M d, Y" }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     {% if not coupon %}
                     <div class="mb-3">
@@ -153,7 +249,7 @@
                             {% if coupon.discount_type == 'percentage' %}
                             ({{ coupon.discount_value }}% off)
                             {% else %}
-                            (₹{{ coupon.discount_value }} off)
+                            ({{ coupon.discount_value|currency }} off)
                             {% endif %}
                         </div>
                         <form action="{% url 'cart:remove_coupon' %}" method="POST">
@@ -314,6 +410,39 @@
                 </button>
             </div>
             {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recently Viewed Products -->
+    {% if recently_viewed %}
+    <div class="recently-viewed mt-4">
+        <h3 class="mb-3">Recently Viewed</h3>
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            {% for product in recently_viewed %}
+            <div class="col">
+                <div class="card h-100 recently-viewed-card">
+                    <a href="{% url 'products:product_detail' product.slug %}" class="text-decoration-none">
+                        {% if product.primary_image %}
+                        <img src="{{ product.primary_image.image.url }}" class="card-img-top" alt="{{ product.title }}">
+                        {% else %}
+                        <img src="/static/img/no-image.png" class="card-img-top" alt="{{ product.title }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="card-title text-truncate">{{ product.title }}</h6>
+                            <p class="card-text fw-bold">{{ product.current_price|currency }}</p>
+                        </div>
+                    </a>
+                    <div class="card-footer bg-white border-top-0">
+                        <form action="{% url 'cart:add_to_cart' product.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" class="btn btn-sm btn-outline-primary w-100">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </div>
     {% endif %}

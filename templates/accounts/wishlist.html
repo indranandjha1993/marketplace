@@ -79,9 +79,9 @@
 
                         <div class="product-price">
                             {% if product.is_on_sale %}
-                            <span class="original-price">₹{{ product.price }}</span>
+                            <span class="original-price">{{ product.price|currency }}</span>
                             {% endif %}
-                            <span class="current-price">₹{{ product.current_price }}</span>
+                            <span class="current-price">{{ product.current_price|currency }}</span>
                         </div>
                     </div>
 

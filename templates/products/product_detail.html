@@ -162,12 +162,12 @@
                     <div class="product-price mb-4" id="product-price">
                         {% if product.is_on_sale %}
                         <div class="d-flex align-items-center flex-wrap">
-                            <span class="original-price fs-5 text-decoration-line-through text-muted me-2">₹{{ product.price }}</span>
-                            <span class="fs-2 fw-bold text-primary me-2">₹{{ product.current_price }}</span>
+                            <span class="original-price fs-5 text-decoration-line-through text-muted me-2">{{ product.price|currency }}</span>
+                            <span class="fs-2 fw-bold text-primary me-2">{{ product.current_price|currency }}</span>
                             <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">{{ product.discount_percentage }}% OFF</span>
                         </div>
                         {% else %}
-                        <span class="fs-2 fw-bold text-primary">₹{{ product.current_price }}</span>
+                        <span class="fs-2 fw-bold text-primary">{{ product.current_price|currency }}</span>
                         {% endif %}
                     </div>
 

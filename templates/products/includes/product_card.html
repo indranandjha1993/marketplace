@@ -99,11 +99,11 @@
             <div class="product-price d-flex align-items-center">
                 {% if product.is_on_sale %}
                 <div class="price-wrapper">
-                    <span class="original-price">₹{{ product.price }}</span>
-                    <span class="current-price">₹{{ product.current_price }}</span>
+                    <span class="original-price">{{ product.price|currency }}</span>
+                    <span class="current-price">{{ product.current_price|currency }}</span>
                 </div>
                 {% else %}
-                <span class="current-price">₹{{ product.current_price }}</span>
+                <span class="current-price">{{ product.current_price|currency }}</span>
                 {% endif %}
             </div>
 

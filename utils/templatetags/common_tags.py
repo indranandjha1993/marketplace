@@ -2,6 +2,7 @@ from django import template
 from django.db.models import Avg, Count, Q
 from django.utils.safestring import mark_safe
 from products.models import Product
+from marketplace.models import CurrencySettings
 
 register = template.Library()
 
@@ -77,6 +78,15 @@ def get_item(dictionary, key):
     return None
 
 
+@register.filter
+def absolute(value):
+    """Return the absolute value of a number."""
+    try:
+        return abs(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
 @register.simple_tag
 def total_category_products(category):
     """
@@ -98,3 +108,71 @@ def total_category_products(category):
     ).count()
     
     return product_count
+
+
+@register.filter
+def currency(value):
+    """
+    Format a number as currency according to the global currency settings.
+    Usage: {{ product.price|currency }}
+    """
+    if value is None:
+        return ''
+    
+    try:
+        # Convert to float if it's not already
+        value = float(value)
+    except (ValueError, TypeError):
+        return value
+    
+    # Get currency settings
+    settings = CurrencySettings.get_currency_settings()
+    
+    # Format the number with the appropriate decimal and thousand separators
+    formatted_number = '{:,.{prec}f}'.format(
+        value, 
+        prec=settings.decimal_places
+    ).replace(',', 'X').replace('.', settings.decimal_separator).replace('X', settings.thousand_separator)
+    
+    # Add the currency symbol in the correct position
+    if settings.symbol_position == 'before':
+        return f'{settings.currency_symbol}{formatted_number}'
+    else:
+        return f'{formatted_number}{settings.currency_symbol}'
+
+
+@register.simple_tag
+def format_currency(value, show_symbol=True, decimal_places=None):
+    """
+    Advanced currency formatting with options.
+    Usage: {% format_currency product.price [show_symbol=True] [decimal_places=None] %}
+    """
+    if value is None:
+        return ''
+    
+    try:
+        # Convert to float if it's not already
+        value = float(value)
+    except (ValueError, TypeError):
+        return value
+    
+    # Get currency settings
+    settings = CurrencySettings.get_currency_settings()
+    
+    # Use provided decimal places or default from settings
+    places = decimal_places if decimal_places is not None else settings.decimal_places
+    
+    # Format the number with the appropriate decimal and thousand separators
+    formatted_number = '{:,.{prec}f}'.format(
+        value, 
+        prec=places
+    ).replace(',', 'X').replace('.', settings.decimal_separator).replace('X', settings.thousand_separator)
+    
+    # Add the currency symbol in the correct position if requested
+    if not show_symbol:
+        return formatted_number
+    
+    if settings.symbol_position == 'before':
+        return f'{settings.currency_symbol}{formatted_number}'
+    else:
+        return f'{formatted_number}{settings.currency_symbol}'

@@ -27,7 +27,7 @@ def get_or_create_cart(request):
 
 def cart_detail(request):
     """
-    View for displaying cart details.
+    View for displaying cart details with enhanced features.
     """
     cart = get_or_create_cart(request)
 
@@ -35,6 +35,35 @@ def cart_detail(request):
     saved_items = []
     if request.user.is_authenticated:
         saved_items = SavedForLater.objects.filter(user=request.user)
+        
+    # Get cart items with all related data for better performance
+    cart_items = cart.items.select_related(
+        'product', 
+        'variant', 
+        'product__vendor'
+    ).prefetch_related(
+        'variant__attribute_values',
+        'variant__attribute_values__attribute'
+    ).all()
+    
+    # Check for items with price changes
+    price_changed_items = [item for item in cart_items if item.has_price_changed]
+    
+    # Check for out of stock items
+    out_of_stock_items = [item for item in cart_items if not item.is_in_stock]
+    
+    # Calculate shipping cost based on cart contents
+    # This is a placeholder - implement your shipping logic here
+    shipping_cost = 0
+    if cart.has_physical_items:
+        if cart.subtotal < 500:  # Free shipping threshold
+            shipping_cost = 50  # Default shipping cost
+    
+    # Set shipping cost on cart object
+    cart.shipping_cost = shipping_cost
+    
+    # Get estimated delivery dates
+    estimated_delivery = cart.estimated_delivery
 
     # Check if a coupon is applied in the session
     coupon_id = request.session.get('coupon_id')
@@ -54,14 +83,33 @@ def cart_detail(request):
         except Coupon.DoesNotExist:
             if 'coupon_id' in request.session:
                 del request.session['coupon_id']
+    
+    # Calculate final total
+    final_total = cart.total - coupon_discount
+    
+    # Check for recently viewed products
+    recently_viewed = []
+    if 'recently_viewed' in request.session:
+        from products.models import Product
+        product_ids = request.session['recently_viewed'][:4]  # Get last 4 viewed products
+        recently_viewed = Product.objects.filter(id__in=product_ids, status='active')
 
     context = {
         'cart': cart,
-        'cart_items': cart.items.select_related('product', 'variant', 'product__vendor').all(),
+        'cart_items': cart_items,
         'saved_items': saved_items,
         'coupon': coupon,
         'coupon_discount': coupon_discount,
-        'final_total': cart.total - coupon_discount
+        'final_total': final_total,
+        'shipping_cost': shipping_cost,
+        'price_changed_items': price_changed_items,
+        'out_of_stock_items': out_of_stock_items,
+        'estimated_delivery': estimated_delivery,
+        'recently_viewed': recently_viewed,
+        'has_digital_items': cart.has_digital_items,
+        'has_physical_items': cart.has_physical_items,
+        'free_shipping_threshold': 500,  # This could be a setting
+        'amount_needed_for_free_shipping': max(0, 500 - cart.subtotal)
     }
 
     return render(request, 'cart/cart_detail.html', context)
@@ -70,25 +118,20 @@ def cart_detail(request):
 @require_POST
 def add_to_cart(request, product_id):
     """
-    View for adding a product to the cart.
-    Simple approach with redirect instead of AJAX.
+    View for adding a product to the cart with enhanced features.
     """
     try:
         with transaction.atomic():
-            product = get_object_or_404(Product, id=product_id, status='active')
-
-            # Check if product is active
-            if product.status != 'active':
-                messages.error(request, 'This product is not available')
-                return redirect('products:product_detail', product_slug=product.slug)
-
-            # Check if product is in stock
-            if not product.is_in_stock:
-                messages.error(request, 'This product is out of stock')
-                return redirect('products:product_detail', product_slug=product.slug)
+            # Get the product with select_related for better performance
+            product = get_object_or_404(
+                Product.objects.select_related('vendor'), 
+                id=product_id, 
+                status='active'
+            )
 
             cart = get_or_create_cart(request)
 
+            # Parse quantity with validation
             try:
                 quantity = int(request.POST.get('quantity', 1))
                 if quantity <= 0:
@@ -112,59 +155,63 @@ def add_to_cart(request, product_id):
                     return redirect('products:product_detail', product_slug=product.slug)
 
                 try:
-                    # Get the selected variant
-                    variant = ProductVariant.objects.get(id=variant_id, product=product)
-
-                    # Check if variant is in stock
-                    if not variant.is_in_stock:
-                        messages.error(request, 'This variant is out of stock')
-                        return redirect('products:product_detail', product_slug=product.slug)
+                    # Get the selected variant with prefetch_related for better performance
+                    variant = ProductVariant.objects.prefetch_related(
+                        'attribute_values', 
+                        'attribute_values__attribute'
+                    ).get(id=variant_id, product=product)
 
                 except ProductVariant.DoesNotExist:
                     messages.error(request, 'Selected variant not found')
                     return redirect('products:product_detail', product_slug=product.slug)
 
+            # Get optional parameters
+            item_note = request.POST.get('item_note', None)
+            is_gift = request.POST.get('is_gift', False) == 'true'
+            gift_message = request.POST.get('gift_message', None) if is_gift else None
+            
             # Check if return path is provided
             next_url = request.POST.get('next', '')
 
-            # Check if item already exists in cart
-            try:
-                cart_item = CartItem.objects.get(cart=cart, product=product, variant=variant)
+            # Use the enhanced add_item method
+            success, message, cart_item = cart.add_item(
+                product=product,
+                quantity=quantity,
+                variant=variant,
+                item_note=item_note,
+                is_gift=is_gift,
+                gift_message=gift_message
+            )
 
-                # Check available quantity
-                available_qty = variant.quantity if variant else product.quantity
-
-                if cart_item.quantity + quantity > available_qty:
-                    cart_item.quantity = available_qty
-                    cart_item.save()
-                    messages.warning(request,
-                                     f'Only {available_qty} items available. Cart updated to maximum quantity.')
-                else:
-                    cart_item.quantity += quantity
-                    cart_item.save()
-                    messages.success(request, 'Cart updated successfully')
-
-            except CartItem.DoesNotExist:
-                # Calculate max quantity based on available stock
-                available_qty = variant.quantity if variant else product.quantity
-                add_quantity = min(quantity, available_qty)
-
-                # Create new cart item
-                CartItem.objects.create(
-                    cart=cart,
-                    product=product,
-                    variant=variant,
-                    quantity=add_quantity
-                )
-
+            if success:
+                # Format product name with variant details for the message
                 product_name = product.title
                 if variant:
                     variant_details = ', '.join([f"{val.attribute.name}: {val.value}"
-                                                 for val in variant.attribute_values.all()])
+                                               for val in variant.attribute_values.all()])
                     product_name = f"{product.title} ({variant_details})"
-
-                messages.success(request, f'{product_name} added to cart')
-
+                
+                # Add success message with product details
+                if "maximum quantity" in message:
+                    messages.warning(request, message)
+                else:
+                    messages.success(request, f'{product_name} added to cart')
+                    
+                # Track recently viewed products
+                if 'recently_viewed' not in request.session:
+                    request.session['recently_viewed'] = []
+                
+                # Add to recently viewed and ensure product_id is at the front of the list
+                recently_viewed = request.session['recently_viewed']
+                if product_id in recently_viewed:
+                    recently_viewed.remove(product_id)
+                recently_viewed.insert(0, product_id)
+                # Keep only the last 10 viewed products
+                request.session['recently_viewed'] = recently_viewed[:10]
+                request.session.modified = True
+            else:
+                messages.error(request, message)
+                
             # Redirect to the provided URL or cart detail page
             if next_url:
                 return redirect(next_url)
@@ -178,34 +225,47 @@ def add_to_cart(request, product_id):
 @require_POST
 def update_cart(request, item_id):
     """
-    View for updating the quantity of an item in the cart.
-    Simple approach with redirect instead of AJAX.
+    View for updating the quantity of an item in the cart with enhanced features.
     """
     cart = get_or_create_cart(request)
     next_url = request.POST.get('next', 'cart:cart_detail')
 
     try:
-        cart_item = CartItem.objects.get(id=item_id, cart=cart)
+        cart_item = CartItem.objects.select_related('product', 'variant').get(id=item_id, cart=cart)
 
+        # Get quantity and validate
         try:
             quantity = int(request.POST.get('quantity', 1))
         except ValueError:
             messages.error(request, 'Invalid quantity')
             return redirect(next_url)
-
-        if quantity <= 0:
-            cart_item.delete()
-            messages.success(request, 'Item removed from cart')
+            
+        # Get optional parameters
+        item_note = request.POST.get('item_note')
+        is_gift = request.POST.get('is_gift') == 'on'
+        gift_message = request.POST.get('gift_message')
+        
+        # Update optional fields if provided
+        if item_note is not None:
+            cart_item.item_note = item_note
+            
+        if 'is_gift' in request.POST:
+            cart_item.is_gift = is_gift
+            if is_gift and gift_message:
+                cart_item.gift_message = gift_message
+            elif not is_gift:
+                cart_item.gift_message = None
+        
+        # Use the enhanced update_quantity method
+        success, message = cart_item.update_quantity(quantity)
+        
+        if success:
+            if "maximum quantity" in message:
+                messages.warning(request, message)
+            else:
+                messages.success(request, message)
         else:
-            # Check if requested quantity is available
-            available_qty = cart_item.variant.quantity if cart_item.variant else cart_item.product.quantity
-
-            if quantity > available_qty:
-                messages.warning(request, f'Only {available_qty} items available')
-                quantity = available_qty
-
-            cart_item.quantity = quantity
-            cart_item.save()
+            messages.info(request, message)
 
     except CartItem.DoesNotExist:
         messages.error(request, 'Item not found in cart')
@@ -251,24 +311,48 @@ def clear_cart(request):
 @require_POST
 def save_for_later(request, item_id):
     """
-    View for moving an item from the cart to the saved items list.
+    View for moving an item from the cart to the saved items list with enhanced features.
     """
     cart = get_or_create_cart(request)
     next_url = request.POST.get('next', 'cart:cart_detail')
 
     try:
-        cart_item = CartItem.objects.get(id=item_id, cart=cart)
+        cart_item = CartItem.objects.select_related('product', 'variant').get(id=item_id, cart=cart)
+        
+        # Get the current price for tracking price changes
+        current_price = cart_item.unit_price
+        
+        # Get optional note
+        note = request.POST.get('note') or cart_item.item_note
 
         # Check if the item already exists in saved items
-        saved_item, created = SavedForLater.objects.get_or_create(
-            user=request.user,
-            product=cart_item.product,
-            variant=cart_item.variant
-        )
+        try:
+            # Try to get existing saved item
+            saved_item = SavedForLater.objects.get(
+                user=request.user,
+                product=cart_item.product,
+                variant=cart_item.variant
+            )
+            # Update the note if provided
+            if note:
+                saved_item.note = note
+                saved_item.save()
+                
+            messages.info(request, 'This item was already in your saved items')
+            
+        except SavedForLater.DoesNotExist:
+            # Create new saved item
+            SavedForLater.objects.create(
+                user=request.user,
+                product=cart_item.product,
+                variant=cart_item.variant,
+                price_at_save=current_price,
+                note=note
+            )
+            messages.success(request, 'Item saved for later')
 
         # Remove from cart
         cart_item.delete()
-        messages.success(request, 'Item saved for later')
 
     except CartItem.DoesNotExist:
         messages.error(request, 'Item not found in cart')
@@ -280,12 +364,12 @@ def save_for_later(request, item_id):
 @require_POST
 def move_to_cart(request, item_id):
     """
-    View for moving an item from the saved items list to the cart.
+    View for moving an item from the saved items list to the cart with enhanced features.
     """
     next_url = request.POST.get('next', 'cart:cart_detail')
 
     try:
-        saved_item = SavedForLater.objects.get(id=item_id, user=request.user)
+        saved_item = SavedForLater.objects.select_related('product', 'variant').get(id=item_id, user=request.user)
         cart = get_or_create_cart(request)
 
         # Check if the product is still active and in stock
@@ -300,45 +384,56 @@ def move_to_cart(request, item_id):
             return redirect(next_url)
 
         # If it's a variant, check variant status
-        if saved_item.variant:
-            if not saved_item.variant.is_in_stock:
-                messages.error(request, 'This product variant is out of stock')
-                return redirect(next_url)
+        if saved_item.variant and not saved_item.variant.is_in_stock:
+            messages.error(request, 'This product variant is out of stock')
+            return redirect(next_url)
 
-        # Check if the item already exists in the cart
+        # Get quantity from form or default to 1
         try:
-            cart_item = CartItem.objects.get(
-                cart=cart,
-                product=saved_item.product,
-                variant=saved_item.variant
-            )
+            quantity = int(request.POST.get('quantity', 1))
+            if quantity <= 0:
+                raise ValueError("Quantity must be greater than zero")
+        except ValueError:
+            quantity = 1
+            
+        # Get optional parameters
+        item_note = saved_item.note
+        is_gift = request.POST.get('is_gift', False) == 'on'
+        gift_message = request.POST.get('gift_message', None) if is_gift else None
 
-            # Check available quantity before updating
-            available_qty = saved_item.variant.quantity if saved_item.variant else saved_item.product.quantity
+        # Use the enhanced add_item method
+        success, message, cart_item = cart.add_item(
+            product=product,
+            quantity=quantity,
+            variant=saved_item.variant,
+            item_note=item_note,
+            is_gift=is_gift,
+            gift_message=gift_message
+        )
 
-            if cart_item.quantity + 1 > available_qty:
-                messages.warning(request,
-                                 f'Cannot add more of this item. Maximum quantity ({available_qty}) already in cart.')
-            else:
-                cart_item.quantity += 1
-                cart_item.save()
-
-                # Remove from saved items
-                saved_item.delete()
-                messages.success(request, 'Item moved to cart')
-
-        except CartItem.DoesNotExist:
-            # Create new cart item with quantity 1
-            CartItem.objects.create(
-                cart=cart,
-                product=saved_item.product,
-                variant=saved_item.variant,
-                quantity=1
-            )
-
+        if success:
             # Remove from saved items
             saved_item.delete()
-            messages.success(request, 'Item moved to cart')
+            
+            # Format product name with variant details for the message
+            product_name = product.title
+            if saved_item.variant:
+                variant_details = ', '.join([f"{val.attribute.name}: {val.value}"
+                                           for val in saved_item.variant.attribute_values.all()])
+                product_name = f"{product.title} ({variant_details})"
+            
+            # Check if price has changed since item was saved
+            if saved_item.has_price_changed:
+                if saved_item.price_change_amount > 0:
+                    messages.info(request, 
+                        f'Note: The price of this item has increased by {saved_item.price_change_percentage}% since you saved it')
+                else:
+                    messages.info(request, 
+                        f'Good news! The price of this item has decreased by {abs(saved_item.price_change_percentage)}% since you saved it')
+            
+            messages.success(request, f'{product_name} moved to cart')
+        else:
+            messages.error(request, message)
 
     except SavedForLater.DoesNotExist:
         messages.error(request, 'Saved item not found')

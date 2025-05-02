@@ -41,13 +41,14 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'crispy_forms',
 
-    'marketplace',
+    'marketplace.apps.MarketplaceConfig',
     'accounts',
     'products',
     'vendors',
     'orders',
     'cart',
     'payments',
+    'utils',
 ]
 
 MIDDLEWARE = [
@@ -79,6 +80,7 @@ TEMPLATES = [
                 'products.context_processors.categories_processor',
                 'accounts.context_processors.user_profile_context',
                 'payments.context_processors.payment_services',
+                'marketplace.context_processors.currency_settings',
             ],
             'libraries': {
                 'common_tags': 'utils.templatetags.common_tags',
