@@ -3,9 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    command: >
-      ./wait-for-it.sh db:3306 --   # wait up to default 15s for db
-      python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -13,6 +11,7 @@ services:
     env_file:
       - ./.env
     depends_on:
+      - db
       - redis
     networks:
       - marketplace-network
@@ -31,7 +30,7 @@ services:
     networks:
       - marketplace-network
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${MYSQL_USER}", "-p${MYSQL_PASSWORD}" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}" ]
       interval: 10s       # check every 10 seconds
       timeout: 5s         # consider a check failed after 5s
       retries: 5          # give it up to 5 tries before marking unhealthy
