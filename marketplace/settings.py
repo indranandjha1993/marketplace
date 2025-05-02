@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -29,8 +30,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.sites',
 
-    'health_check',        # Required
-    'health_check.db',     # Database backend health check
+    'health_check',  # Required
+    'health_check.db',  # Database backend health check
     'health_check.cache',  # Cache backend health check
 
     'allauth',
@@ -99,6 +100,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DB_PASSWORD', ''),
         'HOST': os.getenv('DB_HOST', 'localhost'),
         'PORT': os.getenv('DB_PORT', '3306'),
+        'CONN_HEALTH_CHECKS': True
     }
 }
 
