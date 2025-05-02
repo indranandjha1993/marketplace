@@ -29,6 +29,10 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'django.contrib.sites',
 
+    'health_check',        # Required
+    'health_check.db',     # Database backend health check
+    'health_check.cache',  # Cache backend health check
+
     'allauth',
     'allauth.account',
     'allauth.socialaccount',

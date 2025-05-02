@@ -1,7 +1,7 @@
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
 
 urlpatterns = [
     path('', include('products.urls')),
@@ -12,9 +12,11 @@ urlpatterns = [
     path('cart/', include('cart.urls')),
     path('orders/', include('orders.urls')),
     path('payments/', include('payments.urls')),
-    
+
     # API endpoints
     path('api/accounts/', include('accounts.api.urls')),
+
+    path('health/', include('health_check.urls')),
 ]
 
 if settings.DEBUG:
