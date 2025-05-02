@@ -3,13 +3,6 @@ version: '3.8'
 services:
   web:
     build: .
-    command: >
-      sh -c "
-        pip install gunicorn &&
-        python manage.py migrate &&
-        python manage.py collectstatic --noinput &&
-        gunicorn --bind 0.0.0.0:8000 marketplace.wsgi:application
-      "
     volumes:
       - .:/app
     ports:
@@ -17,8 +10,10 @@ services:
     env_file:
       - ./.env
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
     networks:
       - marketplace-network
     restart: always
@@ -37,7 +32,7 @@ services:
     networks:
       - marketplace-network
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5

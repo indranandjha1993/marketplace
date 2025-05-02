@@ -12,16 +12,23 @@ RUN apk add --no-cache \
     gcc \
     musl-dev \
     mariadb-dev \
-    pkgconf
+    pkgconf \
+    mysql-client
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy project
 COPY . .
 
-# Run gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "marketplace.wsgi:application"]
+# Copy and set entrypoint
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+# Expose port
+EXPOSE 8000
+
+# Use entrypoint
+ENTRYPOINT ["./entrypoint.sh"]

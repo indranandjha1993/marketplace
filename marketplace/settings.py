@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     'django.contrib.sites',
+    'rest_framework',
 
     'health_check',  # Required
     'health_check.db',  # Database backend health check
