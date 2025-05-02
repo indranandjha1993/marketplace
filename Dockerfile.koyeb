@@ -1,5 +1,8 @@
-FROM koyeb/docker-compose                                            # :contentReference[oaicite:0]{index=0}
+FROM koyeb/docker-compose
 
-COPY . /app                                                         # :contentReference[oaicite:1]{index=1}
-WORKDIR /app                                                        # :contentReference[oaicite:2]{index=2}
+COPY . /app
+WORKDIR /app
+
+RUN chmod +x /usr/local/bin/docker-compose
+
 EXPOSE 8000

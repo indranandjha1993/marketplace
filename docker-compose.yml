@@ -5,9 +5,10 @@ services:
     build: .
     command: >
       sh -c "
+        pip install gunicorn &&
         python manage.py migrate &&
         python manage.py collectstatic --noinput &&
-        python manage.py runserver 0.0.0.0:8000
+        gunicorn --bind 0.0.0.0:8000 marketplace.wsgi:application
       "
     volumes:
       - .:/app
@@ -20,6 +21,7 @@ services:
       - redis
     networks:
       - marketplace-network
+    restart: always
 
   db:
     image: mysql:8.0
@@ -36,10 +38,11 @@ services:
       - marketplace-network
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "-p${DB_PASSWORD}" ]
-      interval: 10s       # check every 10 seconds
-      timeout: 5s         # consider a check failed after 5s
-      retries: 5          # give it up to 5 tries before marking unhealthy
-      start_period: 30s   # give initial DB bootstrap up to 30s before starting checks :contentReference[oaicite:0]{index=0}
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
 
   redis:
     image: redis:6.2-alpine
@@ -47,6 +50,7 @@ services:
       - "6379:6379"
     networks:
       - marketplace-network
+    restart: always
 
 networks:
   marketplace-network:
