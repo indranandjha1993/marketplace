@@ -1,25 +1,26 @@
-FROM python:3.12-slim
+FROM python:3.12-alpine
 
 # Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Set work directory
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     gcc \
-    default-libmysqlclient-dev \
-    pkg-config \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    mariadb-dev \
+    pkgconf
 
 # Install Python dependencies
-COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
 # Copy project
-COPY . /app/
+COPY . .
 
 # Run gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "marketplace.wsgi:application"]
