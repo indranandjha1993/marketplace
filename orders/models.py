@@ -1,10 +1,65 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.validators import MinValueValidator
 from products.models import Product, ProductVariant
 from accounts.models import UserAddress
 from vendors.models import Vendor
 
 User = get_user_model()
+
+
+class ShippingMethod(models.Model):
+    """Shipping methods available for orders."""
+    
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    free_shipping_threshold = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0, 
+        help_text="Order value above which shipping is free"
+    )
+    estimated_days_min = models.PositiveIntegerField(default=3, help_text="Minimum estimated delivery days")
+    estimated_days_max = models.PositiveIntegerField(default=7, help_text="Maximum estimated delivery days")
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0, help_text="Order in which to display this method")
+    
+    class Meta:
+        ordering = ['display_order', 'price']
+    
+    def __str__(self):
+        return self.name
+        
+    def get_price_for_cart(self, cart):
+        """Calculate shipping price based on cart contents and various factors."""
+        # Free shipping threshold check
+        if cart.subtotal >= self.free_shipping_threshold:
+            return 0
+        
+        # Base shipping cost
+        shipping_cost = self.price
+        
+        # Additional logic for advanced shipping calculations
+        
+        # 1. Weight-based shipping (if products have weight attribute)
+        total_weight = 0
+        for item in cart.items.select_related('product').all():
+            if hasattr(item.product, 'weight'):
+                total_weight += item.product.weight * item.quantity
+        
+        # Apply weight-based surcharge if total weight exceeds 5kg
+        if total_weight > 5:  # kg
+            shipping_cost += 2.00  # Additional fee for heavy items
+        
+        # 2. Product-specific shipping
+        for item in cart.items.select_related('product').all():
+            # Check for products that require special shipping
+            if hasattr(item.product, 'requires_special_shipping') and item.product.requires_special_shipping:
+                shipping_cost += 5.00
+                break  # Only add the fee once
+        
+        return shipping_cost
 
 
 class Order(models.Model):
@@ -48,6 +103,13 @@ class Order(models.Model):
         default='pending'
     )
     payment_method = models.CharField(max_length=50)
+    shipping_method = models.ForeignKey(
+        ShippingMethod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders'
+    )
     transaction_id = models.CharField(max_length=255, blank=True, null=True)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2)

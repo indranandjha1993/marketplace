@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 
 from products.models import Product, ProductVariant
+from orders.models import ShippingMethod
 from .models import Cart, CartItem, SavedForLater
 
 
@@ -52,15 +53,25 @@ def cart_detail(request):
     # Check for out of stock items
     out_of_stock_items = [item for item in cart_items if not item.is_in_stock]
     
-    # Calculate shipping cost based on cart contents
-    # This is a placeholder - implement your shipping logic here
+    # Get available shipping methods
+    shipping_methods = ShippingMethod.objects.filter(is_active=True)
+    
+    # Get the selected shipping method or use the default
+    selected_shipping_method = cart.shipping_method
+    
+    # If no shipping method is selected, use the first available one
+    if not selected_shipping_method and shipping_methods.exists() and cart.has_physical_items:
+        selected_shipping_method = shipping_methods.first()
+        cart.shipping_method = selected_shipping_method
+    
+    # Calculate shipping cost based on selected method
     shipping_cost = 0
-    if cart.has_physical_items:
-        if cart.subtotal < 500:  # Free shipping threshold
-            shipping_cost = 50  # Default shipping cost
+    if cart.has_physical_items and selected_shipping_method:
+        shipping_cost = selected_shipping_method.get_price_for_cart(cart)
     
     # Set shipping cost on cart object
     cart.shipping_cost = shipping_cost
+    cart.save()
     
     # Get estimated delivery dates
     estimated_delivery = cart.estimated_delivery
@@ -102,14 +113,14 @@ def cart_detail(request):
         'coupon_discount': coupon_discount,
         'final_total': final_total,
         'shipping_cost': shipping_cost,
+        'shipping_methods': shipping_methods,
+        'selected_shipping_method': selected_shipping_method,
         'price_changed_items': price_changed_items,
         'out_of_stock_items': out_of_stock_items,
         'estimated_delivery': estimated_delivery,
         'recently_viewed': recently_viewed,
         'has_digital_items': cart.has_digital_items,
-        'has_physical_items': cart.has_physical_items,
-        'free_shipping_threshold': 500,  # This could be a setting
-        'amount_needed_for_free_shipping': max(0, 500 - cart.subtotal)
+        'has_physical_items': cart.has_physical_items
     }
 
     return render(request, 'cart/cart_detail.html', context)
@@ -617,4 +628,35 @@ def remove_coupon(request):
         del request.session['coupon_id']
         messages.success(request, 'Coupon removed successfully')
 
+    return redirect('cart:cart_detail')
+
+
+@require_POST
+def update_shipping_method(request):
+    """Update the shipping method for the cart."""
+    shipping_method_id = request.POST.get('shipping_method_id')
+    
+    if not shipping_method_id:
+        messages.error(request, "No shipping method selected.")
+        return redirect('cart:cart_detail')
+    
+    try:
+        shipping_method = ShippingMethod.objects.get(id=shipping_method_id, is_active=True)
+        cart = get_or_create_cart(request)
+        
+        # Update shipping method
+        cart.shipping_method = shipping_method
+        
+        # Calculate shipping cost
+        if cart.has_physical_items:
+            cart.shipping_cost = shipping_method.get_price_for_cart(cart)
+        else:
+            cart.shipping_cost = 0
+            
+        cart.save()
+        messages.success(request, f"Shipping method updated to {shipping_method.name}.")
+        
+    except ShippingMethod.DoesNotExist:
+        messages.error(request, "Invalid shipping method selected.")
+    
     return redirect('cart:cart_detail')

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from products.models import Product, ProductVariant
+from orders.models import ShippingMethod
 
 User = get_user_model()
 
@@ -14,7 +15,14 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_activity = models.DateTimeField(auto_now=True, help_text="Last time the cart was modified")
-    shipping_method = models.CharField(max_length=50, blank=True, null=True, help_text="Selected shipping method")
+    shipping_method = models.ForeignKey(
+        ShippingMethod, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='carts',
+        help_text="Selected shipping method"
+    )
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     notes = models.TextField(blank=True, null=True, help_text="Customer notes for the order")
 

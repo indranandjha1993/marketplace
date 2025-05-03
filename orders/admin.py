@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, VendorOrder, OrderItem, Payment, Refund, OrderTracking, Coupon
+from .models import Order, VendorOrder, OrderItem, Payment, Refund, OrderTracking, Coupon, ShippingMethod
 
 
 class OrderItemInline(admin.TabularInline):
@@ -52,6 +52,14 @@ class CouponAdmin(admin.ModelAdmin):
     search_fields = ('code', 'description')
 
 
+class ShippingMethodAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price', 'free_shipping_threshold', 'estimated_days_min', 'estimated_days_max', 'is_active', 'display_order')
+    list_filter = ('is_active',)
+    search_fields = ('name', 'description')
+    list_editable = ('price', 'free_shipping_threshold', 'is_active', 'display_order')
+
+
 admin.site.register(Order, OrderAdmin)
 admin.site.register(VendorOrder, VendorOrderAdmin)
 admin.site.register(Coupon, CouponAdmin)
+admin.site.register(ShippingMethod, ShippingMethodAdmin)

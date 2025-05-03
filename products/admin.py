@@ -31,12 +31,26 @@ class ProductVariantInline(admin.TabularInline):
 
 
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('title', 'vendor', 'category', 'price', 'status', 'quantity', 'created_at')
-    list_filter = ('status', 'is_featured', 'category', 'vendor')
+    list_display = ('title', 'vendor', 'category', 'price', 'status', 'quantity', 'is_digital', 'weight', 'requires_special_shipping', 'created_at')
+    list_filter = ('status', 'is_featured', 'is_digital', 'requires_special_shipping', 'category', 'vendor')
     search_fields = ('title', 'description', 'sku', 'vendor__business_name')
     prepopulated_fields = {'slug': ('title',)}
     inlines = [ProductImageInline, ProductVariantInline]
     list_per_page = 20
+    fieldsets = (
+        (None, {
+            'fields': ('vendor', 'category', 'brand', 'title', 'slug', 'description')
+        }),
+        ('Pricing & Inventory', {
+            'fields': ('price', 'sale_price', 'tax_rate', 'quantity', 'sku')
+        }),
+        ('Product Type & Shipping', {
+            'fields': ('is_digital', 'weight', 'requires_special_shipping')
+        }),
+        ('Status & Visibility', {
+            'fields': ('status', 'is_featured', 'meta_keywords', 'meta_description')
+        }),
+    )
 
 
 class ProductAttributeAdmin(admin.ModelAdmin):

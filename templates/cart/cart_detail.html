@@ -126,11 +126,7 @@
                             </div>
                             <div class="col-md-3 col-6 text-end mt-3 mt-md-0">
                                 <div class="product-price">
-                                    {% if item.variant %}
-                                    <span class="fw-bold">{{ item.variant.current_price|currency }}</span>
-                                    {% else %}
-                                    <span class="fw-bold">{{ item.product.current_price|currency }}</span>
-                                    {% endif %}
+                                    <span class="fw-bold">{{ item.unit_price|currency }}</span>
                                 </div>
                                 <div class="text-muted small">
                                     <span>{{ item.unit_price|currency }}</span> × {{ item.quantity }}
@@ -184,21 +180,44 @@
                     <div class="d-flex justify-content-between mb-2">
                         <span>Shipping</span>
                         <span>{{ shipping_cost|currency }}</span>
-                        {% if cart.has_physical_items and cart.subtotal < free_shipping_threshold %}
-                        <div class="free-shipping-progress mt-2 w-100">
-                            <div class="progress" style="height: 5px;">
-                                <div class="progress-bar bg-success" role="progressbar" 
-                                     style="width: {{ cart.subtotal|floatformat:0 }}%;" 
-                                     aria-valuenow="{{ cart.subtotal|floatformat:0 }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="{{ free_shipping_threshold }}"></div>
-                            </div>
-                            <div class="text-center mt-1">
-                                <small class="text-muted">Add {{ amount_needed_for_free_shipping|currency }} more for free shipping</small>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
+                    
+                    {% if cart.has_physical_items and shipping_methods %}
+                    <div class="shipping-methods mb-3">
+                        <h6 class="mb-2">Shipping Method</h6>
+                        <form action="{% url 'cart:update_shipping' %}" method="POST" id="shipping-method-form">
+                            {% csrf_token %}
+                            <select class="form-select form-select-sm" name="shipping_method_id" onchange="this.form.submit()">
+                                {% for method in shipping_methods %}
+                                <option value="{{ method.id }}" {% if selected_shipping_method.id == method.id %}selected{% endif %}>
+                                    {{ method.name }} - 
+                                    {% if method.free_shipping_threshold > 0 and cart.subtotal >= method.free_shipping_threshold %}
+                                        Free
+                                    {% else %}
+                                        {{ method.price|currency }}
+                                    {% endif %}
+                                    ({{ method.estimated_days_min }}-{{ method.estimated_days_max }} days)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    {% if cart.has_physical_items and cart.subtotal < free_shipping_threshold %}
+                    <div class="free-shipping-progress mb-3 w-100">
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ cart.subtotal|floatformat:0 }}%;" 
+                                 aria-valuenow="{{ cart.subtotal|floatformat:0 }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="{{ free_shipping_threshold }}"></div>
+                        </div>
+                        <div class="text-center mt-1">
+                            <small class="text-muted">Add {{ amount_needed_for_free_shipping|currency }} more for free shipping</small>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="d-flex justify-content-between mb-2">
                         <span>Tax</span>
                         <span>{{ cart.tax_amount|currency }}</span>
@@ -366,7 +385,7 @@
 
                                         <div class="d-flex justify-content-between align-items-center mt-2">
                                             <div class="product-price">
-                                                <span class="current-price">₹{{ item.product.current_price }}</span>
+                                                <span class="current-price">{{ item.current_price|currency }}</span>
                                             </div>
                                             <div>
                                                 {% if item.product.is_in_stock %}

@@ -1334,7 +1334,18 @@ function updateSelectedVariant() {
         if (addToCartBtn) addToCartBtn.disabled = true;
         const priceDisplay = document.getElementById('product-price');
         if (priceDisplay) {
-            priceDisplay.innerHTML = `₹${parseFloat('{{ product.current_price }}').toFixed(2)}`;
+            // Use the same formatting as the original product price display
+            {% if product.is_on_sale %}
+            priceDisplay.innerHTML = `
+                <div class="d-flex align-items-center flex-wrap">
+                    <span class="original-price fs-5 text-decoration-line-through text-muted me-2">{{ product.price|currency }}</span>
+                    <span class="fs-2 fw-bold text-primary me-2">{{ product.current_price|currency }}</span>
+                    <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">{{ product.discount_percentage }}% OFF</span>
+                </div>
+            `;
+            {% else %}
+            priceDisplay.innerHTML = `<span class="fs-2 fw-bold text-primary">{{ product.current_price|currency }}</span>`;
+            {% endif %}
         }
     }
 }
@@ -1378,15 +1389,28 @@ function updatePriceDisplay(variant) {
     const priceDisplay = document.getElementById('product-price');
     if (!priceDisplay) return;
 
+    // Get currency settings from the page
+    const currencySymbol = '{{ currency_settings.currency_symbol|default:"₹" }}';
+    const symbolPosition = '{{ currency_settings.symbol_position|default:"before" }}';
+    const decimalPlaces = parseInt('{{ currency_settings.decimal_places|default:2 }}');
+    
+    // Format price with proper currency
+    function formatCurrency(value) {
+        const formattedValue = value.toFixed(decimalPlaces);
+        return symbolPosition === 'before' ? 
+            `${currencySymbol}${formattedValue}` : 
+            `${formattedValue}${currencySymbol}`;
+    }
+
     let priceHTML = '';
     if (variant.is_on_sale) {
         priceHTML = `
-            <span class="original-price fs-5 text-decoration-line-through">₹${variant.price.toFixed(2)}</span>
-            <span class="fs-3 fw-bold text-primary">₹${variant.sale_price.toFixed(2)}</span>
-            <span class="badge bg-danger ms-2">${variant.discount_percentage}% OFF</span>
+            <span class="original-price fs-5 text-decoration-line-through text-muted me-2">${formatCurrency(variant.price)}</span>
+            <span class="fs-2 fw-bold text-primary me-2">${formatCurrency(variant.sale_price)}</span>
+            <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">${variant.discount_percentage}% OFF</span>
         `;
     } else {
-        priceHTML = `<span class="fs-3 fw-bold text-primary">₹${variant.price.toFixed(2)}</span>`;
+        priceHTML = `<span class="fs-2 fw-bold text-primary">${formatCurrency(variant.price)}</span>`;
     }
     priceDisplay.innerHTML = priceHTML;
 }

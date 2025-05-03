@@ -16,4 +16,5 @@ urlpatterns = [
     path('remove-coupon/', views.remove_coupon, name='remove_coupon'),
     path('move-all-to-cart/', views.move_all_to_cart, name='move_all_to_cart'),
     path('clear-saved-items/', views.clear_saved_items, name='clear_saved_items'),
+    path('update-shipping/', views.update_shipping_method, name='update_shipping'),
 ]

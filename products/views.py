@@ -9,6 +9,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from marketplace.models import CurrencySettings
 from utils.product_recommendations import get_recommendations_for_product, get_personalized_recommendations
 from vendors.models import Vendor
 from .models import (
@@ -108,6 +109,9 @@ def product_detail(request, product_slug):
     meta_keywords = product.meta_keywords or f"{product.title}, {product.category.name}, {product.brand.name if product.brand else ''}"
 
     all_variants_out_of_stock = product.variants.exists() and not product.variants.filter(quantity__gt=0).exists()
+    
+    # Get currency settings for JavaScript
+    currency_settings = CurrencySettings.get_currency_settings()
 
     context = {
         'product': product,
@@ -122,6 +126,7 @@ def product_detail(request, product_slug):
         'meta_description': meta_description,
         'meta_keywords': meta_keywords,
         'og_image': product.primary_image.image.url if product.primary_image else None,
+        'currency_settings': currency_settings,
     }
 
     return render(request, 'products/product_detail.html', context)
