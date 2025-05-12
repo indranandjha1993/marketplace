@@ -1,7 +1,7 @@
 <!-- Header for Desktop and Mobile -->
-<header class="marketplace-header sticky-top">
+<header class="marketplace-header sticky-top" role="banner">
     <div class="container-fluid px-md-4">
-        <nav class="navbar navbar-expand-lg navbar-light py-2 px-1">
+        <nav class="navbar navbar-expand-lg navbar-light py-2 px-1" aria-label="Main navigation">
             <div class="d-flex align-items-center w-100">
                 <!-- Hamburger Menu Toggle (Mobile - Left Side) -->
                 <button class="btn btn-link nav-link d-lg-none me-2 p-1 marketplace-menu-toggle"
@@ -9,7 +9,7 @@
                         data-bs-toggle="offcanvas"
                         data-bs-target="#categoryOffcanvas"
                         aria-controls="categoryOffcanvas"
-                        aria-label="Categories menu">
+                        aria-label="Open categories menu">
                     <i class="fas fa-bars" aria-hidden="true"></i>
                     <span class="visually-hidden">Categories</span>
                 </button>
@@ -17,32 +17,29 @@
                 <!-- Brand Logo -->
                 <a class="navbar-brand me-3 marketplace-logo" href="/" aria-label="Marketplace Home">
                     <img src="/static/img/logo.svg"
-                         alt="Marketplace Logo" 
-                         width="120" 
+                         alt="Marketplace Logo"
+                         width="120"
                          height="36"
-                         class="d-inline-block align-text-top" 
+                         class="d-inline-block align-text-top"
                          loading="lazy">
                 </a>
 
-                <!-- Flipkart-inspired Search Bar (Desktop) -->
-                <div class="d-none d-lg-flex flex-grow-1 mx-3 w-50">
-                    <form class="d-flex w-100"
-                          action="{% url 'products:browse_products' %}"
-                          method="GET"
-                          role="search"
-                          id="desktopSearchForm"
-                          aria-label="Desktop search form">
-                        <div class="marketplace-search-wrapper">
+                <!-- Desktop Search Bar -->
+                <div class="d-none d-lg-flex flex-grow-1 mx-3 w-50 align-items-center">
+                    <form class="d-flex w-100" action="{% url 'products:browse_products' %}" method="GET" role="search" id="desktopSearchForm" aria-label="Desktop search form">
+                        <label for="desktopSearchInput" class="visually-hidden">Search products</label>
+                        <div class="marketplace-search-wrapper flex-grow-1">
                             <div class="marketplace-search-container">
                                 <input type="search"
                                        name="q"
                                        id="desktopSearchInput"
                                        class="marketplace-search-input"
                                        placeholder="Search for Products, Brands and More"
-                                       aria-label="Search products">
+                                       aria-label="Search products"
+                                       autocomplete="off">
                                 <button class="marketplace-search-button" type="submit" aria-label="Search">
                                     <i class="fas fa-search" aria-hidden="true"></i>
-                                    <span class="search-text">Search</span>
+                                    <span class="search-text d-none d-xl-inline">Search</span>
                                 </button>
                             </div>
                         </div>
@@ -50,9 +47,9 @@
                 </div>
 
                 <!-- Right-aligned Nav Items -->
-                <div class="ms-auto d-flex align-items-center">
+                <div class="ms-auto d-flex align-items-center gap-2">
                     <!-- Account Menu -->
-                    <div class="nav-item dropdown me-3">
+                    <div class="nav-item dropdown me-2">
                         <a class="nav-link dropdown-toggle d-flex align-items-center marketplace-nav-link user-account-link"
                            href="#"
                            id="accountDropdown"
@@ -61,11 +58,7 @@
                            aria-expanded="false"
                            aria-label="Account menu">
                             <i class="fas fa-user-circle me-1 d-lg-none" aria-hidden="true"></i>
-                            {% if user.is_authenticated %}
-                            <span class="fw-bold">{{ user.first_name|default:"Account" }}</span>
-                            {% else %}
-                            <span class="fw-bold">Login</span>
-                            {% endif %}
+                            <span class="fw-bold">{% if user.is_authenticated %}{{ user.first_name|default:"Account" }}{% else %}Login{% endif %}</span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow-lg marketplace-dropdown" aria-labelledby="accountDropdown">
                             {% if user.is_authenticated %}
@@ -134,7 +127,7 @@
 
                     <!-- Become a Seller - Desktop only -->
                     {% if not user.is_vendor %}
-                    <div class="nav-item me-3 d-none d-lg-block">
+                    <div class="nav-item me-2 d-none d-lg-block">
                         <a class="nav-link fw-bold marketplace-seller-btn" href="{% url 'vendors:become_vendor' %}" aria-label="Become a seller">
                             Become a Seller
                         </a>
@@ -142,7 +135,7 @@
                     {% endif %}
 
                     <!-- Cart with badge -->
-                    <div class="nav-item me-3 d-flex align-items-center">
+                    <div class="nav-item me-2 d-flex align-items-center">
                         <a class="nav-link position-relative marketplace-nav-link marketplace-cart-link" href="{% url 'cart:cart_detail' %}" aria-label="Shopping cart">
                             <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                             <span class="fw-bold ms-1 d-none d-lg-inline">Cart</span>
@@ -157,20 +150,17 @@
 
         <!-- Mobile Search Bar -->
         <div class="d-lg-none pb-3 mt-2 mx-auto">
-            <form class="d-flex w-100"
-                  action="{% url 'products:browse_products' %}"
-                  method="GET"
-                  role="search"
-                  id="mobileSearchForm"
-                  aria-label="Mobile search form">
-                <div class="marketplace-search-wrapper mobile-search">
+            <form class="d-flex w-100" action="{% url 'products:browse_products' %}" method="GET" role="search" id="mobileSearchForm" aria-label="Mobile search form">
+                <label for="mobileSearchInput" class="visually-hidden">Search products</label>
+                <div class="marketplace-search-wrapper mobile-search flex-grow-1">
                     <div class="marketplace-search-container">
                         <input type="search"
                                name="q"
                                id="mobileSearchInput"
                                class="marketplace-search-input"
                                placeholder="Search for Products, Brands and More"
-                               aria-label="Search products">
+                               aria-label="Search products"
+                               autocomplete="off">
                         <button class="marketplace-search-button" type="submit" aria-label="Search">
                             <i class="fas fa-search" aria-hidden="true"></i>
                         </button>
